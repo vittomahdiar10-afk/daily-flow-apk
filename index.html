@@ -161,7 +161,6 @@
       }
     }
 
-    /* تطبیق ارتفاع مودال‌ها هنگام باز شدن کیبورد در حالت تمام‌صفحه 1080×2400 */
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
@@ -184,7 +183,6 @@
       scrollbar-width: none;
     }
 
-    /* پس‌زمینه شیشه‌ای ملایم قفل‌شده روی کل ارتفاع فیزیکی صفحه (100lvh) */
     .ambient-backdrop {
       position: fixed;
       inset: 0;
@@ -198,7 +196,6 @@
         radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 46%);
     }
 
-    /* لایه شیشه‌ای شفاف بالای صفحه پشت ساعت و باتری گوشی (Edge-to-Edge Frosted Scrim) */
     .status-bar-scrim {
       position: fixed;
       top: 0;
@@ -214,7 +211,6 @@
       -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
     }
 
-    /* لایه شیشه‌ای پایین صفحه برای یکدست کردن نوار ژست اندروید با تم روز و شب */
     .nav-bar-scrim {
       position: fixed;
       bottom: 0;
@@ -250,7 +246,6 @@
       transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, opacity 0.2s ease, background-color 0.25s ease, box-shadow 0.25s ease;
     }
 
-    /* تطبیق رنگ‌های داخلی در حالت روز (Light Mode) */
     body.theme-light .text-white {
       color: #0f172a !important;
     }
@@ -288,7 +283,6 @@
       color: var(--mint-contrast-text) !important;
     }
 
-    /* دکمه‌های فنری با پاسخ لمسی فوری */
     .spring-btn {
       touch-action: manipulation;
       user-select: none;
@@ -298,7 +292,6 @@
       transform: scale(0.94);
     }
 
-    /* ==================== داینامیک آیلند هوشمند با انیمیشن فنری iOS Liquid Morph ==================== */
     .island-stage {
       position: fixed;
       top: calc(12px + env(safe-area-inset-top, 0px));
@@ -470,7 +463,6 @@
       transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* انیمیشن موج صوتی داخل داینامیک آیلند */
     .audio-wave-bar {
       width: 2.5px;
       border-radius: 99px;
@@ -493,7 +485,6 @@
       }
     }
 
-    /* دایره تیک تسک */
     .check-circle {
       width: 24px;
       height: 24px;
@@ -512,7 +503,6 @@
       transform: scale(1.06);
     }
 
-    /* دایره تیک زیرکارها (ریزکارها) روی کارت */
     .subtask-check {
       width: 18px;
       height: 18px;
@@ -543,7 +533,6 @@
       transform: none !important;
     }
 
-    /* نوار پیشرفت مایع */
     .liquid-bar-track {
       background: rgba(147, 163, 165, 0.16);
       border-radius: 999px;
@@ -569,7 +558,6 @@
       transition: height 0.45s cubic-bezier(0.22, 1.12, 0.36, 1);
     }
 
-    /* کارت و المان‌های نمودار راداری هوشمند (ذهن، کارایی، انضباط، جسم) */
     .radar-stage-box {
       background: radial-gradient(circle at 50% 50%, rgba(var(--mint-accent-rgb), 0.08) 0%, rgba(10, 15, 17, 0.42) 72%);
       border: 1px solid rgba(255, 255, 255, 0.07);
@@ -699,13 +687,11 @@
       }
     }
 
-    /* تار شدن متن در حالت حریم خصوصی */
     .privacy-blur-text {
       filter: blur(5.5px);
       transition: filter 0.22s ease;
     }
 
-    /* آواتار شیشه‌ای هماهنگ با تم روز و شب */
     .avatar-surface {
       background: linear-gradient(145deg, rgba(var(--mint-accent-rgb), 0.22), rgba(var(--mint-accent-rgb), 0.08));
       border: 1.5px solid rgba(var(--mint-accent-rgb), 0.42);
@@ -718,7 +704,6 @@
       box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     }
 
-    /* ردیف‌های تنظیمات تلگرامی */
     .tg-settings-row {
       width: 100%;
       display: flex;
@@ -774,7 +759,6 @@
       transform: translateX(-18px);
     }
 
-    /* نوار تب‌های پایین تلگرامی + دکمه + (مخصوص موبایل و تبلت کوچک) */
     .tg-bottom-dock {
       position: fixed;
       bottom: calc(14px + env(safe-area-inset-bottom, 0px));
@@ -887,7 +871,6 @@
       transform: scale(0.92);
     }
 
-    /* ==================== انیمیشن جهت‌دار هوشمند بین تب‌ها (Directional Slide + Wave) ==================== */
     @keyframes tabEnterFromLeft {
       from {
         opacity: 0;
@@ -979,7 +962,6 @@
       cursor: pointer;
     }
 
-    /* ذرات جشن هنگام تکمیل همه کارها */
     .sparkle-particle {
       position: fixed;
       width: 7px;
@@ -1001,7 +983,6 @@
       }
     }
 
-    /* لایه پس‌زمینه راهنمای لمسی هنگام کشیدن کارت (Swipe Action Hint) */
     .task-swipe-slot {
       position: relative;
       border-radius: var(--card-radius);
@@ -1031,12 +1012,10 @@
       background: rgba(244, 63, 94, 0.22);
     }
 
-    /* قفل قطعی پنهان‌سازی تب‌های غیرفعال در موبایل و دسکتاپ */
     .tab-view.is-tab-hidden {
       display: none !important;
     }
 
-    /* ==================== Glass Studio OS — معماری اختصاصی نسخه دسکتاپ (1024px+) ==================== */
     @media (hover: hover) {
       .liquid-card:hover {
         border-color: rgba(var(--mint-accent-rgb), 0.34);
@@ -1054,7 +1033,6 @@
         top: calc(14px + env(safe-area-inset-top, 0px));
       }
 
-      /* حذف نوار پایین موبایل در دسکتاپ و جایگزینی با ریل شیشه‌ای شناور */
       .tg-bottom-dock {
         display: none !important;
       }
@@ -1150,7 +1128,6 @@
       }
     }
 
-    /* حالت‌های کشیدن و رها کردن کارت با ماوس در دسکتاپ */
     .task-card.is-dragging {
       opacity: 0.42;
       transform: scale(0.985);
@@ -1197,7 +1174,6 @@
   <!-- ==================== داینامیک آیلند هوشمند شناور بالای صفحه ==================== -->
   <header class="island-stage">
     <div id="dynamic-island" class="obsidian-shell" role="region" aria-label="داینامیک آیلند هوشمند تمرکز">
-      <!-- حالت بسته (Smart Idle Pill) -->
       <div id="island-idle-layer" class="island-layer flex items-center justify-between px-3.5 gap-2">
         <div class="flex items-center gap-2 min-w-0">
           <span id="island-status-dot" class="w-2.5 h-2.5 rounded-full bg-[#7fd5d8] shrink-0"></span>
@@ -1215,7 +1191,6 @@
         </div>
       </div>
 
-      <!-- حالت اعلان سریع / اقدام هوشمند (Smart Toast Pill) -->
       <div id="island-toast-layer" class="island-layer is-hidden flex items-center justify-between px-3.5 gap-2">
         <div class="flex items-center gap-2 min-w-0">
           <span id="island-toast-icon" class="text-sm shrink-0">✨</span>
@@ -1230,9 +1205,7 @@
         </button>
       </div>
 
-      <!-- حالت بازشده جمع‌وجور و متوازن (344×168px) -->
       <div id="island-expanded-layer" class="island-layer is-hidden flex flex-col justify-between p-3.5">
-        <!-- ردیف ۱: برچسب وضعیت + عنوان کار + توضیح/گام بعدی + دکمه‌های تغییر کار و بستن -->
         <div class="flex items-start justify-between gap-2.5">
           <div class="min-w-0 flex-1 text-right">
             <div class="flex items-center gap-1.5">
@@ -1267,7 +1240,6 @@
           </div>
         </div>
 
-        <!-- ردیف ۲: کپسول اختصاصی و تراز تایمر + انتخابگر زمان -->
         <div class="island-timer-capsule rounded-2xl px-3 py-1.5 flex items-center justify-between gap-2">
           <div class="flex items-center gap-2 min-w-0">
             <span id="island-timer-display" class="island-primary-text ltr font-mono text-[23px] font-black tracking-tight tabular-nums leading-none">
@@ -1285,7 +1257,6 @@
           </div>
         </div>
 
-        <!-- ردیف ۳: دکمه‌های کنترل اصلی (شروع تمرکز، تیک سریع مرحله/کار، بازنشانی و صدا) -->
         <div class="flex items-center gap-1.5">
           <button
             id="island-toggle-timer-btn"
@@ -1322,14 +1293,13 @@
         </div>
       </div>
 
-      <!-- نوار پیشرفت مویی پایین داینامیک آیلند -->
       <div class="island-progress-hairline" aria-hidden="true">
         <div id="island-progress-hairline-fill" class="island-progress-hairline-fill" style="width: 0%"></div>
       </div>
     </div>
   </header>
 
-  <!-- ==================== ریل شیشه‌ای شناور دسکتاپ (Arc + Telegram Desktop Rail) ==================== -->
+  <!-- ==================== ریل شیشه‌ای شناور دسکتاپ ==================== -->
   <aside id="desktop-glass-rail" class="desktop-glass-rail" aria-label="ریل ناوبری دسکتاپ">
     <div class="flex flex-col items-center gap-2.5">
       <button
@@ -1355,7 +1325,6 @@
 
     <div class="w-7 h-px bg-white/10"></div>
 
-    <!-- تب‌های اصلی با نشانگر کپسول مایع -->
     <div id="rail-nav-group" class="relative flex flex-col items-center gap-1.5">
       <div id="rail-nav-indicator" class="rail-nav-indicator">
         <span id="rail-nav-indicator-blob" class="rail-nav-indicator-blob"></span>
@@ -1393,7 +1362,6 @@
 
     <div class="w-7 h-px bg-white/10"></div>
 
-    <!-- ابزارهای سریع پایین ریل -->
     <div class="flex flex-col items-center gap-1.5">
       <button
         id="rail-cmd-btn"
@@ -1416,11 +1384,8 @@
 
   <!-- ==================== بدنه اصلی برنامه ==================== -->
   <main class="app-safe-main relative z-10 max-w-2xl lg:max-w-[1140px] mx-auto px-4 lg:pr-28 lg:pl-7">
-    <!-- ==================== TAB 1: امروز (نسخه موبایل کاملاً اصیل + چیدمان دوپنلی خلوت در دسکتاپ) ==================== -->
     <div id="tab-view-tasks" class="tab-view flex flex-col gap-3.5 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start">
-      <!-- پنل اصلی: در موبایل دقیقاً چیدمان اصلی (خوش‌آمدگویی و پیشرفت، جستجو، فیلترها، لیست کارها) -->
       <div class="lg:col-span-7 flex flex-col gap-3.5 lg:gap-3 min-w-0">
-        <!-- کارت خوش‌آمدگویی و پیشرفت (حفظ کامل چیدمان اصلی موبایل) -->
         <section class="liquid-glass rounded-3xl p-4 lg:px-4 lg:py-3 flex flex-col gap-3 lg:gap-2.5">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -1485,7 +1450,6 @@
           </div>
         </section>
 
-        <!-- نوار جستجو -->
         <div class="relative">
           <input
             id="search-tasks-input"
@@ -1507,7 +1471,6 @@
           </button>
         </div>
 
-        <!-- فیلترها و پاک‌سازی انجام‌شده‌ها (تک‌ردیفه فشرده در دسکتاپ و دو ردیفه اصیل در موبایل) -->
         <div class="flex flex-col lg:flex-row lg:items-center gap-2">
           <div class="flex items-center justify-between gap-2 min-h-[34px] shrink-0">
             <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -1542,13 +1505,10 @@
           </div>
         </div>
 
-        <!-- لیست کارت‌های تسک -->
         <div id="task-list" class="flex flex-col gap-2.5"></div>
       </div>
 
-      <!-- ستون دوم در دسکتاپ: بازرس زنده تسک + تایمر تمرکز جمع‌وجور + یادداشت سریع -->
       <div class="lg:col-span-5 flex flex-col gap-3.5 lg:sticky lg:top-20 min-w-0">
-        <!-- ۱. بازرس زنده تسک و زیرکارها (Contextual Live Inspector) -->
         <section id="desktop-task-inspector" class="hidden liquid-glass rounded-3xl p-4 flex-col gap-3.5 border border-[#7fd5d8]/35">
           <div class="flex items-center justify-between gap-2">
             <button
@@ -1626,7 +1586,6 @@
             </div>
           </div>
 
-          <!-- چک‌لیست زیرکارهای زنده داخل بازرس -->
           <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-extrabold text-[#7fd5d8]">زیرکارها (چک‌لیست)</span>
@@ -1655,9 +1614,7 @@
           </div>
         </section>
 
-        <!-- ۲. نمای کلی خلوت دسکتاپ + یادداشت سریع -->
         <div id="desktop-overview-stack" class="flex flex-col gap-3.5">
-          <!-- کارت جمع‌وجور تایمر تمرکز زنده در دسکتاپ -->
           <section id="desktop-focus-widget" class="hidden lg:flex liquid-glass rounded-3xl p-3.5 flex-col gap-2.5">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 min-w-0">
@@ -1686,7 +1643,6 @@
               <span id="desktop-focus-clock" class="ltr font-mono text-xl font-black text-[#7fd5d8] shrink-0">25:00</span>
             </div>
 
-            <!-- نوار صدای محیطی سریع در ویجت دسکتاپ -->
             <div class="grid grid-cols-4 gap-1">
               <button type="button" data-ambient="off" class="ambient-chip is-active spring-btn text-[10px] font-semibold py-1 rounded-xl bg-white/[0.06] border border-transparent text-slate-300 cursor-pointer">🔇 خاموش</button>
               <button type="button" data-ambient="rain" class="ambient-chip spring-btn text-[10px] font-semibold py-1 rounded-xl bg-white/[0.06] border border-transparent text-slate-300 cursor-pointer">🌧️ باران</button>
@@ -1712,7 +1668,6 @@
             </div>
           </section>
 
-          <!-- کارت یادداشت سریع (Saved Notes شبیه پیام‌های ذخیره‌شده تلگرام) -->
           <section id="quick-notes-card" class="liquid-glass rounded-3xl p-3.5 flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1.5">
@@ -1745,7 +1700,6 @@
       </div>
     </div>
 
-    <!-- ==================== TAB 2: تمرکز عمیق ==================== -->
     <div id="tab-view-focus" class="tab-view hidden is-tab-hidden max-w-lg mx-auto">
       <section class="liquid-glass rounded-3xl p-6 flex flex-col items-center text-center gap-4">
         <span class="text-xs font-bold px-3 py-1 rounded-full bg-[#7fd5d8]/15 text-[#7fd5d8]">
@@ -1756,7 +1710,6 @@
           یک تسک را برای تمرکز انتخاب کن
         </h2>
 
-        <!-- حلقه تایمر دایره‌ای -->
         <div class="relative w-48 h-48 flex items-center justify-center my-1">
           <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(147,163,165,0.18)" stroke-width="7" />
@@ -1787,7 +1740,6 @@
           <button type="button" data-focus-min="60" data-chip-size="page" class="focus-min-chip spring-btn ltr font-mono text-xs font-bold px-3.5 py-1.5 rounded-full bg-white/10 text-slate-200 cursor-pointer">60m</button>
         </div>
 
-        <!-- انتخاب صدای پس‌زمینه تمرکز -->
         <div class="w-full max-w-sm flex flex-col gap-1.5 pt-1">
           <span class="text-[11px] text-[#93a3a5]">صدای محیطی تمرکز (آفلاین):</span>
           <div class="grid grid-cols-4 gap-1.5" role="group" aria-label="صدای پس‌زمینه">
@@ -1817,9 +1769,7 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 3: آمار و نمودار پیشرفت ==================== -->
     <div id="tab-view-stats" class="tab-view hidden is-tab-hidden max-w-3xl mx-auto flex flex-col gap-3.5">
-      <!-- کارت نمودار راداری هوشمند ابعاد رشد شخصی -->
       <section class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col gap-3.5">
         <div class="flex items-center justify-between gap-2">
           <div>
@@ -1834,7 +1784,6 @@
           </span>
         </div>
 
-        <!-- بوم نمودار راداری الماسی ۴ محوره -->
         <div class="radar-stage-box p-3 sm:p-4">
           <div class="relative w-full max-w-[340px] h-[270px] mx-auto select-none">
             <svg id="smart-radar-svg" viewBox="0 0 340 270" class="w-full h-full overflow-visible" aria-label="نمودار راداری ذهن، کارایی، انضباط و جسم">
@@ -1852,17 +1801,14 @@
                 </filter>
               </defs>
 
-              <!-- شبکه‌های لوزی هم‌مرکز (۲۵٪، ۵۰٪، ۷۵٪، ۱۰۰٪) -->
               <polygon points="170,51 254,135 170,219 86,135" fill="none" class="radar-grid-line" stroke-width="1" />
               <polygon points="170,72 233,135 170,198 107,135" fill="none" class="radar-grid-line" stroke-width="1" />
               <polygon points="170,93 212,135 170,177 128,135" fill="none" class="radar-grid-line" stroke-width="1" />
               <polygon points="170,114 191,135 170,156 149,135" fill="none" class="radar-grid-line" stroke-width="1" />
 
-              <!-- محورهای نقطه‌چین عمودی و افقی -->
               <line x1="170" y1="51" x2="170" y2="219" class="radar-grid-line" stroke-width="1" stroke-dasharray="3.5 3.5" />
               <line x1="86" y1="135" x2="254" y2="135" class="radar-grid-line" stroke-width="1" stroke-dasharray="3.5 3.5" />
 
-              <!-- چندضلعی درخشان پیشرفت کاربر -->
               <polygon
                 id="smart-radar-polygon"
                 points="170,95 210,135 170,175 130,135"
@@ -1873,7 +1819,6 @@
                 filter="url(#radarNeonGlow)"
               />
 
-              <!-- گره‌های دایره‌ای درخشان روی ۴ محور -->
               <g id="radar-node-group-mind">
                 <circle id="radar-halo-mind" cx="170" cy="95" r="9.5" fill="var(--mint-accent)" fill-opacity="0.22" />
                 <circle id="radar-node-mind" cx="170" cy="95" r="5" class="radar-node-core" />
@@ -1892,7 +1837,6 @@
               </g>
             </svg>
 
-            <!-- برچسب‌های ۴ محور اطراف نمودار -->
             <button
               type="button"
               data-radar-axis="mind"
@@ -1933,7 +1877,6 @@
           </div>
         </div>
 
-        <!-- تحلیل هوشمند و تفکیک کارهای مؤثر بر هر بُعد -->
         <div id="radar-insight-box" class="rounded-2xl bg-[#12191b]/90 border border-white/10 p-3 flex flex-col gap-2">
           <div class="flex items-center justify-between gap-2">
             <span id="radar-insight-title" class="text-xs font-bold text-[#7fd5d8]">تحلیل هوشمند الگوریتم</span>
@@ -1967,7 +1910,6 @@
         </div>
       </div>
 
-      <!-- نمودار پیشرفت ۷ روز گذشته -->
       <section class="liquid-glass rounded-3xl p-4 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <div>
@@ -1985,11 +1927,8 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 4: تنظیمات تلگرامی ==================== -->
     <div id="tab-view-settings" class="tab-view hidden is-tab-hidden max-w-2xl mx-auto">
-      <!-- نمای اصلی تنظیمات -->
       <div id="tg-settings-main" class="flex flex-col gap-4">
-        <!-- نوار کپسولی بالای تنظیمات -->
         <div class="flex items-center justify-between">
           <button
             id="tg-top-sync-btn"
@@ -2037,7 +1976,6 @@
           </div>
         </div>
 
-        <!-- هدر پروفایل وسط‌چین شبیه تلگرام -->
         <div class="flex flex-col items-center text-center pt-1 pb-2">
           <button
             id="tg-profile-avatar-btn"
@@ -2060,7 +1998,6 @@
           <p id="tg-profile-bio-display" class="text-xs text-[#93a3a5] mt-0.5">تمرکز عمیق و پیشرفت روزانه</p>
         </div>
 
-        <!-- گروه ۱: حساب و شخصی‌سازی -->
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حساب و شخصی‌سازی</span>
           <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
@@ -2096,7 +2033,6 @@
           </div>
         </div>
 
-        <!-- گروه ۲: تمرکز و رفتار هوشمند -->
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">تمرکز و رفتار هوشمند</span>
           <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
@@ -2177,7 +2113,6 @@
           </div>
         </div>
 
-        <!-- گروه ۳: حریم خصوصی، داده‌ها و عملکرد -->
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حریم خصوصی، داده‌ها و عملکرد</span>
           <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
@@ -2263,7 +2198,6 @@
         </p>
       </div>
 
-      <!-- زیرصفحه اختصاصی ظاهر و تم رنگی شبیه Chat Settings تلگرام -->
       <div id="tg-appearance-subpage" class="hidden flex-col gap-4">
         <div class="flex items-center justify-between">
           <button
@@ -2278,7 +2212,6 @@
           <span class="w-16"></span>
         </div>
 
-        <!-- کارت پیش‌نمایش زنده -->
         <div class="liquid-glass rounded-3xl p-4 flex flex-col gap-3">
           <span class="text-[11px] font-bold text-[#7fd5d8]">پیش‌نمایش زنده رابط کاربری</span>
           <div class="rounded-2xl p-3 bg-black/15 border border-white/10 flex flex-col gap-2.5">
@@ -2300,7 +2233,6 @@
           </div>
         </div>
 
-        <!-- کارت انتخاب تم رنگی و تغییر حالت روز / شب -->
         <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
           <div class="p-4 flex flex-col gap-3">
             <span class="text-xs font-bold text-[#7fd5d8]">تم رنگی (Color Theme)</span>
@@ -2336,7 +2268,6 @@
           </button>
         </div>
 
-        <!-- اسلایدر انحنای گوشه کارت‌ها -->
         <div class="liquid-glass rounded-3xl p-4 flex flex-col gap-2.5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-[#7fd5d8]">انحنای گوشه کارت‌ها (Card Corners)</span>
@@ -2355,7 +2286,6 @@
     </div>
   </main>
 
-  <!-- ==================== نوار تب‌های پایین تلگرامی + دکمه + (مخصوص موبایل) ==================== -->
   <nav class="tg-bottom-dock" aria-label="ناوبری اصلی">
     <div class="tg-nav-pill">
       <div id="tg-nav-indicator" class="tg-nav-indicator">
@@ -2399,7 +2329,7 @@
     </button>
   </nav>
 
-  <!-- ==================== MODAL 1: PROFILE & AVATAR ==================== -->
+  <!-- ==================== MODALS ==================== -->
   <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between">
@@ -2448,7 +2378,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: SYNC & BACKUP ==================== -->
   <div id="sync-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-3.5">
       <div class="flex items-center justify-between">
@@ -2483,7 +2412,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: CLEANUP ==================== -->
   <div id="cleanup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-sm p-5 flex flex-col gap-3">
       <div class="flex items-center justify-between">
@@ -2501,7 +2429,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 4: TASK EDITOR & SUBTASKS SHEET (مخصوص موبایل) ==================== -->
   <div id="task-edit-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div data-sheet-handle class="sm:hidden pt-0.5 pb-1.5 -mt-2 cursor-grab active:cursor-grabbing touch-none flex justify-center">
@@ -2558,7 +2485,6 @@
           </button>
         </div>
 
-        <!-- بخش مراحل فرعی (Subtasks) -->
         <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-[#7fd5d8]">مراحل فرعی (چک‌لیست)</span>
@@ -2598,7 +2524,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 5: CUSTOM FOLDERS MANAGER ==================== -->
   <div id="folders-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center justify-between">
@@ -2636,7 +2561,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 6: TELEGRAM-STYLE TASK & SUBTASKS COMPOSER ==================== -->
   <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-4 sm:p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto">
       <div data-sheet-handle class="pt-0.5 pb-1.5 -mt-1.5 cursor-grab active:cursor-grabbing touch-none flex justify-center">
@@ -2644,7 +2568,6 @@
       </div>
 
       <form id="task-composer-form" action="javascript:void(0)" class="flex flex-col gap-3.5">
-        <!-- کارت ۱: عنوان کار اصلی و توضیحات -->
         <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
           <div class="flex items-center justify-between px-4 pt-3.5 pb-2">
             <div class="flex items-center gap-2">
@@ -2696,7 +2619,6 @@
 
           <div class="border-t border-white/[0.08] mx-4"></div>
 
-          <!-- نوار پیش‌نمایش تشخیص هوشمند محور رشد -->
           <div class="px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.02]">
             <span class="text-[11px] text-[#93a3a5] shrink-0">تشخیص هوشمند رشد:</span>
             <div id="composer-smart-detect-badges" class="flex items-center gap-1 flex-wrap justify-end">
@@ -2705,7 +2627,6 @@
           </div>
         </div>
 
-        <!-- کارت ۲: زیرکارها / ریزکارها -->
         <div class="flex flex-col gap-1.5">
           <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
             <div class="px-4 pt-3.5 pb-1.5 flex items-center justify-between">
@@ -2729,7 +2650,6 @@
           </p>
         </div>
 
-        <!-- کارت ۳: تنظیمات کار -->
         <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden divide-y divide-white/[0.07]">
           <div class="px-4 pt-3 pb-1">
             <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
@@ -2799,7 +2719,6 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 7: DESKTOP & KEYBOARD COMMAND PALETTE (Ctrl + K) ==================== -->
   <div id="command-palette-modal" class="fixed inset-0 z-50 hidden items-start justify-center pt-16 sm:pt-24 p-4 bg-black/70 backdrop-blur-md">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-lg overflow-hidden border border-white/15 shadow-2xl">
       <div class="flex items-center gap-2.5 px-4 py-3.5 border-b border-white/10">
@@ -2966,7 +2885,6 @@
       draftPhotoDataUrl: '',
     };
 
-    /* ==================== ابزارهای کمکی فارسی و تاریخ ==================== */
     function toPersianDigits(val) {
       const map = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
       return String(val).replace(/\d/g, (d) => map[Number(d)]);
@@ -3060,7 +2978,6 @@
       return result;
     }
 
-    /* ==================== ذخیره‌سازی آفلاین امن ==================== */
     function getDefaultSampleTasks() {
       const now = Date.now();
       return [
@@ -3216,7 +3133,6 @@
       saveState();
     }
 
-    /* ==================== پوشه‌ها و تم ظاهر ==================== */
     function getAllFolders() {
       return [...DEFAULT_FOLDERS, ...state.customFolders];
     }
@@ -3250,6 +3166,13 @@
       if (themeMeta) {
         themeMeta.setAttribute('content', activeBg);
       }
+
+      // همگام‌سازی خودکار رنگ آیکون‌های نوار بالا و ژست پایین در اپلیکیشن بومی اندروید
+      try {
+        if (window.AndroidNative && typeof window.AndroidNative.setSystemBarTheme === 'function') {
+          window.AndroidNative.setSystemBarTheme(isLight);
+        }
+      } catch (e) {}
 
       const palette = ACCENT_PALETTES[state.accentTheme] || ACCENT_PALETTES.mint;
       const root = document.documentElement;
@@ -3288,7 +3211,6 @@
       });
     }
 
-    /* ==================== موتور صدای لمسی و صدای محیطی تمرکز ==================== */
     function ensureAudioContext() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -3452,7 +3374,6 @@
       }
     }
 
-    /* ==================== داینامیک آیلند هوشمند و تایمر تمرکز ==================== */
     function getSmartFocusCandidate() {
       const current = state.tasks.find((t) => t.id === state.focusedTaskId);
       if (current && !current.completed) return current;
@@ -3669,7 +3590,6 @@
       playTactileSound('pop');
     }
 
-    /* ==================== هدر، پیشرفت، ویجت‌های دسکتاپ و یادداشت سریع ==================== */
     function renderAvatarInto(el) {
       if (!el) return;
       if (state.profile.photoDataUrl) {
@@ -4011,7 +3931,6 @@
       document.getElementById('open-folders-chip-btn')?.addEventListener('click', openFoldersModal);
     }
 
-    /* ==================== مدیریت تسک‌ها، زیرکارها و کشیدن کارت ==================== */
     function addTask(title, options = {}) {
       const clean = String(title || '').trim();
       if (!clean) return;
@@ -4412,7 +4331,6 @@
         })
         .join('');
 
-      // اتصال رویدادهای لمسی، کلیکی و کشیدن ماوس روی کارت‌ها
       container.querySelectorAll('.task-card').forEach((card) => {
         const taskId = card.dataset.taskId;
         const slot = card.closest('.task-swipe-slot');
@@ -4588,7 +4506,6 @@
       });
     }
 
-    /* ==================== بازرس زنده تسک در دسکتاپ (Contextual Live Inspector) ==================== */
     function openDesktopInspector(taskId) {
       const task = state.tasks.find((t) => t.id === taskId);
       if (!task) return;
@@ -4728,7 +4645,6 @@
       }
     }
 
-    /* ==================== موتور تشخیص هوشمند ابعاد رشد (ذهن، کارایی، انضباط، جسم) ==================== */
     function analyzeTaskSmartDimensions(task) {
       const subTexts = Array.isArray(task?.subtasks) ? task.subtasks.map((s) => s.title || '').join(' ') : '';
       const rawCorpus = `${task?.title || ''} ${task?.description || ''} ${subTexts} ${task?.category || ''}`.toLowerCase();
@@ -4987,7 +4903,6 @@
       animateRadarPolygon(scores);
     }
 
-    /* ==================== رندر تب‌های فرعی (آمار و تنظیمات) ==================== */
     function renderSecondaryTabViews() {
       const done = state.tasks.filter((t) => t.completed).length;
       const active = state.tasks.length - done;
@@ -5001,7 +4916,6 @@
 
       renderSmartRadarChart();
 
-      // نمودار ۷ روز گذشته
       const daysMeta = getRecent7DaysMeta();
       const maxCount = Math.max(1, ...daysMeta.map((d) => d.count));
       const weekTotal = daysMeta.reduce((sum, d) => sum + d.count, 0);
@@ -5028,7 +4942,6 @@
           .join('');
       }
 
-      // تفکیک پوشه‌ها در تب آمار
       const catList = document.getElementById('category-breakdown-list');
       if (catList) {
         catList.innerHTML = getAllFolders()
@@ -5051,7 +4964,6 @@
           .join('');
       }
 
-      // همگام‌سازی مقادیر تنظیمات تلگرامی
       const tgName = document.getElementById('tg-profile-name-display');
       const tgBio = document.getElementById('tg-profile-bio-display');
       if (tgName) tgName.textContent = state.profile.name || 'دوست من';
@@ -5149,7 +5061,6 @@
       playTactileSound('pop');
     }
 
-    /* ==================== مودال‌ها، سازنده تلگرامی کار و پنجره فرمان سریع ==================== */
     const modalCloseTimers = new Map();
 
     function resetSheetInlineStyles(modalEl) {
@@ -5292,7 +5203,6 @@
       sheet.addEventListener('touchcancel', finishDrag);
     }
 
-    /* ==================== مودال پروفایل و آواتار ==================== */
     function updateProfileModalPreview() {
       const previewEl = document.getElementById('profile-modal-preview');
       const removeBtn = document.getElementById('remove-avatar-photo-btn');
@@ -5325,7 +5235,6 @@
       openModal('profile-modal');
     }
 
-    /* ==================== مودال پشتیبان‌گیری و کد انتقال آفلاین ==================== */
     function encodeSyncCode(dataObj) {
       const jsonStr = JSON.stringify(dataObj);
       const bytes = new TextEncoder().encode(jsonStr);
@@ -5380,6 +5289,13 @@
     function exportBackupJsonFile() {
       const dataStr = memoryFallbackStorage || JSON.stringify({ tasks: state.tasks }, null, 2);
       const fileName = `daily-flow-backup-${getTodayKey()}.json`;
+
+      if (window.AndroidNative && typeof window.AndroidNative.shareBackupText === 'function') {
+        window.AndroidNative.shareBackupText(fileName, dataStr);
+        triggerIslandToast('💾', 'پنجره ذخیره پشتیبان باز شد');
+        return;
+      }
+
       try {
         const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -5392,23 +5308,11 @@
         setTimeout(() => URL.revokeObjectURL(url), 1200);
         triggerIslandToast('💾', 'فایل پشتیبان JSON دانلود شد');
       } catch (e) {
-        try {
-          const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-          const fallbackLink = document.createElement('a');
-          fallbackLink.href = dataUri;
-          fallbackLink.download = fileName;
-          document.body.appendChild(fallbackLink);
-          fallbackLink.click();
-          fallbackLink.remove();
-          triggerIslandToast('💾', 'فایل پشتیبان JSON آماده شد');
-        } catch (err) {
-          openSyncModal();
-          triggerIslandToast('📋', 'از گزینه «کپی کد انتقال» استفاده کن');
-        }
+        openSyncModal();
+        triggerIslandToast('📋', 'از گزینه «کپی کد انتقال» استفاده کن');
       }
     }
 
-    /* ==================== مودال ویرایش کار و مراحل فرعی (موبایل) ==================== */
     function renderTaskEditModalControls() {
       const task = state.tasks.find((t) => t.id === state.editingTaskId);
       if (!task) return;
@@ -5537,7 +5441,6 @@
       playTactileSound('pop');
     }
 
-    /* ==================== مودال مدیریت پوشه‌های سفارشی ==================== */
     function renderCustomFoldersManageList() {
       const listEl = document.getElementById('custom-folders-manage-list');
       if (!listEl) return;
@@ -5588,7 +5491,6 @@
       openModal('folders-modal');
     }
 
-    /* ==================== پنجره ایجاد کار جدید (Telegram-Style Task Composer) ==================== */
     function updateComposerSmartBadges() {
       const badgesEl = document.getElementById('composer-smart-detect-badges');
       const titleInput = document.getElementById('composer-title-input');
@@ -5738,7 +5640,6 @@
       }
     }
 
-    /* ==================== پنجره فرمان سریع (Ctrl + K Command Palette) ==================== */
     function renderCommandPaletteList(queryText = '') {
       const listEl = document.getElementById('command-palette-list');
       if (!listEl) return;
@@ -5857,10 +5758,10 @@
       setTimeout(() => input?.focus(), 60);
     }
 
-    /* ==================== مدیریت هوشمند دکمه بازگشت اندروید (خروج فوری در صفحه اصلی بدون نیاز به دوبار زدن) ==================== */
     function setupAndroidBackButtonHandler() {
       let hasBackLayer = false;
       let ignoreNextPop = false;
+      const isNativeWrapper = Boolean(window.AndroidNative);
 
       const orderedModals = [
         'command-palette-modal',
@@ -5890,6 +5791,7 @@
       };
 
       const syncBackLayerState = () => {
+        if (isNativeWrapper) return;
         const shouldHaveLayer = isAnyLayerOpen();
         if (shouldHaveLayer && !hasBackLayer) {
           hasBackLayer = true;
@@ -5948,6 +5850,8 @@
         return false;
       };
 
+      window.__handleNativeBack = () => handleHardwareBackAction();
+
       window.addEventListener('popstate', () => {
         if (ignoreNextPop) {
           ignoreNextPop = false;
@@ -5965,17 +5869,10 @@
         if (consumed) {
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
           syncBackLayerState();
-        } else {
-          try {
-            if (navigator.app && typeof navigator.app.exitApp === 'function') {
-              navigator.app.exitApp();
-            }
-          } catch (err) {}
         }
       });
     }
 
-    /* ==================== همگام‌سازی کامل با رزولوشن 1080×2400 و کیبورد تمام‌صفحه ==================== */
     function setupFullScreenViewportSync() {
       const root = document.documentElement;
       const syncViewport = () => {
@@ -6007,7 +5904,6 @@
       });
     }
 
-    /* ==================== ثبت سرویس‌ورکر آفلاین برای اجرا در حالت قطع کامل اینترنت ==================== */
     function registerOfflineServiceWorker() {
       if (!('serviceWorker' in navigator)) return;
       if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
@@ -6016,7 +5912,6 @@
       });
     }
 
-    /* ==================== راه‌اندازی اولیه و اتصال تمام رویدادها ==================== */
     function initApp() {
       loadState();
       applyThemePreferences();
@@ -6029,7 +5924,6 @@
       setupAndroidBackButtonHandler();
       registerOfflineServiceWorker();
 
-      // تعاملات داینامیک آیلند (باز کردن، بستن با کلیک بیرون یا کشیدن به بالا، کنترل تایمر و تیک سریع)
       const islandEl = document.getElementById('dynamic-island');
       if (islandEl) {
         let islandTouchStartY = 0;
@@ -6133,7 +6027,6 @@
         setIslandMode('idle');
       });
 
-      // انتخابگر مدت زمان تایمر و صداهای محیطی
       document.querySelectorAll('.focus-min-chip').forEach((chip) => {
         chip.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -6159,7 +6052,6 @@
       });
       document.getElementById('desktop-focus-reset-btn')?.addEventListener('click', resetFocusTimer);
 
-      // رها کردن کارت تسک روی ویجت تمرکز دسکتاپ
       const dropzone = document.getElementById('desktop-focus-dropzone');
       if (dropzone) {
         dropzone.addEventListener('dragover', (e) => {
@@ -6177,14 +6069,12 @@
         });
       }
 
-      // ناوبری تب‌ها (موبایل و دسکتاپ)
       document.querySelectorAll('.tg-nav-btn, .rail-nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           if (btn.dataset.tab) switchTab(btn.dataset.tab);
         });
       });
 
-      // دکمه‌های افزودن کار جدید و ریل دسکتاپ
       document.getElementById('fab-quick-add-btn')?.addEventListener('click', openTaskComposer);
       document.getElementById('rail-new-task-btn')?.addEventListener('click', openTaskComposer);
       document.getElementById('rail-avatar-btn')?.addEventListener('click', openProfileModal);
@@ -6197,7 +6087,6 @@
         playTactileSound('pop');
       });
 
-      // دکمه‌های سریع هدر (حریم خصوصی و صدا)
       document.getElementById('privacy-quick-btn')?.addEventListener('click', () => {
         state.privacyBlur = !state.privacyBlur;
         saveState();
@@ -6214,7 +6103,6 @@
         if (state.soundEnabled) playTactileSound('pop');
       });
 
-      // جستجو و فیلترها
       const searchInput = document.getElementById('search-tasks-input');
       const clearSearchBtn = document.getElementById('clear-search-btn');
       searchInput?.addEventListener('input', () => {
@@ -6267,7 +6155,6 @@
       document.getElementById('clear-completed-btn')?.addEventListener('click', handleClearCompleted);
       document.getElementById('clear-completed-desktop-btn')?.addEventListener('click', handleClearCompleted);
 
-      // بازرس زنده دسکتاپ
       document.getElementById('close-desktop-inspector-btn')?.addEventListener('click', closeDesktopInspector);
       document.getElementById('inspector-focus-btn')?.addEventListener('click', () => {
         if (state.inspectedTaskId) setFocusedTask(state.inspectedTaskId);
@@ -6346,7 +6233,6 @@
         }
       });
 
-      // یادداشت سریع
       document.getElementById('quick-note-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         const inp = document.getElementById('quick-note-input');
@@ -6355,7 +6241,6 @@
         inp.value = '';
       });
 
-      // نمودار راداری هوشمند
       document.querySelectorAll('.radar-axis-pill').forEach((btn) => {
         btn.addEventListener('click', () => {
           const axis = btn.dataset.radarAxis;
@@ -6371,7 +6256,6 @@
         playTactileSound('pop');
       });
 
-      // تنظیمات تلگرامی
       document.getElementById('tg-top-sync-btn')?.addEventListener('click', openSyncModal);
       document.getElementById('tg-row-storage')?.addEventListener('click', openSyncModal);
       document.getElementById('tg-top-export-btn')?.addEventListener('click', exportBackupJsonFile);
@@ -6491,7 +6375,6 @@
         playTactileSound('pop');
       });
 
-      // فرم پروفایل
       document.getElementById('close-profile-modal')?.addEventListener('click', () => closeModal('profile-modal'));
       document.querySelectorAll('.avatar-choice-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -6547,7 +6430,6 @@
         triggerIslandToast('✨', 'پروفایل شما به‌روزرسانی شد');
       });
 
-      // فرم انتقال و پشتیبان‌گیری
       document.getElementById('close-sync-modal')?.addEventListener('click', () => closeModal('sync-modal'));
       document.getElementById('copy-sync-code-btn')?.addEventListener('click', () => {
         const box = document.getElementById('sync-code-box');
@@ -6609,7 +6491,6 @@
         }
       });
 
-      // فرم پاک‌سازی داده‌ها
       document.getElementById('close-cleanup-modal')?.addEventListener('click', () => closeModal('cleanup-modal'));
       document.getElementById('cleanup-completed-action')?.addEventListener('click', () => {
         handleClearCompleted();
@@ -6627,7 +6508,6 @@
         triggerIslandToast('🔄', 'تسک‌های نمونه بازیابی شدند');
       });
 
-      // فرم ویرایش کار موبایل
       document.getElementById('close-task-edit-modal')?.addEventListener('click', () => closeModal('task-edit-modal'));
       document.getElementById('edit-task-urgent-btn')?.addEventListener('click', () => {
         state.draftEditUrgent = !state.draftEditUrgent;
@@ -6671,7 +6551,6 @@
         triggerIslandToast('✅', 'تغییرات کار ذخیره شد');
       });
 
-      // فرم مدیریت پوشه‌های سفارشی
       document.getElementById('close-folders-modal')?.addEventListener('click', () => closeModal('folders-modal'));
       document.querySelectorAll('.folder-emoji-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
@@ -6700,7 +6579,6 @@
         triggerIslandToast('📁', `پوشه «${name}» ساخته شد`);
       });
 
-      // فرم سازنده کار جدید (Task Composer)
       document.getElementById('close-composer-modal')?.addEventListener('click', () => closeModal('task-composer-modal'));
       document.getElementById('composer-title-input')?.addEventListener('input', updateComposerSmartBadges);
       document.getElementById('composer-desc-input')?.addEventListener('input', updateComposerSmartBadges);
@@ -6764,7 +6642,6 @@
         closeModal('task-composer-modal');
       });
 
-      // پنجره فرمان سریع (Command Palette)
       const cmdInput = document.getElementById('command-palette-input');
       cmdInput?.addEventListener('input', () => {
         cmdSelectedIndex = 0;
@@ -6791,7 +6668,6 @@
         }
       });
 
-      // بستن مودال‌ها با کلیک روی پس‌زمینه و ژست کشیدن به پایین در موبایل
       [
         'profile-modal',
         'sync-modal',
@@ -6810,7 +6686,6 @@
       setupSheetSwipeToClose('task-composer-modal');
       setupSheetSwipeToClose('task-edit-modal');
 
-      // میانبرهای کیبورد سراسری
       document.addEventListener('keydown', (e) => {
         const tag = (e.target?.tagName || '').toLowerCase();
         const isTyping = tag === 'input' || tag === 'textarea';
