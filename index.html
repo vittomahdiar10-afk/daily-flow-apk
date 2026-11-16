@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" id="meta-theme-color" content="#0b1012" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Daily Flow" />
+  <meta name="application-name" content="Daily Flow" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
   <title>Daily Flow — برنامه‌ریز روزانه شیشه‌ای</title>
   <script>
     /* موتور سبک و خودکار آفلاین (Offline CSS Self-Caching Engine) */
@@ -45,6 +51,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
+      color-scheme: dark;
       --mint-accent: #7fd5d8;
       --mint-accent-strong: #4ebec2;
       --mint-accent-rgb: 127, 213, 216;
@@ -60,6 +67,7 @@
       --specular-edge: rgba(255, 255, 255, 0.16);
       --text-main: #f4f7f7;
       --text-muted: #93a3a5;
+      --scrim-bg: rgba(11, 16, 18, 0.68);
       --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.92) 0%, rgba(15, 21, 23, 0.95) 100%);
       --island-border: rgba(255, 255, 255, 0.1);
       --island-shadow:
@@ -75,6 +83,7 @@
     }
 
     body.theme-light {
+      color-scheme: light;
       --bg-primary: #eef3f5;
       --bg-elevated: #ffffff;
       --bg-input: #f4f7f8;
@@ -85,6 +94,7 @@
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
       --text-muted: #5b6b73;
+      --scrim-bg: rgba(238, 243, 245, 0.72);
       --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(246, 250, 251, 0.96) 100%);
       --island-border: rgba(15, 23, 42, 0.08);
       --island-shadow:
@@ -164,6 +174,22 @@
       background:
         radial-gradient(circle at 18% 12%, rgba(var(--mint-accent-rgb), 0.12) 0%, transparent 42%),
         radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 46%);
+    }
+
+    /* لایه شیشه‌ای شفاف بالای صفحه پشت ساعت و باتری گوشی (Edge-to-Edge Frosted Scrim) */
+    .status-bar-scrim {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(18px + env(safe-area-inset-top, 0px));
+      z-index: 44;
+      pointer-events: none;
+      background: var(--scrim-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
     }
 
     .liquid-glass {
@@ -1127,6 +1153,7 @@
 </head>
 <body>
   <div class="ambient-backdrop" aria-hidden="true"></div>
+  <div class="status-bar-scrim" aria-hidden="true"></div>
 
   <!-- ==================== داینامیک آیلند هوشمند شناور بالای صفحه ==================== -->
   <header class="island-stage">
@@ -5765,7 +5792,7 @@
       setTimeout(() => input?.focus(), 60);
     }
 
-    /* ==================== مدیریت هوشمند دکمه بازگشت سخت‌افزاری اندروید (APK WebView) ==================== */
+    /* ==================== مدیریت هوشمند دکمه بازگشت سخت‌افزاری اندروید ==================== */
     function setupAndroidBackButtonHandler() {
       let lastRootBackPressAt = 0;
 
@@ -5870,6 +5897,15 @@
       });
     }
 
+    /* ==================== ثبت سرویس‌ورکر آفلاین برای اجرا در حالت قطع کامل اینترنت ==================== */
+    function registerOfflineServiceWorker() {
+      if (!('serviceWorker' in navigator)) return;
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+      });
+    }
+
     /* ==================== راه‌اندازی اولیه و اتصال تمام رویدادها ==================== */
     function initApp() {
       loadState();
@@ -5880,6 +5916,7 @@
       updateFocusUI();
       updateHeaderAndProgress();
       setupAndroidBackButtonHandler();
+      registerOfflineServiceWorker();
 
       // تعاملات داینامیک آیلند (باز کردن، بستن با کلیک بیرون یا کشیدن به بالا، کنترل تایمر و تیک سریع)
       const islandEl = document.getElementById('dynamic-island');
