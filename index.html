@@ -52,7 +52,7 @@
   <style>
     :root {
       color-scheme: dark;
-      --app-viewport-height: 100dvh;
+      --app-viewport-height: 100lvh;
       --keyboard-offset: 0px;
       --mint-accent: #7fd5d8;
       --mint-accent-strong: #4ebec2;
@@ -118,8 +118,8 @@
 
     html {
       width: 100%;
-      height: 100%;
       min-height: 100%;
+      min-height: 100lvh;
       background-color: #0b1012;
       overflow-x: clip;
       scroll-behavior: smooth;
@@ -130,8 +130,7 @@
       margin: 0;
       width: 100%;
       min-height: 100vh;
-      min-height: 100dvh;
-      min-height: -webkit-fill-available;
+      min-height: 100lvh;
       font-family: 'Vazirmatn', 'Tahoma', system-ui, -apple-system, sans-serif;
       background-color: var(--bg-primary);
       color: var(--text-main);
@@ -150,7 +149,7 @@
     }
 
     .app-safe-main {
-      min-height: var(--app-viewport-height);
+      min-height: 100lvh;
       padding-top: calc(4.85rem + env(safe-area-inset-top, 0px));
       padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px) + var(--keyboard-offset));
     }
@@ -185,16 +184,13 @@
       scrollbar-width: none;
     }
 
-    /* پس‌زمینه شیشه‌ای ملایم تمام‌صفحه (پوشش کامل 1080×2400) */
+    /* پس‌زمینه شیشه‌ای ملایم قفل‌شده روی کل ارتفاع فیزیکی صفحه (100lvh) */
     .ambient-backdrop {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
-      height: 100dvh;
+      height: 100lvh;
       pointer-events: none;
       z-index: 0;
       background:
@@ -3247,6 +3243,7 @@
       const activeBg = isLight ? '#eef3f5' : '#0b1012';
       document.body.classList.toggle('theme-light', isLight);
       document.documentElement.style.backgroundColor = activeBg;
+      document.body.style.backgroundColor = activeBg;
 
       const themeMeta = document.getElementById('meta-theme-color');
       if (themeMeta) {

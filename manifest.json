@@ -10,8 +10,8 @@
   "orientation": "portrait",
   "dir": "rtl",
   "lang": "fa",
-  "background_color": "#eef3f5",
-  "theme_color": "#eef3f5",
+  "background_color": "#0b1012",
+  "theme_color": "#0b1012",
   "categories": ["productivity", "utilities"],
   "icons": [
     {
