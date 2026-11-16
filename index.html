@@ -52,6 +52,8 @@
   <style>
     :root {
       color-scheme: dark;
+      --app-viewport-height: 100dvh;
+      --keyboard-offset: 0px;
       --mint-accent: #7fd5d8;
       --mint-accent-strong: #4ebec2;
       --mint-accent-rgb: 127, 213, 216;
@@ -115,6 +117,8 @@
     }
 
     html {
+      width: 100%;
+      height: 100%;
       min-height: 100%;
       background-color: #0b1012;
       overflow-x: clip;
@@ -124,8 +128,10 @@
 
     body {
       margin: 0;
+      width: 100%;
       min-height: 100vh;
       min-height: 100dvh;
+      min-height: -webkit-fill-available;
       font-family: 'Vazirmatn', 'Tahoma', system-ui, -apple-system, sans-serif;
       background-color: var(--bg-primary);
       color: var(--text-main);
@@ -144,8 +150,9 @@
     }
 
     .app-safe-main {
-      padding-top: calc(5rem + env(safe-area-inset-top, 0px));
-      padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+      min-height: var(--app-viewport-height);
+      padding-top: calc(4.85rem + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px) + var(--keyboard-offset));
     }
 
     @media (min-width: 1024px) {
@@ -153,6 +160,16 @@
         padding-top: calc(5.5rem + env(safe-area-inset-top, 0px));
         padding-bottom: 3rem;
       }
+    }
+
+    /* تطبیق ارتفاع مودال‌ها هنگام باز شدن کیبورد در حالت تمام‌صفحه 1080×2400 */
+    [id$="-modal"] {
+      height: var(--app-viewport-height);
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    [id$="-modal"] .sheet-animate {
+      max-height: calc(var(--app-viewport-height) - 1.5rem - env(safe-area-inset-top, 0px));
     }
 
     .ltr {
@@ -168,10 +185,16 @@
       scrollbar-width: none;
     }
 
-    /* پس‌زمینه شیشه‌ای ملایم */
+    /* پس‌زمینه شیشه‌ای ملایم تمام‌صفحه (پوشش کامل 1080×2400) */
     .ambient-backdrop {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       pointer-events: none;
       z-index: 0;
       background:
@@ -5919,6 +5942,38 @@
       });
     }
 
+    /* ==================== همگام‌سازی کامل با رزولوشن 1080×2400 و کیبورد تمام‌صفحه ==================== */
+    function setupFullScreenViewportSync() {
+      const root = document.documentElement;
+      const syncViewport = () => {
+        const vv = window.visualViewport;
+        const height = vv ? Math.round(vv.height) : window.innerHeight;
+        const keyboardHeight = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+        root.style.setProperty('--app-viewport-height', `${height}px`);
+        root.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+      };
+
+      syncViewport();
+      window.addEventListener('resize', syncViewport, { passive: true });
+      window.addEventListener('orientationchange', () => setTimeout(syncViewport, 120), { passive: true });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncViewport, { passive: true });
+        window.visualViewport.addEventListener('scroll', syncViewport, { passive: true });
+      }
+
+      document.addEventListener('focusin', (e) => {
+        const target = e.target;
+        if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+        setTimeout(() => {
+          syncViewport();
+          try {
+            target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } catch (err) {}
+        }, 260);
+      });
+    }
+
     /* ==================== ثبت سرویس‌ورکر آفلاین برای اجرا در حالت قطع کامل اینترنت ==================== */
     function registerOfflineServiceWorker() {
       if (!('serviceWorker' in navigator)) return;
@@ -5937,6 +5992,7 @@
       renderQuickNotes();
       updateFocusUI();
       updateHeaderAndProgress();
+      setupFullScreenViewportSync();
       setupAndroidBackButtonHandler();
       registerOfflineServiceWorker();
 
