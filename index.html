@@ -2834,6 +2834,7 @@
     let cmdSelectedIndex = 0;
     let currentCmdItems = [];
     let draggedTaskId = null;
+    let syncBackLayerCallback = null;
 
     const DEFAULT_FOLDERS = [
       { name: 'شخصی', emoji: '✨', builtIn: true },
@@ -3494,6 +3495,10 @@
       idleLayer.classList.toggle('is-hidden', mode !== 'idle');
       toastLayer.classList.toggle('is-hidden', mode !== 'toast');
       expandedLayer.classList.toggle('is-hidden', mode !== 'expanded');
+
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
     }
 
     function triggerIslandToast(icon, text, actionOptions = false) {
@@ -4599,6 +4604,9 @@
 
       renderDesktopInspector();
       renderTasks();
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
       playTactileSound('pop');
     }
 
@@ -4612,6 +4620,9 @@
         overviewEl.classList.remove('hidden');
       }
       renderTasks();
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
     }
 
     function renderDesktopInspector() {
@@ -5128,6 +5139,9 @@
       }
 
       syncDesktopRailUI();
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
 
       if (tabName === 'stats' || tabName === 'settings') {
         renderSecondaryTabViews();
@@ -5160,6 +5174,9 @@
       resetSheetInlineStyles(el);
       el.classList.remove('hidden', 'is-closing');
       el.classList.add('flex');
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
     }
 
     function closeModal(id, fromDrag = false) {
@@ -5170,6 +5187,9 @@
         resetSheetInlineStyles(el);
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
+        if (typeof syncBackLayerCallback === 'function') {
+          syncBackLayerCallback();
+        }
         return;
       }
 
@@ -5177,6 +5197,9 @@
         resetSheetInlineStyles(el);
       }
       el.classList.add('is-closing');
+      if (typeof syncBackLayerCallback === 'function') {
+        syncBackLayerCallback();
+      }
 
       const timer = setTimeout(() => {
         el.classList.add('hidden');
@@ -5834,37 +5857,59 @@
       setTimeout(() => input?.focus(), 60);
     }
 
-    /* ==================== مدیریت هوشمند دکمه بازگشت سخت‌افزاری اندروید ==================== */
+    /* ==================== مدیریت هوشمند دکمه بازگشت اندروید (خروج فوری در صفحه اصلی بدون نیاز به دوبار زدن) ==================== */
     function setupAndroidBackButtonHandler() {
-      let lastRootBackPressAt = 0;
+      let hasBackLayer = false;
+      let ignoreNextPop = false;
 
-      const pushSentinelState = () => {
-        try {
-          window.history.pushState({ dfAndroidSentinel: true }, '');
-        } catch (e) {}
-      };
-
-      try {
-        window.history.replaceState({ dfAndroidBase: true }, '');
-        pushSentinelState();
-      } catch (e) {}
+      const orderedModals = [
+        'command-palette-modal',
+        'task-composer-modal',
+        'task-edit-modal',
+        'folders-modal',
+        'profile-modal',
+        'sync-modal',
+        'cleanup-modal',
+      ];
 
       const isModalVisible = (id) => {
         const el = document.getElementById(id);
         return Boolean(el && !el.classList.contains('hidden') && !el.classList.contains('is-closing'));
       };
 
-      const handleHardwareBackAction = () => {
-        const orderedModals = [
-          'command-palette-modal',
-          'task-composer-modal',
-          'task-edit-modal',
-          'folders-modal',
-          'profile-modal',
-          'sync-modal',
-          'cleanup-modal',
-        ];
+      const isAnyLayerOpen = () => {
+        for (let i = 0; i < orderedModals.length; i++) {
+          if (isModalVisible(orderedModals[i])) return true;
+        }
+        if (state.islandMode === 'expanded') return true;
+        const appearanceSubpage = document.getElementById('tg-appearance-subpage');
+        if (appearanceSubpage && !appearanceSubpage.classList.contains('hidden')) return true;
+        if (state.inspectedTaskId) return true;
+        if (state.activeTab !== 'tasks') return true;
+        return false;
+      };
 
+      const syncBackLayerState = () => {
+        const shouldHaveLayer = isAnyLayerOpen();
+        if (shouldHaveLayer && !hasBackLayer) {
+          hasBackLayer = true;
+          try {
+            window.history.pushState({ dfLayer: true }, '');
+          } catch (e) {}
+        } else if (!shouldHaveLayer && hasBackLayer) {
+          hasBackLayer = false;
+          ignoreNextPop = true;
+          try {
+            window.history.back();
+          } catch (e) {
+            ignoreNextPop = false;
+          }
+        }
+      };
+
+      syncBackLayerCallback = syncBackLayerState;
+
+      const handleHardwareBackAction = () => {
         for (let i = 0; i < orderedModals.length; i++) {
           if (isModalVisible(orderedModals[i])) {
             closeModal(orderedModals[i]);
@@ -5884,6 +5929,7 @@
           appearanceSubpage.classList.add('hidden');
           appearanceSubpage.classList.remove('flex');
           document.getElementById('tg-settings-main')?.classList.remove('hidden');
+          syncBackLayerState();
           playTactileSound('pop');
           return true;
         }
@@ -5899,29 +5945,18 @@
           return true;
         }
 
-        const now = Date.now();
-        if (now - lastRootBackPressAt < 2200) {
-          return false;
-        }
-
-        lastRootBackPressAt = now;
-        triggerIslandToast('🔙', 'برای خروج دوباره دکمه بازگشت را بزنید');
-        playTactileSound('pop');
-        return true;
+        return false;
       };
 
       window.addEventListener('popstate', () => {
+        if (ignoreNextPop) {
+          ignoreNextPop = false;
+          return;
+        }
+        hasBackLayer = false;
         const consumed = handleHardwareBackAction();
         if (consumed) {
-          pushSentinelState();
-        } else {
-          try {
-            if (navigator.app && typeof navigator.app.exitApp === 'function') {
-              navigator.app.exitApp();
-            } else {
-              window.history.back();
-            }
-          } catch (e) {}
+          syncBackLayerState();
         }
       });
 
@@ -5929,6 +5964,7 @@
         const consumed = handleHardwareBackAction();
         if (consumed) {
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          syncBackLayerState();
         } else {
           try {
             if (navigator.app && typeof navigator.app.exitApp === 'function') {
@@ -6361,6 +6397,9 @@
         const sub = document.getElementById('tg-appearance-subpage');
         sub?.classList.remove('hidden');
         sub?.classList.add('flex');
+        if (typeof syncBackLayerCallback === 'function') {
+          syncBackLayerCallback();
+        }
         playTactileSound('pop');
       });
 
@@ -6369,6 +6408,9 @@
         sub?.classList.add('hidden');
         sub?.classList.remove('flex');
         document.getElementById('tg-settings-main')?.classList.remove('hidden');
+        if (typeof syncBackLayerCallback === 'function') {
+          syncBackLayerCallback();
+        }
         playTactileSound('pop');
       });
 
