@@ -1,11 +1,13 @@
 'use strict';
 
-const CACHE_NAME = 'daily-flow-offline-v4';
+const CACHE_NAME = 'daily-flow-offline-v5';
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
