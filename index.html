@@ -59,18 +59,25 @@
       --mint-accent-rgb: 127, 213, 216;
       --mint-contrast-text: #0b1617;
       --card-radius: 24px;
+      --glass-blur: 14px;
+      --island-blur: 16px;
+      --modal-backdrop-blur: 8px;
+      --motion-scale: 1;
+      --spring-curve: cubic-bezier(0.32, 1.22, 0.36, 1);
+      --sheet-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
       --bg-primary: #0b1012;
       --bg-elevated: #131a1c;
       --bg-input: #12191b;
       --bg-chip: #1a2224;
-      --glass-bg: rgba(20, 27, 29, 0.78);
-      --glass-card-bg: rgba(22, 30, 32, 0.84);
+      --glass-bg: rgba(20, 27, 29, 0.82);
+      --glass-card-bg: rgba(22, 30, 32, 0.88);
+      --glass-modal-surface: rgba(18, 25, 28, 0.96);
       --glass-border: rgba(255, 255, 255, 0.09);
       --specular-edge: rgba(255, 255, 255, 0.16);
       --text-main: #f4f7f7;
       --text-muted: #93a3a5;
-      --scrim-bg: rgba(11, 16, 18, 0.68);
-      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.92) 0%, rgba(15, 21, 23, 0.95) 100%);
+      --scrim-bg: rgba(11, 16, 18, 0.86);
+      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.94) 0%, rgba(15, 21, 23, 0.97) 100%);
       --island-border: rgba(255, 255, 255, 0.1);
       --island-shadow:
         0 2px 6px -1px rgba(0, 0, 0, 0.35),
@@ -90,14 +97,15 @@
       --bg-elevated: #ffffff;
       --bg-input: #f4f7f8;
       --bg-chip: #e6eef0;
-      --glass-bg: rgba(255, 255, 255, 0.88);
+      --glass-bg: rgba(255, 255, 255, 0.90);
       --glass-card-bg: rgba(255, 255, 255, 0.96);
+      --glass-modal-surface: rgba(248, 250, 252, 0.98);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
       --text-muted: #5b6b73;
-      --scrim-bg: rgba(238, 243, 245, 0.72);
-      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(246, 250, 251, 0.96) 100%);
+      --scrim-bg: rgba(238, 243, 245, 0.88);
+      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 251, 0.98) 100%);
       --island-border: rgba(15, 23, 42, 0.08);
       --island-shadow:
         0 2px 5px -1px rgba(15, 23, 42, 0.05),
@@ -109,6 +117,33 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.98);
       --island-text: #0f172a;
       --island-subtext: #52636b;
+    }
+
+    /* سطوح بهینه‌سازی GPU برای نرخ فریم‌های مختلف و پردازنده‌های گرافیکی موبایل (Mali / Adreno) */
+    body.gpu-tier-balanced {
+      --glass-blur: 9px;
+      --island-blur: 11px;
+      --modal-backdrop-blur: 4px;
+      --glass-bg: rgba(20, 27, 29, 0.89);
+      --glass-card-bg: rgba(22, 30, 32, 0.94);
+    }
+    body.theme-light.gpu-tier-balanced {
+      --glass-bg: rgba(255, 255, 255, 0.94);
+      --glass-card-bg: rgba(255, 255, 255, 0.98);
+    }
+
+    body.gpu-tier-performance {
+      --glass-blur: 0px;
+      --island-blur: 0px;
+      --modal-backdrop-blur: 0px;
+      --glass-bg: linear-gradient(180deg, rgba(25, 34, 37, 0.96) 0%, rgba(18, 25, 27, 0.98) 100%);
+      --glass-card-bg: linear-gradient(180deg, rgba(27, 36, 39, 0.97) 0%, rgba(20, 28, 30, 0.99) 100%);
+      --island-bg: linear-gradient(180deg, rgba(26, 36, 40, 0.98) 0%, rgba(16, 22, 25, 0.99) 100%);
+    }
+    body.theme-light.gpu-tier-performance {
+      --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 250, 252, 0.99) 100%);
+      --glass-card-bg: #ffffff;
+      --island-bg: linear-gradient(180deg, #ffffff 0%, #f4f8fa 100%);
     }
 
     * {
@@ -139,7 +174,8 @@
       touch-action: pan-y;
       user-select: none;
       -webkit-user-select: none;
-      transition: background-color 0.28s ease, color 0.28s ease;
+      text-rendering: optimizeSpeed;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     input,
@@ -164,6 +200,8 @@
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      backdrop-filter: blur(var(--modal-backdrop-blur));
+      -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
     }
 
     [id$="-modal"] .sheet-animate {
@@ -191,11 +229,13 @@
       height: 100lvh;
       pointer-events: none;
       z-index: 0;
+      transform: translateZ(0);
       background:
         radial-gradient(circle at 18% 12%, rgba(var(--mint-accent-rgb), 0.12) 0%, transparent 42%),
         radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 46%);
     }
 
+    /* حذف passهای اضافه backdrop-filter روی نوارهای بالا و پایین برای جلوگیری از افت فریم در سامسونگ و ۶۰/۹۰ هرتز */
     .status-bar-scrim {
       position: fixed;
       top: 0;
@@ -204,11 +244,7 @@
       height: calc(18px + env(safe-area-inset-top, 0px));
       z-index: 44;
       pointer-events: none;
-      background: var(--scrim-bg);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+      background: linear-gradient(to bottom, var(--scrim-bg) 45%, transparent 100%);
     }
 
     .nav-bar-scrim {
@@ -219,21 +255,26 @@
       height: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 38;
       pointer-events: none;
-      background: var(--scrim-bg);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      mask-image: linear-gradient(to top, #000 62%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to top, #000 62%, transparent 100%);
+      background: linear-gradient(to top, var(--scrim-bg) 50%, transparent 100%);
     }
 
     .liquid-glass {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
       border-radius: var(--card-radius);
-      transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.2s ease, box-shadow 0.25s ease;
+      contain: layout style;
+      transition: background-color 0.22s ease, border-color 0.22s ease, border-radius 0.2s ease;
+    }
+
+    /* حذف blur تودرتو داخل مودال‌ها برای حذف لگ باز و بسته شدن پنجره‌ها */
+    [id$="-modal"] > .liquid-glass {
+      background: var(--glass-modal-surface) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
     .liquid-card {
@@ -241,14 +282,13 @@
       border: 1px solid var(--glass-border);
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: var(--card-radius);
-      transform: translate3d(0, 0, 0);
-      will-change: transform;
-      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, opacity 0.2s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+      contain: layout style;
+      transition: transform calc(0.2s * var(--motion-scale)) var(--sheet-curve), border-color 0.18s ease, opacity 0.18s ease;
     }
 
     /* بهینه‌سازی کامل کنتراست و رنگ‌ها در حالت روز (Light Mode) */
     body.theme-light [id$="-modal"] > .liquid-glass {
-      background: rgba(248, 250, 252, 0.97) !important;
+      background: var(--glass-modal-surface) !important;
       border-color: rgba(15, 23, 42, 0.1) !important;
       box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
     }
@@ -326,7 +366,7 @@
       touch-action: manipulation;
       user-select: none;
       line-height: 1;
-      transition: transform 0.18s cubic-bezier(0.22, 1.25, 0.36, 1), background-color 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, opacity 0.16s ease, border-color 0.16s ease;
     }
     .spring-btn:active {
       transform: scale(0.94);
@@ -375,21 +415,21 @@
       background: var(--island-bg);
       border: 1px solid var(--island-border);
       box-shadow: var(--island-shadow);
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(var(--island-blur));
+      -webkit-backdrop-filter: blur(var(--island-blur));
       overflow: hidden;
       cursor: pointer;
+      contain: layout style paint;
       transform: translate3d(0, 0, 0) scale(1);
       transform-origin: top center;
-      will-change: width, height, border-radius, transform;
       transition:
-        width 0.42s cubic-bezier(0.32, 1.24, 0.36, 1),
-        height 0.42s cubic-bezier(0.32, 1.24, 0.36, 1),
-        border-radius 0.42s cubic-bezier(0.32, 1.24, 0.36, 1),
-        transform 0.22s cubic-bezier(0.22, 1.32, 0.36, 1),
-        box-shadow 0.3s ease,
-        background 0.25s ease,
-        border-color 0.25s ease;
+        width calc(0.38s * var(--motion-scale)) var(--spring-curve),
+        height calc(0.38s * var(--motion-scale)) var(--spring-curve),
+        border-radius calc(0.38s * var(--motion-scale)) var(--spring-curve),
+        transform calc(0.2s * var(--motion-scale)) var(--spring-curve),
+        box-shadow 0.25s ease,
+        background 0.22s ease,
+        border-color 0.22s ease;
     }
 
     .obsidian-shell:not(.is-expanded):hover {
@@ -409,13 +449,6 @@
       width: min(92vw, 336px);
       height: 48px;
       border-radius: 24px;
-      transition:
-        width 0.4s cubic-bezier(0.34, 1.28, 0.38, 1),
-        height 0.4s cubic-bezier(0.34, 1.28, 0.38, 1),
-        border-radius 0.4s cubic-bezier(0.34, 1.28, 0.38, 1),
-        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-        background 0.25s ease,
-        border-color 0.25s ease;
     }
 
     .obsidian-shell.is-expanded {
@@ -424,14 +457,6 @@
       border-radius: 30px;
       cursor: default;
       box-shadow: var(--island-shadow-expanded);
-      transition:
-        width 0.44s cubic-bezier(0.32, 1.22, 0.36, 1),
-        height 0.44s cubic-bezier(0.32, 1.22, 0.36, 1),
-        border-radius 0.44s cubic-bezier(0.32, 1.22, 0.36, 1),
-        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-        box-shadow 0.32s ease,
-        background 0.25s ease,
-        border-color 0.25s ease;
     }
 
     .island-layer {
@@ -442,8 +467,8 @@
       transform: translate3d(-50%, 0, 0) scale(1);
       opacity: 1;
       transition:
-        opacity 0.24s ease 0.06s,
-        transform 0.4s cubic-bezier(0.26, 1.16, 0.36, 1);
+        opacity calc(0.22s * var(--motion-scale)) ease 0.05s,
+        transform calc(0.36s * var(--motion-scale)) var(--spring-curve);
     }
 
     #island-idle-layer {
@@ -482,8 +507,8 @@
       pointer-events: none;
       transform: translate3d(-50%, -3px, 0) scale(0.92);
       transition:
-        opacity 0.13s ease,
-        transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 0.12s ease,
+        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .island-primary-text {
@@ -496,11 +521,11 @@
     @keyframes islandDotPulse {
       0%, 100% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(var(--mint-accent-rgb), 0.55);
+        opacity: 1;
       }
       50% {
-        transform: scale(1.18);
-        box-shadow: 0 0 0 5px rgba(var(--mint-accent-rgb), 0);
+        transform: scale(1.22);
+        opacity: 0.72;
       }
     }
 
@@ -519,16 +544,22 @@
       overflow: hidden;
     }
 
+    /* رندر ۱۰۰٪ سخت‌افزاری نوار پیشرفت با transform: scaleX به جای width */
     .island-progress-hairline-fill {
+      width: 100%;
       height: 100%;
+      transform-origin: left center;
+      transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform calc(0.4s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .audio-wave-bar {
       width: 2.5px;
+      height: 13px;
       border-radius: 99px;
       background-color: var(--mint-accent);
+      transform-origin: bottom center;
       animation: wavePulse 0.9s ease-in-out infinite;
     }
     .audio-wave-bar:nth-child(2) {
@@ -540,10 +571,10 @@
 
     @keyframes wavePulse {
       0%, 100% {
-        height: 4px;
+        transform: scaleY(0.32);
       }
       50% {
-        height: 13px;
+        transform: scaleY(1);
       }
     }
 
@@ -556,7 +587,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform 0.25s cubic-bezier(0.22, 1.4, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease;
+      transition: transform calc(0.22s * var(--motion-scale)) var(--spring-curve), background-color 0.18s ease, border-color 0.18s ease;
     }
 
     .check-circle.checked {
@@ -574,7 +605,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform 0.2s cubic-bezier(0.22, 1.4, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease;
+      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
     }
 
     .subtask-check.checked {
@@ -586,7 +617,7 @@
     .composer-create-btn {
       background-color: var(--mint-accent);
       color: var(--mint-contrast-text);
-      transition: opacity 0.2s ease, transform 0.18s cubic-bezier(0.22, 1.25, 0.36, 1);
+      transition: opacity 0.18s ease, transform calc(0.16s * var(--motion-scale)) var(--spring-curve);
     }
 
     .composer-create-btn:disabled {
@@ -601,11 +632,15 @@
       overflow: hidden;
     }
 
+    /* شتاب‌دهی سخت‌افزاری نوارهای پیشرفت اصلی با scaleX */
     .liquid-bar-fill {
+      width: 100%;
       height: 100%;
       border-radius: 999px;
+      transform-origin: right center;
+      transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: width 0.45s cubic-bezier(0.22, 1.12, 0.36, 1);
+      transition: transform calc(0.4s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .ambient-chip.is-active {
@@ -616,8 +651,8 @@
 
     .chart-bar-fill {
       background: linear-gradient(180deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
-      box-shadow: 0 0 14px rgba(var(--mint-accent-rgb), 0.32);
-      transition: height 0.45s cubic-bezier(0.22, 1.12, 0.36, 1);
+      box-shadow: 0 0 12px rgba(var(--mint-accent-rgb), 0.28);
+      transition: height calc(0.4s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .radar-stage-box {
@@ -650,7 +685,7 @@
     }
 
     .radar-axis-pill {
-      transition: transform 0.18s cubic-bezier(0.22, 1.25, 0.36, 1), background-color 0.2s ease, border-color 0.2s ease;
+      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.18s ease, border-color 0.18s ease;
     }
 
     .radar-axis-pill.is-selected {
@@ -679,7 +714,7 @@
     @keyframes sheetSlideUpMobile {
       from {
         opacity: 0;
-        transform: translate3d(0, 100%, 0);
+        transform: translate3d(0, 64px, 0);
       }
       to {
         opacity: 1;
@@ -694,14 +729,14 @@
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 100%, 0);
+        transform: translate3d(0, 64px, 0);
       }
     }
 
     @keyframes sheetScaleInDesktop {
       from {
         opacity: 0;
-        transform: translate3d(0, 18px, 0) scale(0.96);
+        transform: translate3d(0, 16px, 0) scale(0.96);
       }
       to {
         opacity: 1;
@@ -716,42 +751,41 @@
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 14px, 0) scale(0.96);
+        transform: translate3d(0, 12px, 0) scale(0.96);
       }
     }
 
     [id$="-modal"] {
-      animation: modalBackdropIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
-      will-change: opacity;
+      animation: modalBackdropIn calc(0.22s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     [id$="-modal"].is-closing {
       pointer-events: none;
-      animation: modalBackdropOut 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: modalBackdropOut calc(0.18s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .sheet-animate {
-      animation: sheetSlideUpMobile 0.36s cubic-bezier(0.22, 1.14, 0.36, 1) both;
+      animation: sheetSlideUpMobile calc(0.32s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     [id$="-modal"].is-closing .sheet-animate {
-      animation: sheetSlideDownMobile 0.21s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+      animation: sheetSlideDownMobile calc(0.19s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
     }
 
     @media (min-width: 640px) {
       .sheet-animate {
-        animation: sheetScaleInDesktop 0.28s cubic-bezier(0.22, 1.16, 0.36, 1) both;
+        animation: sheetScaleInDesktop calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
       }
 
       [id$="-modal"].is-closing .sheet-animate {
-        animation: sheetScaleOutDesktop 0.19s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+        animation: sheetScaleOutDesktop calc(0.18s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
       }
     }
 
     .privacy-blur-text {
       filter: blur(5.5px);
-      transition: filter 0.22s ease;
+      transition: filter 0.2s ease;
     }
 
     .avatar-surface {
@@ -775,7 +809,7 @@
       padding: 0.78rem 0.95rem;
       text-align: right;
       cursor: pointer;
-      transition: background-color 0.16s ease;
+      transition: background-color 0.15s ease;
     }
     .tg-settings-row:hover {
       background-color: rgba(147, 163, 165, 0.08);
@@ -803,7 +837,7 @@
       padding: 2px;
       position: relative;
       flex-shrink: 0;
-      transition: background-color 0.22s ease;
+      transition: background-color 0.2s ease;
     }
     .tg-switch.is-on {
       background-color: var(--mint-accent);
@@ -814,18 +848,18 @@
       border-radius: 999px;
       background-color: #ffffff;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-      transition: transform 0.22s cubic-bezier(0.22, 1.2, 0.36, 1);
-      transform: translateX(0);
+      transition: transform calc(0.2s * var(--motion-scale)) var(--spring-curve);
+      transform: translate3d(0, 0, 0);
     }
     .tg-switch.is-on .tg-switch-knob {
-      transform: translateX(-18px);
+      transform: translate3d(-18px, 0, 0);
     }
 
     .tg-bottom-dock {
       position: fixed;
       bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate3d(-50%, 0, 0);
       z-index: 40;
       width: min(94vw, 430px);
       display: flex;
@@ -841,13 +875,14 @@
       border-radius: 999px;
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       padding: 4px;
       position: relative;
+      contain: layout style paint;
     }
 
     .tg-nav-indicator {
@@ -857,7 +892,7 @@
       width: calc(25% - 2px);
       height: calc(100% - 8px);
       will-change: transform;
-      transition: transform 0.36s cubic-bezier(0.32, 1.22, 0.36, 1);
+      transition: transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
       pointer-events: none;
     }
 
@@ -878,10 +913,10 @@
         transform: scale(1, 1);
       }
       36% {
-        transform: scale(1.26, 0.88);
+        transform: scale(1.22, 0.9);
       }
       72% {
-        transform: scale(0.95, 1.04);
+        transform: scale(0.96, 1.03);
       }
       100% {
         transform: scale(1, 1);
@@ -889,21 +924,21 @@
     }
 
     .tg-nav-indicator-blob.is-stretching {
-      animation: liquidPillStretchX 0.4s cubic-bezier(0.26, 1.25, 0.36, 1);
+      animation: liquidPillStretchX calc(0.36s * var(--motion-scale)) var(--spring-curve);
     }
 
     @keyframes navIconSpring {
       0% {
-        transform: scale(1) translateY(0);
+        transform: scale(1) translate3d(0, 0, 0);
       }
       40% {
-        transform: scale(1.2) translateY(-1.5px);
+        transform: scale(1.18) translate3d(0, -1.5px, 0);
       }
       75% {
-        transform: scale(0.95) translateY(0.5px);
+        transform: scale(0.96) translate3d(0, 0.5px, 0);
       }
       100% {
-        transform: scale(1) translateY(0);
+        transform: scale(1) translate3d(0, 0, 0);
       }
     }
 
@@ -920,14 +955,14 @@
       font-weight: 700;
       border-radius: 999px;
       cursor: pointer;
-      transition: color 0.2s ease, transform 0.16s ease;
+      transition: color 0.18s ease, transform 0.15s ease;
     }
     .tg-nav-btn.is-active {
       color: var(--mint-accent);
     }
     .tg-nav-btn.is-bouncing svg,
     .rail-nav-btn.is-bouncing svg {
-      animation: navIconSpring 0.38s cubic-bezier(0.24, 1.3, 0.36, 1);
+      animation: navIconSpring calc(0.34s * var(--motion-scale)) var(--spring-curve);
     }
     .tg-nav-btn:active {
       transform: scale(0.92);
@@ -936,22 +971,22 @@
     @keyframes tabEnterFromLeft {
       from {
         opacity: 0;
-        transform: translate3d(-26px, 0, 0) scale(0.985);
+        transform: translate3d(-22px, 0, 0);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0);
       }
     }
 
     @keyframes tabEnterFromRight {
       from {
         opacity: 0;
-        transform: translate3d(26px, 0, 0) scale(0.985);
+        transform: translate3d(22px, 0, 0);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0);
       }
     }
 
@@ -964,49 +999,18 @@
       }
     }
 
-    @keyframes tabCardCascade {
-      from {
-        opacity: 0;
-        transform: translate3d(0, 10px, 0) scale(0.99);
-      }
-      to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
-      }
-    }
-
     .tab-view.tab-enter-from-left {
-      animation: tabEnterFromLeft 0.32s cubic-bezier(0.22, 1.08, 0.36, 1) both;
+      animation: tabEnterFromLeft calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     .tab-view.tab-enter-from-right {
-      animation: tabEnterFromRight 0.32s cubic-bezier(0.22, 1.08, 0.36, 1) both;
+      animation: tabEnterFromRight calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     .tab-view.tab-enter-fade {
-      animation: tabEnterFade 0.18s ease-out both;
-    }
-
-    .tab-view.tab-enter-from-left > *,
-    .tab-view.tab-enter-from-right > * {
-      animation: tabCardCascade 0.32s cubic-bezier(0.22, 1.08, 0.36, 1) both;
-    }
-
-    .tab-view.tab-enter-from-left > *:nth-child(2),
-    .tab-view.tab-enter-from-right > *:nth-child(2) {
-      animation-delay: 32ms;
-    }
-
-    .tab-view.tab-enter-from-left > *:nth-child(3),
-    .tab-view.tab-enter-from-right > *:nth-child(3) {
-      animation-delay: 64ms;
-    }
-
-    .tab-view.tab-enter-from-left > *:nth-child(4),
-    .tab-view.tab-enter-from-right > *:nth-child(4) {
-      animation-delay: 96ms;
+      animation: tabEnterFade 0.16s ease-out both;
     }
 
     .tg-fab-add {
@@ -1031,7 +1035,7 @@
       border-radius: 999px;
       pointer-events: none;
       z-index: 60;
-      animation: sparkleFly 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: sparkleFly 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     @keyframes sparkleFly {
@@ -1045,10 +1049,19 @@
       }
     }
 
+    /* مجازی‌سازی هوشمند اسکرول و ایزوله‌سازی لایه‌های رندر کارت‌ها */
     .task-swipe-slot {
       position: relative;
       border-radius: var(--card-radius);
       overflow: hidden;
+      contain: layout style paint;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 84px;
+    }
+
+    .task-swipe-slot.is-actively-swiping .task-card {
+      will-change: transform;
+      transition: none !important;
     }
 
     .task-swipe-backdrop {
@@ -1061,7 +1074,7 @@
       padding: 0 1.25rem;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.16s ease, background-color 0.16s ease;
+      transition: opacity 0.14s ease, background-color 0.14s ease;
     }
 
     .task-swipe-slot.is-swiping-complete .task-swipe-backdrop {
@@ -1103,7 +1116,7 @@
         position: fixed;
         right: 20px;
         top: 50%;
-        transform: translateY(-50%);
+        transform: translate3d(0, -50%, 0);
         z-index: 42;
         width: 68px;
         max-height: calc(100vh - 44px);
@@ -1111,8 +1124,8 @@
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32), inset 0 1px 0 0 var(--specular-edge);
-        backdrop-filter: blur(22px);
-        -webkit-backdrop-filter: blur(22px);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1128,7 +1141,7 @@
         width: 46px;
         height: 46px;
         will-change: transform;
-        transition: transform 0.36s cubic-bezier(0.32, 1.22, 0.36, 1);
+        transition: transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
         pointer-events: none;
       }
 
@@ -1149,10 +1162,10 @@
           transform: scale(1, 1);
         }
         36% {
-          transform: scale(0.88, 1.26);
+          transform: scale(0.9, 1.22);
         }
         72% {
-          transform: scale(1.04, 0.95);
+          transform: scale(1.03, 0.96);
         }
         100% {
           transform: scale(1, 1);
@@ -1160,7 +1173,7 @@
       }
 
       .rail-nav-indicator-blob.is-stretching {
-        animation: liquidPillStretchY 0.4s cubic-bezier(0.26, 1.25, 0.36, 1);
+        animation: liquidPillStretchY calc(0.36s * var(--motion-scale)) var(--spring-curve);
       }
 
       .rail-nav-btn {
@@ -1177,7 +1190,7 @@
         color: var(--text-muted);
         border: 1px solid transparent;
         cursor: pointer;
-        transition: color 0.2s ease, background-color 0.2s ease, transform 0.18s cubic-bezier(0.22, 1.2, 0.36, 1);
+        transition: color 0.18s ease, background-color 0.18s ease, transform 0.16s var(--spring-curve);
       }
 
       .rail-nav-btn:hover:not(.is-active) {
@@ -1209,7 +1222,7 @@
     }
 
     #desktop-focus-dropzone {
-      transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+      transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
     }
 
     #desktop-focus-dropzone.is-drag-target {
@@ -1362,7 +1375,7 @@
       </div>
 
       <div class="island-progress-hairline" aria-hidden="true">
-        <div id="island-progress-hairline-fill" class="island-progress-hairline-fill" style="width: 0%"></div>
+        <div id="island-progress-hairline-fill" class="island-progress-hairline-fill" style="transform: scaleX(0)"></div>
       </div>
     </div>
   </header>
@@ -1513,7 +1526,7 @@
               <span id="progress-percent" class="ltr font-mono font-extrabold text-[#7fd5d8]">0%</span>
             </div>
             <div class="liquid-bar-track h-2.5 w-full">
-              <div id="liquid-progress-bar" class="liquid-bar-fill" style="width: 0%"></div>
+              <div id="liquid-progress-bar" class="liquid-bar-fill" style="transform: scaleX(0)"></div>
             </div>
           </div>
         </section>
@@ -1794,7 +1807,7 @@
               stroke-linecap="round"
               stroke-dasharray="326.72"
               stroke-dashoffset="0"
-              style="transition: stroke-dashoffset 0.4s ease;"
+              style="transition: stroke-dashoffset 0.35s ease;"
             />
           </svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center">
@@ -1862,13 +1875,6 @@
                   <stop offset="0%" stop-color="var(--mint-accent)" stop-opacity="0.34" />
                   <stop offset="100%" stop-color="var(--mint-accent)" stop-opacity="0.10" />
                 </radialGradient>
-                <filter id="radarNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="3.5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
               </defs>
 
               <polygon points="170,51 254,135 170,219 86,135" fill="none" class="radar-grid-line" stroke-width="1" />
@@ -1886,7 +1892,6 @@
                 stroke="var(--mint-accent)"
                 stroke-width="2.5"
                 stroke-linejoin="round"
-                filter="url(#radarNeonGlow)"
               />
 
               <g id="radar-node-group-mind">
@@ -2094,8 +2099,8 @@
                   </svg>
                 </span>
                 <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">تنظیمات ظاهر و تم رنگی</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">حالت روز/شب، رنگ تم و انحنای کارت‌ها</div>
+                  <div class="text-sm font-semibold text-white">تنظیمات ظاهر، تم و رندر گرافیکی</div>
+                  <div class="text-[11px] text-[#93a3a5] truncate">حالت روز/شب، رنگ تم و بهینه‌سازی فریم‌ریت</div>
                 </div>
               </div>
               <span id="tg-val-appearance-summary" class="text-xs font-semibold text-[#7fd5d8] shrink-0">شب • نعنایی ‹</span>
@@ -2264,7 +2269,7 @@
         </div>
 
         <p class="text-center text-[11px] text-[#7d8e90] pt-1">
-          Daily Flow Glass Studio • ذخیره‌سازی ۱۰۰٪ آفلاین روی دستگاه شما
+          Daily Flow Glass Studio • موتور رندر تطبیقی ۶۰ تا ۱۴۴ هرتز
         </p>
       </div>
 
@@ -2278,7 +2283,7 @@
             <span>→</span>
             <span>بازگشت</span>
           </button>
-          <h2 class="text-sm font-extrabold text-white">تنظیمات ظاهر و تم رنگی</h2>
+          <h2 class="text-sm font-extrabold text-white">تنظیمات ظاهر و موتور گرافیکی</h2>
           <span class="w-16"></span>
         </div>
 
@@ -2335,6 +2340,21 @@
               </span>
               <span id="tg-day-night-label" class="text-sm font-bold text-[#7fd5d8]">تغییر به حالت روز (Light Mode)</span>
             </div>
+          </button>
+
+          <button id="tg-row-gpu-mode" type="button" class="tg-settings-row">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="tg-icon-circle bg-[#10b981]">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-white">موتور رندر گرافیکی و نرخ فریم</div>
+                <div id="tg-gpu-subtext" class="text-[11px] text-[#93a3a5] truncate">تشخیص خودکار نمایشگر (۶۰ / ۹۰ / ۱۲۰ / ۱۴۴ هرتز)</div>
+              </div>
+            </div>
+            <span id="tg-val-gpu-mode" class="text-xs font-bold text-[#7fd5d8] shrink-0">خودکار • 120Hz</span>
           </button>
         </div>
 
@@ -2400,7 +2420,7 @@
   </nav>
 
   <!-- ==================== MODALS ==================== -->
-  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">ویرایش پروفایل و آواتار</h3>
@@ -2452,7 +2472,7 @@
     </div>
   </div>
 
-  <div id="sync-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div id="sync-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-3.5">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">انتقال و پشتیبان‌گیری آفلاین</h3>
@@ -2490,7 +2510,7 @@
     </div>
   </div>
 
-  <div id="cleanup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div id="cleanup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-sm p-5 flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">پاک‌سازی داده‌ها</h3>
@@ -2511,7 +2531,7 @@
     </div>
   </div>
 
-  <div id="task-edit-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md">
+  <div id="task-edit-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div data-sheet-handle class="sm:hidden pt-0.5 pb-1.5 -mt-2 cursor-grab active:cursor-grabbing touch-none flex justify-center">
         <div class="w-10 h-1 rounded-full bg-white/25"></div>
@@ -2610,7 +2630,7 @@
     </div>
   </div>
 
-  <div id="folders-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div id="folders-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">مدیریت پوشه‌های سفارشی</h3>
@@ -2651,7 +2671,7 @@
     </div>
   </div>
 
-  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4 bg-black/70 backdrop-blur-md">
+  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-4 sm:p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto">
       <div data-sheet-handle class="pt-0.5 pb-1.5 -mt-1.5 cursor-grab active:cursor-grabbing touch-none flex justify-center">
         <div class="w-10 h-1 rounded-full bg-white/25"></div>
@@ -2815,7 +2835,7 @@
     </div>
   </div>
 
-  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden items-start justify-center pt-16 sm:pt-24 p-4 bg-black/70 backdrop-blur-md">
+  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden items-start justify-center pt-16 sm:pt-24 p-4 bg-black/70">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-lg overflow-hidden border border-white/15 shadow-2xl">
       <div class="flex items-center gap-2.5 px-4 py-3.5 border-b border-white/10">
         <span class="text-sm text-[#7fd5d8]">⌘</span>
@@ -2850,6 +2870,7 @@
     let currentCmdItems = [];
     let draggedTaskId = null;
     let syncBackLayerCallback = null;
+    let compositorBoostRaf = null;
 
     const DEFAULT_FOLDERS = [
       { name: 'شخصی', emoji: '✨', builtIn: true },
@@ -2943,6 +2964,9 @@
       undoSnapshot: null,
       soundEnabled: true,
       batterySaver: false,
+      gpuQualityMode: 'auto',
+      detectedHz: 120,
+      activeGpuTier: 'ultra',
       autoSortCompleted: false,
       privacyBlur: false,
       dailyGoal: 5,
@@ -2980,6 +3004,148 @@
       draftAvatar: '🧑‍💻',
       draftPhotoDataUrl: '',
     };
+
+    /* موتور رندر گرافیکی تطبیقی برای نرخ فریم‌های ۶۰، ۹۰، ۱۲۰ و ۱۴۴ هرتز و GPUهای مختلف موبایل */
+    function snapToStandardHz(rawHz) {
+      if (rawHz >= 134) return 144;
+      if (rawHz >= 106) return 120;
+      if (rawHz >= 78) return 90;
+      return 60;
+    }
+
+    function boostCompositorFrames(durationMs = 420) {
+      if (compositorBoostRaf) {
+        cancelAnimationFrame(compositorBoostRaf);
+        compositorBoostRaf = null;
+      }
+      const endAt = performance.now() + durationMs;
+      function tick(now) {
+        if (now < endAt) {
+          compositorBoostRaf = requestAnimationFrame(tick);
+        } else {
+          compositorBoostRaf = null;
+        }
+      }
+      compositorBoostRaf = requestAnimationFrame(tick);
+    }
+
+    function applyAdaptiveRenderCalibration(forcedTier = null) {
+      const hz = state.detectedHz || 120;
+      const root = document.documentElement;
+      const body = document.body;
+
+      // مقیاس‌بندی منحنی‌های حرکت بر اساس نرخ فریم واقعی نمایشگر (۶۰ / ۹۰ / ۱۲۰ / ۱۴۴ هرتز)
+      if (hz <= 60) {
+        root.style.setProperty('--motion-scale', '0.86');
+        root.style.setProperty('--spring-curve', 'cubic-bezier(0.22, 1, 0.36, 1)');
+        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1, 0.36, 1)');
+      } else if (hz <= 90) {
+        root.style.setProperty('--motion-scale', '0.94');
+        root.style.setProperty('--spring-curve', 'cubic-bezier(0.28, 1.14, 0.36, 1)');
+        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.1, 0.36, 1)');
+      } else if (hz <= 120) {
+        root.style.setProperty('--motion-scale', '1');
+        root.style.setProperty('--spring-curve', 'cubic-bezier(0.32, 1.22, 0.36, 1)');
+        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.12, 0.36, 1)');
+      } else {
+        root.style.setProperty('--motion-scale', '1.05');
+        root.style.setProperty('--spring-curve', 'cubic-bezier(0.34, 1.25, 0.36, 1)');
+        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.14, 0.36, 1)');
+      }
+
+      let tier = forcedTier;
+      if (!tier) {
+        if (state.batterySaver) {
+          tier = 'performance';
+        } else if (state.gpuQualityMode !== 'auto') {
+          tier = state.gpuQualityMode;
+        } else if (hz <= 60) {
+          tier = 'balanced';
+        } else {
+          tier = 'ultra';
+        }
+      }
+
+      state.activeGpuTier = tier;
+      body.classList.remove('gpu-tier-ultra', 'gpu-tier-balanced', 'gpu-tier-performance');
+      body.classList.add(`gpu-tier-${tier}`);
+
+      updateGpuSettingsLabels();
+    }
+
+    function updateGpuSettingsLabels() {
+      const valEl = document.getElementById('tg-val-gpu-mode');
+      const subEl = document.getElementById('tg-gpu-subtext');
+      const modeNames = {
+        auto: 'خودکار',
+        ultra: 'حداکثر گرافیک',
+        balanced: 'متعادل',
+        performance: 'فوق‌سریع',
+      };
+      if (valEl) {
+        valEl.textContent = `${modeNames[state.gpuQualityMode] || 'خودکار'} • ${state.detectedHz}Hz`;
+      }
+      if (subEl) {
+        const tierLabel =
+          state.activeGpuTier === 'performance'
+            ? 'حالت بدون لگ و مصرف پایین GPU فعال است'
+            : state.activeGpuTier === 'balanced'
+            ? 'شیدینگ شیشه‌ای بهینه برای ۹۰ و ۶۰ هرتز'
+            : 'رندر شیشه‌ای کامل برای ۱۲۰ و ۱۴۴ هرتز';
+        subEl.textContent = tierLabel;
+      }
+    }
+
+    function initAdaptiveRenderEngine() {
+      let frameDeltas = [];
+      let lastTs = 0;
+      let sampleCount = 0;
+      const maxInitialSamples = 28;
+
+      function measureLoop(now) {
+        if (lastTs > 0) {
+          const dt = now - lastTs;
+          if (dt >= 4.5 && dt <= 40) {
+            frameDeltas.push(dt);
+          }
+        }
+        lastTs = now;
+        sampleCount += 1;
+
+        if (sampleCount < maxInitialSamples) {
+          requestAnimationFrame(measureLoop);
+        } else if (frameDeltas.length >= 8) {
+          frameDeltas.sort((a, b) => a - b);
+          // استفاده از صدک ۲۵ام (سریع‌ترین فریم‌های پایدار) برای تشخیص دقیق نرخ تازه‌سازی سخت‌افزار
+          const p25Delta = frameDeltas[Math.floor(frameDeltas.length * 0.25)];
+          const estimatedHz = snapToStandardHz(1000 / p25Delta);
+          state.detectedHz = estimatedHz;
+
+          // بررسی افت فریم واقعی (اگر میانه زمان فریم بیش از ۳۵٪ از بودجه سخت‌افزار کندتر باشد)
+          const medianDelta = frameDeltas[Math.floor(frameDeltas.length * 0.5)];
+          const frameBudget = 1000 / estimatedHz;
+          const hasGpuPressure = medianDelta > frameBudget * 1.38;
+
+          if (state.gpuQualityMode === 'auto' && !state.batterySaver && hasGpuPressure) {
+            applyAdaptiveRenderCalibration(estimatedHz <= 60 ? 'performance' : 'balanced');
+          } else {
+            applyAdaptiveRenderCalibration();
+          }
+        }
+      }
+
+      requestAnimationFrame(measureLoop);
+
+      // بازسنجی خودکار هنگام بازگشت به برنامه یا تغییر حالت نمایشگر در گوشی‌های LTPO سامسونگ و شیائومی
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          frameDeltas = [];
+          lastTs = 0;
+          sampleCount = 0;
+          requestAnimationFrame(measureLoop);
+        }
+      });
+    }
 
     function toPersianDigits(val) {
       const map = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -3132,6 +3298,7 @@
         focusDurationMinutes: state.focusDurationMinutes,
         soundEnabled: state.soundEnabled,
         batterySaver: state.batterySaver,
+        gpuQualityMode: state.gpuQualityMode,
         autoSortCompleted: state.autoSortCompleted,
         privacyBlur: state.privacyBlur,
         dailyGoal: state.dailyGoal,
@@ -3173,6 +3340,9 @@
           }
           if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
           if (typeof parsed.batterySaver === 'boolean') state.batterySaver = parsed.batterySaver;
+          if (['auto', 'ultra', 'balanced', 'performance'].includes(parsed.gpuQualityMode)) {
+            state.gpuQualityMode = parsed.gpuQualityMode;
+          }
           if (typeof parsed.autoSortCompleted === 'boolean') state.autoSortCompleted = parsed.autoSortCompleted;
           if (typeof parsed.privacyBlur === 'boolean') state.privacyBlur = parsed.privacyBlur;
           if (typeof parsed.dailyGoal === 'number') state.dailyGoal = parsed.dailyGoal;
@@ -3454,10 +3624,10 @@
       const colors = ['#7fd5d8', '#34d399', '#fbbf24', '#60a5fa', '#c084fc'];
       const cx = window.innerWidth / 2;
       const cy = 140;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 18; i++) {
         const dot = document.createElement('span');
         dot.className = 'sparkle-particle';
-        const angle = (Math.PI * 2 * i) / 20;
+        const angle = (Math.PI * 2 * i) / 18;
         const dist = 55 + Math.random() * 85;
         dot.style.left = `${cx}px`;
         dot.style.top = `${cy}px`;
@@ -3465,7 +3635,7 @@
         dot.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
         dot.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
         document.body.appendChild(dot);
-        setTimeout(() => dot.remove(), 900);
+        setTimeout(() => dot.remove(), 860);
       }
     }
 
@@ -3503,6 +3673,8 @@
       const toastLayer = document.getElementById('island-toast-layer');
       const expandedLayer = document.getElementById('island-expanded-layer');
       if (!shell || !idleLayer || !toastLayer || !expandedLayer) return;
+
+      boostCompositorFrames(440);
 
       shell.classList.toggle('is-toast', mode === 'toast');
       shell.classList.toggle('is-expanded', mode === 'expanded');
@@ -3745,10 +3917,10 @@
       if (hairlineFill) {
         if (state.focusRunning) {
           const totalSecs = Math.max(1, state.focusDurationMinutes * 60);
-          const elapsedPct = Math.min(100, Math.max(2, Math.round(((totalSecs - state.focusSeconds) / totalSecs) * 100)));
-          hairlineFill.style.width = `${elapsedPct}%`;
+          const elapsedRatio = Math.min(1, Math.max(0.02, (totalSecs - state.focusSeconds) / totalSecs));
+          hairlineFill.style.transform = `scaleX(${elapsedRatio.toFixed(4)})`;
         } else {
-          hairlineFill.style.width = `${pct}%`;
+          hairlineFill.style.transform = `scaleX(${(pct / 100).toFixed(4)})`;
         }
       }
 
@@ -3856,7 +4028,7 @@
         ratioEl.textContent = `${toPersianDigits(done)} از ${toPersianDigits(total)} کار تکمیل شده • هدف ${toPersianDigits(state.dailyGoal)}`;
       }
       if (pctEl) pctEl.textContent = `${pct}%`;
-      if (barEl) barEl.style.width = `${pct}%`;
+      if (barEl) barEl.style.transform = `scaleX(${(pct / 100).toFixed(4)})`;
       if (streakEl) streakEl.textContent = `🔥 ${toPersianDigits(state.streak.count || 1)} روز`;
 
       renderAvatarInto(document.getElementById('header-avatar-badge'));
@@ -4437,6 +4609,20 @@
         let startY = 0;
         let currentDeltaX = 0;
         let swiping = false;
+        let swipeRafPending = false;
+        let lastSwipeState = 0;
+
+        const applySwipeFrame = () => {
+          swipeRafPending = false;
+          if (!swiping) return;
+          card.style.transform = `translate3d(${currentDeltaX}px, 0, 0)`;
+          const nextState = currentDeltaX > 36 ? 1 : currentDeltaX < -36 ? -1 : 0;
+          if (slot && nextState !== lastSwipeState) {
+            lastSwipeState = nextState;
+            slot.classList.toggle('is-swiping-complete', nextState === 1);
+            slot.classList.toggle('is-swiping-delete', nextState === -1);
+          }
+        };
 
         card.addEventListener(
           'touchstart',
@@ -4447,6 +4633,7 @@
             startY = touch.clientY;
             currentDeltaX = 0;
             swiping = false;
+            lastSwipeState = 0;
           },
           { passive: true }
         );
@@ -4460,14 +4647,13 @@
             const dy = touch.clientY - startY;
             if (!swiping && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.4) {
               swiping = true;
-              card.style.transition = 'none';
+              if (slot) slot.classList.add('is-actively-swiping');
             }
             if (swiping) {
               currentDeltaX = Math.max(-130, Math.min(130, dx));
-              card.style.transform = `translate3d(${currentDeltaX}px, 0, 0)`;
-              if (slot) {
-                slot.classList.toggle('is-swiping-complete', currentDeltaX > 36);
-                slot.classList.toggle('is-swiping-delete', currentDeltaX < -36);
+              if (!swipeRafPending) {
+                swipeRafPending = true;
+                requestAnimationFrame(applySwipeFrame);
               }
             }
           },
@@ -4480,11 +4666,10 @@
             setTimeout(() => {
               suppressNextCardClick = false;
             }, 250);
-            card.style.transition = '';
-            card.style.transform = '';
             if (slot) {
-              slot.classList.remove('is-swiping-complete', 'is-swiping-delete');
+              slot.classList.remove('is-actively-swiping', 'is-swiping-complete', 'is-swiping-delete');
             }
+            card.style.transform = '';
             if (currentDeltaX > 85) {
               toggleTask(taskId);
             } else if (currentDeltaX < -85) {
@@ -4493,6 +4678,7 @@
           }
           startX = 0;
           swiping = false;
+          swipeRafPending = false;
         });
 
         card.addEventListener('dragstart', (e) => {
@@ -4858,7 +5044,7 @@
 
       const startScores = { ...state.radarCurrentScores };
       const startTime = performance.now();
-      const duration = 420;
+      const duration = state.detectedHz <= 60 ? 320 : 400;
       const cx = 170;
       const cy = 135;
       const maxRadius = 84;
@@ -5059,7 +5245,7 @@
                   <span class="text-[#93a3a5]">${toPersianDigits(catDone)} از ${toPersianDigits(catTasks.length)} (${pct}%)</span>
                 </div>
                 <div class="liquid-bar-track h-2 w-full">
-                  <div class="liquid-bar-fill" style="width: ${pct}%"></div>
+                  <div class="liquid-bar-fill" style="transform: scaleX(${(pct / 100).toFixed(4)})"></div>
                 </div>
               </div>
             `;
@@ -5089,6 +5275,8 @@
       document.getElementById('tg-switch-sound')?.classList.toggle('is-on', state.soundEnabled);
       document.getElementById('tg-switch-battery')?.classList.toggle('is-on', state.batterySaver);
 
+      updateGpuSettingsLabels();
+
       if (storageVal) {
         const bytes = new Blob([memoryFallbackStorage || '']).size;
         const kb = Math.max(1, Math.round(bytes / 1024));
@@ -5110,6 +5298,9 @@
       const isSameTab = state.activeTab === tabName;
 
       state.activeTab = tabName;
+      if (!isSameTab) {
+        boostCompositorFrames(420);
+      }
 
       document.querySelectorAll('.tab-view').forEach((view) => {
         const isTarget = view.id === `tab-view-${tabName}`;
@@ -5139,7 +5330,7 @@
 
       const indicator = document.getElementById('tg-nav-indicator');
       if (indicator) {
-        indicator.style.transform = `translateX(${-newIdx * 100}%)`;
+        indicator.style.transform = `translate3d(${-newIdx * 100}%, 0, 0)`;
       }
 
       if (!isSameTab) {
@@ -5185,6 +5376,7 @@
         clearTimeout(modalCloseTimers.get(id));
         modalCloseTimers.delete(id);
       }
+      boostCompositorFrames(400);
       resetSheetInlineStyles(el);
       el.classList.remove('hidden', 'is-closing');
       el.classList.add('flex');
@@ -5207,6 +5399,7 @@
         return;
       }
 
+      boostCompositorFrames(300);
       if (!fromDrag) {
         resetSheetInlineStyles(el);
       }
@@ -5235,6 +5428,14 @@
       let currentDy = 0;
       let canDrag = false;
       let isDragging = false;
+      let sheetRafPending = false;
+
+      const applySheetDragFrame = () => {
+        sheetRafPending = false;
+        if (!isDragging) return;
+        sheet.style.transform = `translate3d(0, ${currentDy}px, 0)`;
+        modal.style.opacity = String(Math.max(0.28, 1 - currentDy / 360));
+      };
 
       sheet.addEventListener(
         'touchstart',
@@ -5274,8 +5475,10 @@
 
           if (e.cancelable) e.preventDefault();
           currentDy = Math.max(0, dy);
-          sheet.style.transform = `translate3d(0, ${currentDy}px, 0)`;
-          modal.style.opacity = String(Math.max(0.28, 1 - currentDy / 360));
+          if (!sheetRafPending) {
+            sheetRafPending = true;
+            requestAnimationFrame(applySheetDragFrame);
+          }
         },
         { passive: false }
       );
@@ -5287,6 +5490,7 @@
         }
         isDragging = false;
         canDrag = false;
+        sheetRafPending = false;
         modal.style.opacity = '';
 
         if (currentDy > 95) {
@@ -6023,6 +6227,8 @@
 
     function initApp() {
       loadState();
+      applyAdaptiveRenderCalibration();
+      initAdaptiveRenderEngine();
       applyThemePreferences();
       renderFolderFilterChips();
       renderTasks();
@@ -6379,6 +6585,14 @@
       document.getElementById('tg-top-mode-btn')?.addEventListener('click', toggleColorMode);
       document.getElementById('tg-switch-day-night-btn')?.addEventListener('click', toggleColorMode);
 
+      document.getElementById('tg-row-gpu-mode')?.addEventListener('click', () => {
+        const modes = ['auto', 'ultra', 'balanced', 'performance'];
+        state.gpuQualityMode = modes[(modes.indexOf(state.gpuQualityMode) + 1) % modes.length];
+        applyAdaptiveRenderCalibration();
+        saveState();
+        playTactileSound('pop');
+      });
+
       document.getElementById('tg-top-cleanup-btn')?.addEventListener('click', () => openModal('cleanup-modal'));
       document.getElementById('tg-row-cleanup')?.addEventListener('click', () => openModal('cleanup-modal'));
 
@@ -6390,6 +6604,7 @@
         const sub = document.getElementById('tg-appearance-subpage');
         sub?.classList.remove('hidden');
         sub?.classList.add('flex');
+        updateGpuSettingsLabels();
         if (typeof syncBackLayerCallback === 'function') {
           syncBackLayerCallback();
         }
@@ -6479,6 +6694,7 @@
 
       document.getElementById('tg-row-battery')?.addEventListener('click', () => {
         state.batterySaver = !state.batterySaver;
+        applyAdaptiveRenderCalibration();
         saveState();
         renderSecondaryTabViews();
         playTactileSound('pop');
