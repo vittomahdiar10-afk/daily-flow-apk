@@ -344,10 +344,11 @@
         border-bottom-right-radius: 0 !important;
         border-top-left-radius: 28px !important;
         border-top-right-radius: 28px !important;
+        transform-origin: center bottom;
         transform: translate3d(0, 100%, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
-        will-change: transform;
+        will-change: transform, opacity;
         animation: none !important;
         transition: none;
         overflow: hidden !important;
@@ -5620,6 +5621,9 @@
       const sheet = modalEl.querySelector('.sheet-animate');
       if (sheet) {
         sheet.style.transform = '';
+        sheet.style.transformOrigin = '';
+        sheet.style.borderTopLeftRadius = '';
+        sheet.style.borderTopRightRadius = '';
         sheet.style.transition = '';
         sheet.style.opacity = '';
         sheet.style.animation = '';
@@ -5667,7 +5671,7 @@
         syncBackLayerCallback();
       }
 
-      const closeDelay = isMobileComposer ? 300 : 230;
+      const closeDelay = isMobileComposer ? 330 : 230;
       const timer = setTimeout(() => {
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
@@ -5681,7 +5685,7 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — بدون چسبندگی مگنتی و لمس فعال روی کل صفحه */
+    /* موتور کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — آستانه بستن روی ۴۲٪ باز بودن و انیمیشن جمع‌شونده شبیه داینامیک آیلند */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -5700,6 +5704,7 @@
       let startTouchX = 0;
       let startSheetY = 0;
       let cachedHalfY = 0;
+      let cachedCloseY = 0;
       let cachedVh = 0;
       let startedOnDragZone = false;
       let touchSamples = [];
@@ -5708,7 +5713,7 @@
       let settleTimer = null;
 
       const TELEGRAM_GLIDE_CURVE = 'cubic-bezier(0.22, 1, 0.36, 1)';
-      const TELEGRAM_EXIT_CURVE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+      const ISLAND_TUCK_CLOSE_CURVE = 'cubic-bezier(0.32, 0.72, 0, 1)';
       const isMobileShutter = () => window.innerWidth < 640;
 
       const getViewportH = () => {
@@ -5719,6 +5724,12 @@
       const getHalfOffset = () => {
         const vh = getViewportH();
         return Math.max(124, Math.round(vh * 0.21));
+      };
+
+      /* آستانه بستن روی ~۴۲٪ باز بودن صفحه (۵۸٪ پایین آمدن از بالا) تا در ۷۰–۸۰٪ هرگز بسته نشود */
+      const getCloseOffset = () => {
+        const vh = getViewportH();
+        return Math.round(vh * 0.58);
       };
 
       const readLiveTranslateY = () => {
@@ -5769,8 +5780,12 @@
         currentY = nextTargetY;
         const scaledMs = Math.max(200, Math.round(durationMs * (state.detectedHz <= 60 ? 0.92 : 1)));
 
-        sheet.style.transition = `transform ${scaledMs}ms ${curve}`;
-        sheet.style.transform = `translate3d(0, ${nextTargetY.toFixed(1)}px, 0)`;
+        sheet.style.transformOrigin = 'center bottom';
+        sheet.style.borderTopLeftRadius = '';
+        sheet.style.borderTopRightRadius = '';
+        sheet.style.opacity = '1';
+        sheet.style.transition = `transform ${scaledMs}ms ${curve}, border-radius ${scaledMs}ms ease`;
+        sheet.style.transform = `translate3d(0, ${nextTargetY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
 
         settleTimer = setTimeout(() => {
           sheet.style.transition = 'none';
@@ -5794,6 +5809,7 @@
         const vh = getViewportH();
         const halfY = getHalfOffset();
         cachedHalfY = halfY;
+        cachedCloseY = getCloseOffset();
         cachedVh = vh;
         setFullscreenState(false);
         const dur = computeAdaptiveDuration(currentY, halfY, initialVel);
@@ -5805,6 +5821,7 @@
         if (!isMobileShutter()) return;
         const vh = getViewportH();
         const halfY = cachedHalfY || getHalfOffset();
+        cachedCloseY = getCloseOffset();
         cachedVh = vh;
         setFullscreenState(true);
         const dur = computeAdaptiveDuration(currentY, 0, initialVel);
@@ -5824,13 +5841,18 @@
         const halfY = getHalfOffset();
         cachedVh = vh;
         cachedHalfY = halfY;
+        cachedCloseY = getCloseOffset();
         setFullscreenState(false);
         scrollBody.scrollTop = 0;
 
         modal.style.transition = 'none';
         modal.style.opacity = '0';
         sheet.style.transition = 'none';
-        sheet.style.transform = `translate3d(0, ${vh}px, 0)`;
+        sheet.style.transformOrigin = 'center bottom';
+        sheet.style.borderTopLeftRadius = '';
+        sheet.style.borderTopRightRadius = '';
+        sheet.style.opacity = '1';
+        sheet.style.transform = `translate3d(0, ${vh}px, 0) scale3d(0.95, 0.96, 1)`;
         updateMainStageDepth(0, false);
 
         currentY = vh;
@@ -5843,15 +5865,23 @@
         });
       };
 
+      /* انیمیشن بستن جمع‌شونده و ابریشمی الهام‌گرفته از داینامیک آیلند */
       const animateClose = (initialVel = 0) => {
+        clearSettleTimer();
         if (!isMobileShutter()) return;
         const vh = getViewportH();
         const halfY = cachedHalfY || getHalfOffset();
         cachedVh = vh;
         setFullscreenState(false);
-        const dur = Math.min(290, Math.max(220, computeAdaptiveDuration(currentY, vh, initialVel)));
-        syncBackdropAndStage(vh, vh, halfY, dur, TELEGRAM_EXIT_CURVE);
-        glideToPosition(vh, dur, TELEGRAM_EXIT_CURVE);
+        const dur = Math.min(340, Math.max(255, computeAdaptiveDuration(currentY, vh, initialVel)));
+        syncBackdropAndStage(vh, vh, halfY, dur, ISLAND_TUCK_CLOSE_CURVE);
+
+        sheet.style.transformOrigin = 'center bottom';
+        sheet.style.transition = `transform ${dur}ms ${ISLAND_TUCK_CLOSE_CURVE}, opacity ${Math.round(dur * 0.86)}ms ease, border-radius ${dur}ms ease`;
+        sheet.style.borderTopLeftRadius = '38px';
+        sheet.style.borderTopRightRadius = '38px';
+        sheet.style.opacity = '0';
+        sheet.style.transform = `translate3d(0, ${Math.round(vh * 0.96)}px, 0) scale3d(0.86, 0.88, 1)`;
       };
 
       const resetState = () => {
@@ -5867,6 +5897,10 @@
         modal.style.opacity = '';
         sheet.classList.remove('is-fullscreen', 'is-settled-fullscreen');
         sheet.style.transition = 'none';
+        sheet.style.transformOrigin = '';
+        sheet.style.borderTopLeftRadius = '';
+        sheet.style.borderTopRightRadius = '';
+        sheet.style.opacity = '';
         sheet.style.transform = '';
       };
 
@@ -5909,7 +5943,13 @@
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
-        sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+        let tuckScale = 1;
+        if (currentY > cachedHalfY) {
+          const closeSpan = Math.max(1, cachedCloseY - cachedHalfY);
+          const tuckRatio = Math.max(0, Math.min(1.15, (currentY - cachedHalfY) / closeSpan));
+          tuckScale = 1 - tuckRatio * 0.036;
+        }
+        sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0) scale3d(${tuckScale.toFixed(4)}, ${tuckScale.toFixed(4)}, 1)`;
         syncBackdropAndStage(currentY, cachedVh, cachedHalfY, 0);
       };
 
@@ -5935,7 +5975,7 @@
           clearSettleTimer();
           const liveY = readLiveTranslateY();
           sheet.style.transition = 'none';
-          sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0)`;
+          sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
           currentY = liveY;
 
           const touch = e.touches[0];
@@ -5946,6 +5986,7 @@
           startedInFullscreen = isFullscreen;
           cachedVh = getViewportH();
           cachedHalfY = Math.max(124, Math.round(cachedVh * 0.21));
+          cachedCloseY = Math.round(cachedVh * 0.58);
           startedOnDragZone = Boolean(e.target.closest('[data-composer-drag-zone]'));
           touchSamples = [{ y: touch.clientY, t: now }];
           dragging = false;
@@ -6025,12 +6066,14 @@
 
         const velocityY = computeReleaseVelocity();
         touchSamples = [];
+        const vh = cachedVh || getViewportH();
         const halfY = cachedHalfY || getHalfOffset();
+        const closeThresholdY = cachedCloseY || getCloseOffset();
 
         if (startedInFullscreen) {
-          /* آستانه سبک و غیرمگنتی هنگام پایین کشیدن از حالت تمام‌صفحه (دقیقاً مثل تلگرام) */
+          /* از ۱۰۰٪ تمام‌صفحه، در ۷۰–۸۰٪ به نیمه‌باز می‌رود و فقط با رسیدن به ~۴۲٪ باز بودن بسته می‌شود */
           const pullDownThreshold = Math.min(48, Math.round(halfY * 0.28));
-          if (currentY >= halfY + 85 || (velocityY > 720 && currentY > halfY * 0.55)) {
+          if (currentY >= closeThresholdY || (velocityY > 1450 && currentY >= vh * 0.44)) {
             animateClose(velocityY);
             playTactileSound('pop');
             triggerHaptic(8);
@@ -6042,10 +6085,10 @@
             snapToFullscreen(velocityY);
           }
         } else {
-          /* آستانه‌های نرم و واکنش‌گرا از حالت نیمه‌باز */
+          /* از حالت نیمه‌باز: بالا رفتن -> تمام‌صفحه؛ پایین رفتن تا ~۴۲٪ باز بودن -> بسته شدن جمع‌شونده */
           if (currentY <= halfY * 0.68 || (velocityY < -230 && currentY < halfY * 0.96)) {
             snapToFullscreen(velocityY);
-          } else if (currentY >= halfY + 80 || (velocityY > 360 && currentY > halfY + 18)) {
+          } else if (currentY >= closeThresholdY || (velocityY > 980 && currentY >= vh * 0.46)) {
             animateClose(velocityY);
             playTactileSound('pop');
             triggerHaptic(8);
