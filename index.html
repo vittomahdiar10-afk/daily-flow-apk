@@ -62,17 +62,13 @@
       --glass-blur: 10px;
       --island-blur: 12px;
       --motion-scale: 1;
-      /* منحنی‌های فنری چندنقطه‌ای منطبق با فیزیک iOS & HyperOS */
+      /* منحنی‌های فنری و ابریشمی منطبق با فیزیک iOS 27 & HyperOS 4 */
       --spring-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
       --spring-curve: linear(
         0, 0.012 2.2%, 0.048 4.5%, 0.185 9.5%, 0.56 18%, 0.84 26%,
         0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
       );
-      --sheet-curve: cubic-bezier(0.22, 1, 0.36, 1);
-      --sheet-curve: linear(
-        0, 0.011 2.2%, 0.044 4.5%, 0.17 9.5%, 0.52 18.5%, 0.80 27.5%,
-        0.935 36%, 0.988 45%, 1.004 55%, 1.003 67%, 1.000 82%, 1
-      );
+      --sheet-curve: cubic-bezier(0.16, 1, 0.3, 1);
       --ios-fluid-curve: cubic-bezier(0.2, 0.9, 0.25, 1);
       --ios-fluid-curve: linear(
         0, 0.010 2.5%, 0.040 5.2%, 0.155 11%, 0.47 21%, 0.75 32%,
@@ -84,7 +80,7 @@
       --bg-chip: #1a2224;
       --glass-bg: rgba(20, 27, 29, 0.88);
       --glass-card-bg: rgba(22, 30, 32, 0.92);
-      --glass-modal-surface: rgba(18, 25, 28, 0.98);
+      --glass-modal-surface: rgba(18, 25, 28, 0.985);
       --composer-fs-scrim: linear-gradient(to bottom, rgba(18, 25, 28, 0.99) 74%, rgba(18, 25, 28, 0) 100%);
       --glass-border: rgba(255, 255, 255, 0.09);
       --specular-edge: rgba(255, 255, 255, 0.14);
@@ -223,7 +219,7 @@
       }
     }
 
-    /* حذف backdrop-filter تمام‌صفحه از مودال‌ها برای جلوگیری از افت فریم GPU در اندروید */
+    /* پس‌زمینه مودال‌ها بدون بلور سنگین برای حداکثر نرخ فریم GPU */
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
@@ -314,7 +310,7 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — کنترل کامل توسط موتور فیزیک فنری */
+    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — رندر ابریشمی مستقیم روی Compositor GPU */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -337,24 +333,25 @@
         background: var(--glass-modal-surface) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
+        box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.34), inset 0 1px 0 0 var(--specular-edge) !important;
         border-left: none !important;
         border-right: none !important;
         border-bottom: none !important;
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
-        border-top-left-radius: 30px !important;
-        border-top-right-radius: 30px !important;
+        border-top-left-radius: 28px !important;
+        border-top-right-radius: 28px !important;
         transform: translate3d(0, 22vh, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         will-change: transform;
         animation: none !important;
+        transition: none;
         overflow: hidden !important;
-        contain: strict;
+        contain: layout style paint;
       }
 
-      #composer-shutter-sheet.is-fullscreen {
+      #composer-shutter-sheet.is-settled-fullscreen {
         border-top-left-radius: 0px !important;
         border-top-right-radius: 0px !important;
       }
@@ -365,8 +362,10 @@
         -webkit-overflow-scrolling: touch;
         contain: content;
         transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
         will-change: transform;
-        transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+        transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       #composer-shutter-sheet.is-fullscreen #composer-scroll-body {
@@ -408,46 +407,40 @@
       background: var(--composer-fs-scrim);
       opacity: 0;
       pointer-events: none;
-      transform: translate3d(0, -14px, 0) scale3d(0.97, 0.97, 1);
+      transform: translate3d(0, -10px, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
       transition:
-        opacity calc(0.26s * var(--motion-scale)) ease,
-        transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
+        opacity 0.24s ease,
+        transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-fs-header {
       opacity: 1;
       pointer-events: auto;
-      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      transform: translate3d(0, 0, 0);
     }
 
     #composer-grabber-zone {
       opacity: 1;
-      transform: scale3d(1, 1, 1);
-      will-change: opacity, transform;
-      transition:
-        opacity calc(0.2s * var(--motion-scale)) ease,
-        transform calc(0.32s * var(--motion-scale)) var(--ios-fluid-curve);
+      will-change: opacity;
+      transition: opacity 0.18s ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
       opacity: 0;
-      transform: scale3d(0.85, 0.85, 1);
       pointer-events: none;
     }
 
     #composer-inline-header {
       opacity: 1;
-      transform: translate3d(0, 0, 0);
-      will-change: opacity, transform;
-      transition:
-        opacity calc(0.2s * var(--motion-scale)) ease,
-        transform calc(0.32s * var(--motion-scale)) var(--ios-fluid-curve);
+      will-change: opacity;
+      transition: opacity 0.18s ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-inline-header {
       opacity: 0;
-      transform: translate3d(0, -6px, 0);
       pointer-events: none;
     }
 
@@ -996,7 +989,7 @@
 
     [id$="-modal"].is-closing {
       pointer-events: none;
-      animation: modalBackdropOut calc(0.22s * var(--motion-scale)) var(--ios-fluid-curve) forwards;
+      animation: modalBackdropOut calc(0.24s * var(--motion-scale)) var(--ios-fluid-curve) forwards;
     }
 
     .sheet-animate {
@@ -3109,93 +3102,6 @@
     let draggedTaskId = null;
     let syncBackLayerCallback = null;
     let composerShutterController = null;
-
-    /* ==================== موتور فیزیک فنری واقعی iOS & HyperOS (Harmonic Spring Engine) ==================== */
-    function createSpringSimulator(options = {}) {
-      let stiffness = options.stiffness || 340;
-      let damping = options.damping || 32;
-      let mass = options.mass || 1;
-      let position = options.initialValue || 0;
-      let velocity = 0;
-      let target = position;
-      let rafId = null;
-      let lastTime = 0;
-      let onUpdate = options.onUpdate || null;
-      let onComplete = null;
-
-      function stop() {
-        if (rafId !== null) {
-          cancelAnimationFrame(rafId);
-          rafId = null;
-        }
-        lastTime = 0;
-      }
-
-      function setImmediate(val) {
-        stop();
-        position = val;
-        target = val;
-        velocity = 0;
-        if (onUpdate) onUpdate(position);
-      }
-
-      function step(now) {
-        if (!lastTime) lastTime = now;
-        const dt = Math.min((now - lastTime) / 1000, 0.032);
-        lastTime = now;
-
-        const subSteps = 2;
-        const subDt = dt / subSteps;
-        for (let i = 0; i < subSteps; i++) {
-          const displacement = position - target;
-          const springForce = -stiffness * displacement;
-          const dampingForce = -damping * velocity;
-          const acceleration = (springForce + dampingForce) / mass;
-          velocity += acceleration * subDt;
-          position += velocity * subDt;
-        }
-
-        if (onUpdate) onUpdate(position);
-
-        if (Math.abs(position - target) < 0.35 && Math.abs(velocity) < 3.5) {
-          position = target;
-          velocity = 0;
-          rafId = null;
-          lastTime = 0;
-          if (onUpdate) onUpdate(position);
-          const doneCb = onComplete;
-          onComplete = null;
-          if (doneCb) doneCb();
-        } else {
-          rafId = requestAnimationFrame(step);
-        }
-      }
-
-      function animateTo(nextTarget, initialVel = 0, completeCb = null, customConfig = null) {
-        if (customConfig) {
-          if (typeof customConfig.stiffness === 'number') stiffness = customConfig.stiffness;
-          if (typeof customConfig.damping === 'number') damping = customConfig.damping;
-          if (typeof customConfig.mass === 'number') mass = customConfig.mass;
-        }
-        target = nextTarget;
-        if (typeof initialVel === 'number' && !Number.isNaN(initialVel)) {
-          velocity = Math.max(-3600, Math.min(3600, initialVel));
-        }
-        onComplete = completeCb;
-        if (rafId === null) {
-          lastTime = 0;
-          rafId = requestAnimationFrame(step);
-        }
-      }
-
-      return {
-        stop,
-        setImmediate,
-        animateTo,
-        getValue: () => position,
-        isRunning: () => rafId !== null,
-      };
-    }
 
     /* تابع کشسانی لبه iOS Rubber-Banding برای حس لمسی واقعی هنگام کشیدن بیش از حد */
     function computeIosRubberBand(offset, dimension = 64) {
@@ -5742,7 +5648,7 @@
         syncBackLayerCallback();
       }
 
-      const closeDelay = id === 'task-composer-modal' ? 280 : 230;
+      const closeDelay = id === 'task-composer-modal' ? 290 : 230;
       const timer = setTimeout(() => {
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
@@ -5756,7 +5662,7 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram با انتگرال‌گیر فنری واقعی (Real Velocity-Preserving Spring) */
+    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram با انتقال سخت‌افزاری مستقیم روی GPU Compositor */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -5766,6 +5672,7 @@
       if (!modal || !sheet || !scrollBody) return null;
 
       let currentY = 0;
+      let targetY = 0;
       let isFullscreen = false;
       let dragging = false;
       let startTouchY = 0;
@@ -5774,12 +5681,12 @@
       let cachedHalfY = 0;
       let cachedVh = 0;
       let startedOnDragZone = false;
-      let lastMoveY = 0;
-      let lastMoveTime = 0;
-      let velocityY = 0;
+      let touchSamples = [];
       let rafPending = false;
       let dragLocked = false;
+      let settleTimer = null;
 
+      const SILK_GLIDE_CURVE = 'cubic-bezier(0.16, 1, 0.3, 1)';
       const isMobileShutter = () => window.innerWidth < 640;
 
       const getViewportH = () => {
@@ -5792,32 +5699,54 @@
         return Math.max(130, Math.round(vh * 0.22));
       };
 
-      const syncShutterTransformFrame = (yVal, syncDepth = true) => {
-        currentY = yVal;
-        sheet.style.transform = `translate3d(0, ${yVal.toFixed(2)}px, 0)`;
-
-        if (syncDepth) {
-          const vh = cachedVh || getViewportH();
-          const progress = Math.max(0, Math.min(1, 1 - yVal / Math.max(1, vh)));
-          updateMainStageDepth(progress, false);
-        }
+      const readLiveTranslateY = () => {
+        try {
+          const matrix = new DOMMatrixReadOnly(getComputedStyle(sheet).transform);
+          if (Number.isFinite(matrix.m42)) return matrix.m42;
+        } catch (e) {}
+        return currentY;
       };
 
-      const shutterSpring = createSpringSimulator({
-        stiffness: 350,
-        damping: 31,
-        mass: 1,
-        initialValue: 0,
-        onUpdate: (val) => {
-          if (!isMobileShutter()) return;
-          syncShutterTransformFrame(val, true);
-        },
-      });
+      const clearSettleTimer = () => {
+        if (settleTimer) {
+          clearTimeout(settleTimer);
+          settleTimer = null;
+        }
+      };
 
       const setFullscreenState = (nextFs) => {
         if (isFullscreen === nextFs) return;
         isFullscreen = nextFs;
         sheet.classList.toggle('is-fullscreen', isFullscreen);
+        if (!isFullscreen) {
+          sheet.classList.remove('is-settled-fullscreen');
+        }
+      };
+
+      const glideToPosition = (nextTargetY, durationMs, curve = SILK_GLIDE_CURVE, onDone = null) => {
+        clearSettleTimer();
+        targetY = nextTargetY;
+        currentY = nextTargetY;
+        const scaledMs = Math.max(190, Math.round(durationMs * (state.detectedHz <= 60 ? 0.92 : 1)));
+
+        sheet.style.transition = `transform ${scaledMs}ms ${curve}`;
+        sheet.style.transform = `translate3d(0, ${nextTargetY.toFixed(1)}px, 0)`;
+
+        settleTimer = setTimeout(() => {
+          sheet.style.transition = 'none';
+          if (isFullscreen && nextTargetY === 0) {
+            sheet.classList.add('is-settled-fullscreen');
+          }
+          if (typeof onDone === 'function') onDone();
+        }, scaledMs + 16);
+      };
+
+      const computeAdaptiveDuration = (fromY, toY, velY) => {
+        const dist = Math.abs(toY - fromY);
+        const speed = Math.abs(velY);
+        if (speed > 950) return 275;
+        if (speed > 450) return 325;
+        return Math.min(430, Math.max(300, Math.round(280 + dist * 0.42)));
       };
 
       const snapToHalf = (initialVel = 0) => {
@@ -5826,27 +5755,22 @@
         cachedHalfY = halfY;
         cachedVh = getViewportH();
         setFullscreenState(false);
-        shutterSpring.animateTo(halfY, initialVel, null, {
-          stiffness: 340,
-          damping: 30,
-          mass: 1,
-        });
+        const dur = computeAdaptiveDuration(currentY, halfY, initialVel);
+        glideToPosition(halfY, dur, SILK_GLIDE_CURVE);
       };
 
       const snapToFullscreen = (initialVel = 0) => {
         if (!isMobileShutter()) return;
         cachedVh = getViewportH();
         setFullscreenState(true);
-        shutterSpring.animateTo(0, initialVel, null, {
-          stiffness: 370,
-          damping: 33,
-          mass: 1,
-        });
+        const dur = computeAdaptiveDuration(currentY, 0, initialVel);
+        glideToPosition(0, dur, SILK_GLIDE_CURVE);
         playTactileSound('pop');
         triggerHaptic(8);
       };
 
       const animateOpen = () => {
+        clearSettleTimer();
         if (!isMobileShutter()) {
           setFullscreenState(false);
           return;
@@ -5858,13 +5782,14 @@
         setFullscreenState(false);
         scrollBody.scrollTop = 0;
 
-        shutterSpring.setImmediate(vh);
+        sheet.style.transition = 'none';
+        sheet.style.transform = `translate3d(0, ${vh}px, 0)`;
+        currentY = vh;
+        targetY = halfY;
+        void sheet.offsetWidth;
+
         requestAnimationFrame(() => {
-          shutterSpring.animateTo(halfY, -220, null, {
-            stiffness: 330,
-            damping: 29,
-            mass: 1,
-          });
+          glideToPosition(halfY, 410, SILK_GLIDE_CURVE);
         });
       };
 
@@ -5873,26 +5798,25 @@
         const vh = getViewportH();
         cachedVh = vh;
         setFullscreenState(false);
-        shutterSpring.animateTo(vh, Math.max(0, initialVel), null, {
-          stiffness: 390,
-          damping: 35,
-          mass: 1,
-        });
+        const dur = Math.min(280, Math.max(210, computeAdaptiveDuration(currentY, vh, initialVel)));
+        glideToPosition(vh, dur, 'cubic-bezier(0.22, 1, 0.36, 1)');
       };
 
       const resetState = () => {
-        shutterSpring.stop();
+        clearSettleTimer();
         isFullscreen = false;
         dragging = false;
         dragLocked = false;
         rafPending = false;
-        sheet.classList.remove('is-fullscreen');
+        touchSamples = [];
+        sheet.classList.remove('is-fullscreen', 'is-settled-fullscreen');
+        sheet.style.transition = 'none';
         sheet.style.transform = '';
       };
 
       collapseFsBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        snapToHalf(260);
+        snapToHalf(300);
         playTactileSound('pop');
       });
 
@@ -5907,7 +5831,21 @@
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
-        syncShutterTransformFrame(currentY, true);
+        sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+      };
+
+      const computeReleaseVelocity = () => {
+        if (touchSamples.length < 2) return 0;
+        const newest = touchSamples[touchSamples.length - 1];
+        let oldest = touchSamples[0];
+        for (let i = touchSamples.length - 2; i >= 0; i--) {
+          if (newest.t - touchSamples[i].t >= 45) {
+            oldest = touchSamples[i];
+            break;
+          }
+        }
+        const dt = Math.max(8, newest.t - oldest.t);
+        return ((newest.y - oldest.y) / dt) * 1000;
       };
 
       sheet.addEventListener(
@@ -5916,17 +5854,21 @@
           if (!isMobileShutter() || e.touches.length !== 1) return;
           if (e.target.closest('button') || e.target.closest('input')) return;
 
-          shutterSpring.stop();
+          clearSettleTimer();
+          const liveY = readLiveTranslateY();
+          sheet.style.transition = 'none';
+          sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0)`;
+          currentY = liveY;
+
           const touch = e.touches[0];
+          const now = performance.now();
           startTouchY = touch.clientY;
           startTouchX = touch.clientX;
-          startSheetY = currentY;
+          startSheetY = liveY;
           cachedVh = getViewportH();
           cachedHalfY = Math.max(130, Math.round(cachedVh * 0.22));
           startedOnDragZone = Boolean(e.target.closest('[data-composer-drag-zone]'));
-          lastMoveY = touch.clientY;
-          lastMoveTime = performance.now();
-          velocityY = 0;
+          touchSamples = [{ y: touch.clientY, t: now }];
           dragging = false;
           dragLocked = false;
         },
@@ -5946,7 +5888,7 @@
               dragLocked = true;
               return;
             }
-            if (Math.abs(dy) < 7) return;
+            if (Math.abs(dy) < 6) return;
 
             if (startedOnDragZone) {
               dragging = true;
@@ -5958,16 +5900,14 @@
               dragLocked = true;
               return;
             }
+            sheet.classList.remove('is-settled-fullscreen');
           }
 
           if (dragging) {
             if (e.cancelable) e.preventDefault();
             const now = performance.now();
-            const dt = Math.max(1, now - lastMoveTime);
-            const instantVel = ((touch.clientY - lastMoveY) / dt) * 1000;
-            velocityY = velocityY * 0.35 + instantVel * 0.65;
-            lastMoveY = touch.clientY;
-            lastMoveTime = now;
+            touchSamples.push({ y: touch.clientY, t: now });
+            if (touchSamples.length > 6) touchSamples.shift();
 
             let nextY = startSheetY + dy;
             if (nextY < 0) {
@@ -5991,11 +5931,13 @@
         dragging = false;
         rafPending = false;
 
+        const velocityY = computeReleaseVelocity();
+        touchSamples = [];
         const halfY = cachedHalfY || getHalfOffset();
 
-        if (currentY <= halfY * 0.56 || (velocityY < -420 && currentY < halfY * 0.96)) {
+        if (currentY <= halfY * 0.62 || (velocityY < -340 && currentY < halfY * 0.96)) {
           snapToFullscreen(velocityY);
-        } else if (currentY >= halfY + 95 || (velocityY > 560 && currentY > halfY * 0.78)) {
+        } else if (currentY >= halfY + 90 || (velocityY > 520 && currentY > halfY * 0.78)) {
           animateClose(velocityY);
           playTactileSound('pop');
           triggerHaptic(8);
