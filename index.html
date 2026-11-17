@@ -99,7 +99,7 @@
       --bg-chip: #e6eef0;
       --glass-bg: rgba(255, 255, 255, 0.90);
       --glass-card-bg: rgba(255, 255, 255, 0.96);
-      --glass-modal-surface: rgba(248, 250, 252, 0.98);
+      --glass-modal-surface: rgba(242, 245, 247, 0.98);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
@@ -204,7 +204,7 @@
       -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
     }
 
-    [id$="-modal"] .sheet-animate {
+    [id$="-modal"]:not(#task-composer-modal) .sheet-animate {
       max-height: calc(var(--app-viewport-height) - 1.5rem - env(safe-area-inset-top, 0px));
     }
 
@@ -235,7 +235,6 @@
         radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 46%);
     }
 
-    /* حذف passهای اضافه backdrop-filter روی نوارهای بالا و پایین برای جلوگیری از افت فریم در سامسونگ و ۶۰/۹۰ هرتز */
     .status-bar-scrim {
       position: fixed;
       top: 0;
@@ -269,12 +268,118 @@
       transition: background-color 0.22s ease, border-color 0.22s ease, border-radius 0.2s ease;
     }
 
-    /* حذف blur تودرتو داخل مودال‌ها برای حذف لگ باز و بسته شدن پنجره‌ها */
     [id$="-modal"] > .liquid-glass {
       background: var(--glass-modal-surface) !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 var(--specular-edge) !important;
+    }
+
+    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram برای ایجاد کار جدید */
+    #task-composer-modal {
+      padding: 0 !important;
+    }
+
+    @media (max-width: 639px) {
+      #task-composer-modal {
+        align-items: flex-end !important;
+      }
+
+      #composer-shutter-sheet {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: var(--app-viewport-height) !important;
+        max-height: var(--app-viewport-height) !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-top-left-radius: var(--shutter-top-radius, 30px) !important;
+        border-top-right-radius: var(--shutter-top-radius, 30px) !important;
+        transform: translate3d(0, var(--shutter-y, 22vh), 0);
+        will-change: transform, border-radius;
+        animation: none !important;
+        overflow: hidden !important;
+      }
+
+      #composer-shutter-sheet.is-snapping {
+        transition:
+          transform calc(0.42s * var(--motion-scale)) cubic-bezier(0.22, 1.08, 0.32, 1),
+          border-radius calc(0.32s * var(--motion-scale)) ease !important;
+      }
+    }
+
+    @media (min-width: 640px) {
+      #task-composer-modal {
+        padding: 1rem !important;
+        align-items: center !important;
+      }
+
+      #composer-shutter-sheet {
+        max-height: 88vh;
+        overflow: hidden;
+      }
+    }
+
+    .composer-fs-floating-bar {
+      background: var(--island-bg);
+      border: 1px solid var(--island-border);
+      box-shadow: var(--island-shadow);
+      backdrop-filter: blur(var(--island-blur));
+      -webkit-backdrop-filter: blur(var(--island-blur));
+    }
+
+    #composer-fs-header {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transform: translate3d(0, -10px, 0) scale(0.97);
+      transition:
+        max-height calc(0.34s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity calc(0.24s * var(--motion-scale)) ease,
+        transform calc(0.34s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        padding calc(0.34s * var(--motion-scale)) ease;
+    }
+
+    #composer-shutter-sheet.is-fullscreen #composer-fs-header {
+      max-height: calc(68px + env(safe-area-inset-top, 0px));
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate3d(0, 0, 0) scale(1);
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
+      padding-bottom: 8px;
+    }
+
+    #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
+      opacity: 0;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    #composer-grabber-zone {
+      max-height: 28px;
+      opacity: 1;
+      transition: opacity 0.2s ease, max-height 0.28s ease, padding 0.28s ease;
+    }
+
+    #composer-inline-header {
+      transition: opacity 0.22s ease, max-height 0.28s ease, padding 0.28s ease;
+      max-height: 56px;
+      overflow: hidden;
+    }
+
+    #composer-shutter-sheet.is-fullscreen #composer-inline-header {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      pointer-events: none;
     }
 
     .liquid-card {
@@ -286,7 +391,6 @@
       transition: transform calc(0.2s * var(--motion-scale)) var(--sheet-curve), border-color 0.18s ease, opacity 0.18s ease;
     }
 
-    /* بهینه‌سازی کامل کنتراست و رنگ‌ها در حالت روز (Light Mode) */
     body.theme-light [id$="-modal"] > .liquid-glass {
       background: var(--glass-modal-surface) !important;
       border-color: rgba(15, 23, 42, 0.1) !important;
@@ -372,7 +476,6 @@
       transform: scale(0.94);
     }
 
-    /* تراز هندسی دقیق آیکون‌های داخل دکمه‌های دایره‌ای در Android WebView */
     .icon-circle-btn {
       position: relative;
       display: inline-flex;
@@ -544,7 +647,6 @@
       overflow: hidden;
     }
 
-    /* رندر ۱۰۰٪ سخت‌افزاری نوار پیشرفت با transform: scaleX به جای width */
     .island-progress-hairline-fill {
       width: 100%;
       height: 100%;
@@ -632,7 +734,6 @@
       overflow: hidden;
     }
 
-    /* شتاب‌دهی سخت‌افزاری نوارهای پیشرفت اصلی با scaleX */
     .liquid-bar-fill {
       width: 100%;
       height: 100%;
@@ -756,12 +857,12 @@
     }
 
     [id$="-modal"] {
-      animation: modalBackdropIn calc(0.22s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: modalBackdropIn calc(0.24s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     [id$="-modal"].is-closing {
       pointer-events: none;
-      animation: modalBackdropOut calc(0.18s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: modalBackdropOut calc(0.2s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .sheet-animate {
@@ -769,7 +870,7 @@
       will-change: transform, opacity;
     }
 
-    [id$="-modal"].is-closing .sheet-animate {
+    [id$="-modal"]:not(#task-composer-modal).is-closing .sheet-animate {
       animation: sheetSlideDownMobile calc(0.19s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
     }
 
@@ -990,15 +1091,6 @@
       }
     }
 
-    @keyframes tabEnterFade {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
     .tab-view.tab-enter-from-left {
       animation: tabEnterFromLeft calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
@@ -1007,10 +1099,6 @@
     .tab-view.tab-enter-from-right {
       animation: tabEnterFromRight calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
-    }
-
-    .tab-view.tab-enter-fade {
-      animation: tabEnterFade 0.16s ease-out both;
     }
 
     .tg-fab-add {
@@ -1049,7 +1137,6 @@
       }
     }
 
-    /* مجازی‌سازی هوشمند اسکرول و ایزوله‌سازی لایه‌های رندر کارت‌ها */
     .task-swipe-slot {
       position: relative;
       border-radius: var(--card-radius);
@@ -2189,7 +2276,7 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حریم خصوصی، داده‌ها و عملکرد</span>
+          <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حریم خصوصی، داده‌ها و صدا</span>
           <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
             <button id="tg-row-privacy" type="button" class="tg-settings-row">
               <div class="flex items-center gap-3 min-w-0">
@@ -2219,21 +2306,6 @@
                 </div>
               </div>
               <span id="tg-switch-sound" class="tg-switch is-on"><span class="tg-switch-knob block"></span></span>
-            </button>
-
-            <button id="tg-row-battery" type="button" class="tg-settings-row">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#f97316]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">ذخیره باتری (Power Saving)</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">کاهش ذرات جشن و ویبره برای مصرف کمتر</div>
-                </div>
-              </div>
-              <span id="tg-switch-battery" class="tg-switch"><span class="tg-switch-knob block"></span></span>
             </button>
 
             <button id="tg-row-storage" type="button" class="tg-settings-row">
@@ -2671,167 +2743,204 @@
     </div>
   </div>
 
-  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4 bg-black/70">
-    <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-4 sm:p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto">
-      <div data-sheet-handle class="pt-0.5 pb-1.5 -mt-1.5 cursor-grab active:cursor-grabbing touch-none flex justify-center">
-        <div class="w-10 h-1 rounded-full bg-white/25"></div>
+  <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار (iOS 27 / HyperOS 4 / Telegram) ==================== -->
+  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70">
+    <div id="composer-shutter-sheet" class="liquid-glass sheet-animate rounded-3xl w-full max-w-md flex flex-col">
+      <!-- دستگیره کرکره در حالت نیمه‌باز -->
+      <div id="composer-grabber-zone" data-composer-drag-zone class="pt-2.5 pb-1.5 cursor-grab active:cursor-grabbing touch-none flex flex-col items-center shrink-0">
+        <div class="w-10 h-1.5 rounded-full bg-white/30"></div>
       </div>
 
-      <form id="task-composer-form" action="javascript:void(0)" class="flex flex-col gap-3.5">
-        <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
-          <div class="flex items-center justify-between px-4 pt-3.5 pb-2">
-            <div class="flex items-center gap-2">
-              <button
-                id="close-composer-modal"
-                type="button"
-                aria-label="بستن"
-                class="spring-btn icon-circle-btn w-7 h-7 rounded-full bg-white/10 text-slate-300 cursor-pointer"
-              >
-                <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <span class="text-xs font-extrabold text-[#7fd5d8]">کار جدید</span>
-            </div>
-
+      <!-- نوار شناور تمام‌صفحه شبیه تلگرام / iOS 27 (فقط وقتی کرکره تا بالا کشیده شود ظاهر می‌شود) -->
+      <div id="composer-fs-header" data-composer-drag-zone class="px-3.5 shrink-0 touch-none select-none">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
             <button
-              id="composer-submit-btn"
-              type="submit"
-              disabled
-              class="composer-create-btn spring-btn text-xs font-extrabold px-4 py-1.5 rounded-full cursor-pointer"
-            >
-              ایجاد کار
-            </button>
-          </div>
-
-          <div class="px-4 pb-1">
-            <input
-              id="composer-title-input"
-              type="text"
-              dir="auto"
-              maxlength="140"
-              placeholder="عنوان کار (مثلاً: برنامه ورزش امروز)..."
-              class="w-full bg-transparent py-2 text-sm font-bold text-white placeholder-[#7d8e90] outline-none"
-            />
-          </div>
-
-          <div class="border-t border-white/[0.08] mx-4"></div>
-
-          <div class="px-4 py-2 flex items-center gap-2">
-            <input
-              id="composer-desc-input"
-              type="text"
-              dir="auto"
-              maxlength="180"
-              placeholder="توضیحات کوتاه (اختیاری)..."
-              class="w-full bg-transparent py-1 text-xs text-slate-200 placeholder-[#7d8e90] outline-none"
-            />
-            <span class="text-xs text-[#7d8e90] shrink-0">📝</span>
-          </div>
-
-          <div class="border-t border-white/[0.08] mx-4"></div>
-
-          <div class="px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.02]">
-            <span class="text-[11px] text-[#93a3a5] shrink-0">تشخیص هوشمند رشد:</span>
-            <div id="composer-smart-detect-badges" class="flex items-center gap-1 flex-wrap justify-end">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7fd5d8]/15 text-[#7fd5d8]">🛡️ انضباط</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
-            <div class="px-4 pt-3.5 pb-1.5 flex items-center justify-between">
-              <span class="text-xs font-extrabold text-[#7fd5d8]">زیرکارها (ریزکارها)</span>
-              <span id="composer-subtasks-badge" class="text-[11px] text-[#93a3a5]">۰ مورد</span>
-            </div>
-
-            <div id="composer-subtasks-list" class="divide-y divide-white/[0.07]"></div>
-
-            <button
-              id="composer-add-option-btn"
+              id="composer-collapse-fs-btn"
               type="button"
-              class="w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-white/[0.04] transition-colors cursor-pointer"
+              aria-label="بازگشت به حالت نیمه‌باز"
+              class="spring-btn icon-circle-btn w-9 h-9 rounded-full composer-fs-floating-bar text-white cursor-pointer"
             >
-              <span class="w-6 h-6 rounded-full bg-[#7fd5d8] text-[#0b1617] flex items-center justify-center shrink-0">
-                <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </span>
-              <span class="text-xs font-bold text-[#7fd5d8]">افزودن زیرکار...</span>
+              <svg width="16" height="16" class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            <div class="composer-fs-floating-bar h-9 px-4 rounded-full flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#7fd5d8]"></span>
+              <span class="text-xs font-extrabold text-white">کار جدید</span>
+            </div>
+          </div>
+
+          <button
+            id="composer-fs-submit-btn"
+            type="button"
+            disabled
+            class="composer-create-btn spring-btn h-9 text-xs font-extrabold px-4 rounded-full shadow-lg cursor-pointer"
+          >
+            ایجاد کار
+          </button>
+        </div>
+      </div>
+
+      <!-- بدنه قابل اسکرول فرم ایجاد کار -->
+      <div id="composer-scroll-body" class="flex-1 overflow-y-auto px-4 pt-1 pb-8">
+        <form id="task-composer-form" action="javascript:void(0)" class="flex flex-col gap-3.5">
+          <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
+            <div id="composer-inline-header" data-composer-drag-zone class="flex items-center justify-between px-4 pt-3.5 pb-2 touch-none">
+              <div class="flex items-center gap-2">
+                <button
+                  id="close-composer-modal"
+                  type="button"
+                  aria-label="بستن"
+                  class="spring-btn icon-circle-btn w-7 h-7 rounded-full bg-white/10 text-slate-300 cursor-pointer"
+                >
+                  <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <span class="text-xs font-extrabold text-[#7fd5d8]">کار جدید</span>
+              </div>
+
+              <button
+                id="composer-submit-btn"
+                type="submit"
+                disabled
+                class="composer-create-btn spring-btn text-xs font-extrabold px-4 py-1.5 rounded-full cursor-pointer"
+              >
+                ایجاد کار
+              </button>
+            </div>
+
+            <div class="px-4 pb-1 pt-2">
+              <input
+                id="composer-title-input"
+                type="text"
+                dir="auto"
+                maxlength="140"
+                placeholder="عنوان کار (مثلاً: برنامه ورزش امروز)..."
+                class="w-full bg-transparent py-2 text-sm font-bold text-white placeholder-[#7d8e90] outline-none"
+              />
+            </div>
+
+            <div class="border-t border-white/[0.08] mx-4"></div>
+
+            <div class="px-4 py-2 flex items-center gap-2">
+              <input
+                id="composer-desc-input"
+                type="text"
+                dir="auto"
+                maxlength="180"
+                placeholder="توضیحات کوتاه (اختیاری)..."
+                class="w-full bg-transparent py-1 text-xs text-slate-200 placeholder-[#7d8e90] outline-none"
+              />
+              <span class="text-xs text-[#7d8e90] shrink-0">📝</span>
+            </div>
+
+            <div class="border-t border-white/[0.08] mx-4"></div>
+
+            <div class="px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.02]">
+              <span class="text-[11px] text-[#93a3a5] shrink-0">تشخیص هوشمند رشد:</span>
+              <div id="composer-smart-detect-badges" class="flex items-center gap-1 flex-wrap justify-end">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7fd5d8]/15 text-[#7fd5d8]">🛡️ انضباط</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
+              <div class="px-4 pt-3.5 pb-1.5 flex items-center justify-between">
+                <span class="text-xs font-extrabold text-[#7fd5d8]">زیرکارها (ریزکارها)</span>
+                <span id="composer-subtasks-badge" class="text-[11px] text-[#93a3a5]">۰ مورد</span>
+              </div>
+
+              <div id="composer-subtasks-list" class="divide-y divide-white/[0.07]"></div>
+
+              <button
+                id="composer-add-option-btn"
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 text-right hover:bg-white/[0.04] transition-colors cursor-pointer"
+              >
+                <span class="w-6 h-6 rounded-full bg-[#7fd5d8] text-[#0b1617] flex items-center justify-center shrink-0">
+                  <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </span>
+                <span class="text-xs font-bold text-[#7fd5d8]">افزودن زیرکار...</span>
+              </button>
+            </div>
+            <p id="composer-remaining-hint" class="text-[11px] text-[#93a3a5] px-3">
+              می‌توانی تا ۱۲ زیرکار اضافه کنی (مثلاً انواع تمرین‌های ورزشی).
+            </p>
+          </div>
+
+          <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden divide-y divide-white/[0.07]">
+            <div class="px-4 pt-3 pb-1">
+              <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
+            </div>
+
+            <button id="composer-row-category" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#0ea5e9]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">پوشه دسته‌بندی</div>
+                  <div class="text-[10px] text-[#93a3a5]">برای تغییر پوشه لمس کن</div>
+                </div>
+              </div>
+              <span id="composer-val-category" class="text-xs font-bold text-[#7fd5d8] shrink-0">✨ شخصی</span>
+            </button>
+
+            <button id="composer-row-autocomplete" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#10b981]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">تکمیل خودکار با انجام زیرکارها</div>
+                  <div class="text-[10px] text-[#93a3a5] truncate">با تیک خوردن همه زیرکارها، کار اصلی تیک بخورد</div>
+                </div>
+              </div>
+              <span id="composer-switch-autocomplete" class="tg-switch is-on"><span class="tg-switch-knob block"></span></span>
+            </button>
+
+            <button id="composer-row-urgent" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#f59e0b]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">وضعیت فوری 🔥</div>
+                  <div class="text-[10px] text-[#93a3a5] truncate">نمایش برجسته در فیلتر کارهای فوری</div>
+                </div>
+              </div>
+              <span id="composer-switch-urgent" class="tg-switch"><span class="tg-switch-knob block"></span></span>
+            </button>
+
+            <button id="composer-row-habit" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#8b5cf6]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">تکرار روزانه (عادت) 🔁</div>
+                  <div class="text-[10px] text-[#93a3a5] truncate">بازنشانی خودکار زیرکارها در صبح روز بعد</div>
+                </div>
+              </div>
+              <span id="composer-switch-habit" class="tg-switch"><span class="tg-switch-knob block"></span></span>
             </button>
           </div>
-          <p id="composer-remaining-hint" class="text-[11px] text-[#93a3a5] px-3">
-            می‌توانی تا ۱۲ زیرکار اضافه کنی (مثلاً انواع تمرین‌های ورزشی).
-          </p>
-        </div>
-
-        <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden divide-y divide-white/[0.07]">
-          <div class="px-4 pt-3 pb-1">
-            <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
-          </div>
-
-          <button id="composer-row-category" type="button" class="tg-settings-row">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="tg-icon-circle bg-[#0ea5e9]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-white">پوشه دسته‌بندی</div>
-                <div class="text-[10px] text-[#93a3a5]">برای تغییر پوشه لمس کن</div>
-              </div>
-            </div>
-            <span id="composer-val-category" class="text-xs font-bold text-[#7fd5d8] shrink-0">✨ شخصی</span>
-          </button>
-
-          <button id="composer-row-autocomplete" type="button" class="tg-settings-row">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="tg-icon-circle bg-[#10b981]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-white">تکمیل خودکار با انجام زیرکارها</div>
-                <div class="text-[10px] text-[#93a3a5] truncate">با تیک خوردن همه زیرکارها، کار اصلی تیک بخورد</div>
-              </div>
-            </div>
-            <span id="composer-switch-autocomplete" class="tg-switch is-on"><span class="tg-switch-knob block"></span></span>
-          </button>
-
-          <button id="composer-row-urgent" type="button" class="tg-settings-row">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="tg-icon-circle bg-[#f59e0b]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-white">وضعیت فوری 🔥</div>
-                <div class="text-[10px] text-[#93a3a5] truncate">نمایش برجسته در فیلتر کارهای فوری</div>
-              </div>
-            </div>
-            <span id="composer-switch-urgent" class="tg-switch"><span class="tg-switch-knob block"></span></span>
-          </button>
-
-          <button id="composer-row-habit" type="button" class="tg-settings-row">
-            <div class="flex items-center gap-3 min-w-0">
-              <span class="tg-icon-circle bg-[#8b5cf6]">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-white">تکرار روزانه (عادت) 🔁</div>
-                <div class="text-[10px] text-[#93a3a5] truncate">بازنشانی خودکار زیرکارها در صبح روز بعد</div>
-              </div>
-            </div>
-            <span id="composer-switch-habit" class="tg-switch"><span class="tg-switch-knob block"></span></span>
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -2871,6 +2980,7 @@
     let draggedTaskId = null;
     let syncBackLayerCallback = null;
     let compositorBoostRaf = null;
+    let composerShutterController = null;
 
     const DEFAULT_FOLDERS = [
       { name: 'شخصی', emoji: '✨', builtIn: true },
@@ -2963,7 +3073,6 @@
       toastActionCallback: null,
       undoSnapshot: null,
       soundEnabled: true,
-      batterySaver: false,
       gpuQualityMode: 'auto',
       detectedHz: 120,
       activeGpuTier: 'ultra',
@@ -3034,7 +3143,6 @@
       const root = document.documentElement;
       const body = document.body;
 
-      // مقیاس‌بندی منحنی‌های حرکت بر اساس نرخ فریم واقعی نمایشگر (۶۰ / ۹۰ / ۱۲۰ / ۱۴۴ هرتز)
       if (hz <= 60) {
         root.style.setProperty('--motion-scale', '0.86');
         root.style.setProperty('--spring-curve', 'cubic-bezier(0.22, 1, 0.36, 1)');
@@ -3055,9 +3163,7 @@
 
       let tier = forcedTier;
       if (!tier) {
-        if (state.batterySaver) {
-          tier = 'performance';
-        } else if (state.gpuQualityMode !== 'auto') {
+        if (state.gpuQualityMode !== 'auto') {
           tier = state.gpuQualityMode;
         } else if (hz <= 60) {
           tier = 'balanced';
@@ -3116,17 +3222,15 @@
           requestAnimationFrame(measureLoop);
         } else if (frameDeltas.length >= 8) {
           frameDeltas.sort((a, b) => a - b);
-          // استفاده از صدک ۲۵ام (سریع‌ترین فریم‌های پایدار) برای تشخیص دقیق نرخ تازه‌سازی سخت‌افزار
           const p25Delta = frameDeltas[Math.floor(frameDeltas.length * 0.25)];
           const estimatedHz = snapToStandardHz(1000 / p25Delta);
           state.detectedHz = estimatedHz;
 
-          // بررسی افت فریم واقعی (اگر میانه زمان فریم بیش از ۳۵٪ از بودجه سخت‌افزار کندتر باشد)
           const medianDelta = frameDeltas[Math.floor(frameDeltas.length * 0.5)];
           const frameBudget = 1000 / estimatedHz;
           const hasGpuPressure = medianDelta > frameBudget * 1.38;
 
-          if (state.gpuQualityMode === 'auto' && !state.batterySaver && hasGpuPressure) {
+          if (state.gpuQualityMode === 'auto' && hasGpuPressure) {
             applyAdaptiveRenderCalibration(estimatedHz <= 60 ? 'performance' : 'balanced');
           } else {
             applyAdaptiveRenderCalibration();
@@ -3136,7 +3240,6 @@
 
       requestAnimationFrame(measureLoop);
 
-      // بازسنجی خودکار هنگام بازگشت به برنامه یا تغییر حالت نمایشگر در گوشی‌های LTPO سامسونگ و شیائومی
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
           frameDeltas = [];
@@ -3297,7 +3400,6 @@
         focusedTaskId: state.focusedTaskId,
         focusDurationMinutes: state.focusDurationMinutes,
         soundEnabled: state.soundEnabled,
-        batterySaver: state.batterySaver,
         gpuQualityMode: state.gpuQualityMode,
         autoSortCompleted: state.autoSortCompleted,
         privacyBlur: state.privacyBlur,
@@ -3339,7 +3441,6 @@
             state.focusSeconds = parsed.focusDurationMinutes * 60;
           }
           if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
-          if (typeof parsed.batterySaver === 'boolean') state.batterySaver = parsed.batterySaver;
           if (['auto', 'ultra', 'balanced', 'performance'].includes(parsed.gpuQualityMode)) {
             state.gpuQualityMode = parsed.gpuQualityMode;
           }
@@ -3530,7 +3631,7 @@
     }
 
     function triggerHaptic(ms = 10) {
-      if (state.batterySaver) return;
+      if (!state.soundEnabled) return;
       try {
         if (navigator.vibrate) navigator.vibrate(ms);
       } catch (e) {}
@@ -3620,7 +3721,6 @@
     }
 
     function spawnCelebrationSparkles() {
-      if (state.batterySaver) return;
       const colors = ['#7fd5d8', '#34d399', '#fbbf24', '#60a5fa', '#c084fc'];
       const cx = window.innerWidth / 2;
       const cy = 140;
@@ -5273,7 +5373,6 @@
       document.getElementById('tg-switch-autosort')?.classList.toggle('is-on', state.autoSortCompleted);
       document.getElementById('tg-switch-privacy')?.classList.toggle('is-on', state.privacyBlur);
       document.getElementById('tg-switch-sound')?.classList.toggle('is-on', state.soundEnabled);
-      document.getElementById('tg-switch-battery')?.classList.toggle('is-on', state.batterySaver);
 
       updateGpuSettingsLabels();
 
@@ -5285,7 +5384,7 @@
     }
 
     function triggerBlobStretch(blobEl) {
-      if (!blobEl || state.batterySaver) return;
+      if (!blobEl) return;
       blobEl.classList.remove('is-stretching');
       void blobEl.offsetWidth;
       blobEl.classList.add('is-stretching');
@@ -5304,17 +5403,13 @@
 
       document.querySelectorAll('.tab-view').forEach((view) => {
         const isTarget = view.id === `tab-view-${tabName}`;
-        view.classList.remove('tab-enter-from-left', 'tab-enter-from-right', 'tab-enter-fade');
+        view.classList.remove('tab-enter-from-left', 'tab-enter-from-right');
         view.classList.toggle('hidden', !isTarget);
         view.classList.toggle('is-tab-hidden', !isTarget);
 
         if (isTarget && !isSameTab) {
           void view.offsetWidth;
-          if (state.batterySaver) {
-            view.classList.add('tab-enter-fade');
-          } else {
-            view.classList.add(newIdx > oldIdx ? 'tab-enter-from-left' : 'tab-enter-from-right');
-          }
+          view.classList.add(newIdx > oldIdx ? 'tab-enter-from-left' : 'tab-enter-from-right');
         }
       });
 
@@ -5322,7 +5417,7 @@
         const isActive = btn.dataset.tab === tabName;
         btn.classList.toggle('is-active', isActive);
         btn.classList.remove('is-bouncing');
-        if (isActive && !state.batterySaver) {
+        if (isActive) {
           void btn.offsetWidth;
           btn.classList.add('is-bouncing');
         }
@@ -5376,7 +5471,7 @@
         clearTimeout(modalCloseTimers.get(id));
         modalCloseTimers.delete(id);
       }
-      boostCompositorFrames(400);
+      boostCompositorFrames(420);
       resetSheetInlineStyles(el);
       el.classList.remove('hidden', 'is-closing');
       el.classList.add('flex');
@@ -5389,18 +5484,10 @@
       const el = document.getElementById(id);
       if (!el || el.classList.contains('hidden') || el.classList.contains('is-closing')) return;
 
-      if (state.batterySaver) {
-        resetSheetInlineStyles(el);
-        el.classList.add('hidden');
-        el.classList.remove('flex', 'is-closing');
-        if (typeof syncBackLayerCallback === 'function') {
-          syncBackLayerCallback();
-        }
-        return;
-      }
-
-      boostCompositorFrames(300);
-      if (!fromDrag) {
+      boostCompositorFrames(340);
+      if (id === 'task-composer-modal' && composerShutterController && !fromDrag) {
+        composerShutterController.animateClose();
+      } else if (!fromDrag) {
         resetSheetInlineStyles(el);
       }
       el.classList.add('is-closing');
@@ -5412,10 +5499,267 @@
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
         resetSheetInlineStyles(el);
+        if (id === 'task-composer-modal' && composerShutterController) {
+          composerShutterController.resetState();
+        }
         modalCloseTimers.delete(id);
-      }, 215);
+      }, 240);
 
       modalCloseTimers.set(id, timer);
+    }
+
+    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram برای پنجره ایجاد کار */
+    function initComposerShutterGesture() {
+      const modal = document.getElementById('task-composer-modal');
+      const sheet = document.getElementById('composer-shutter-sheet');
+      const scrollBody = document.getElementById('composer-scroll-body');
+      const collapseFsBtn = document.getElementById('composer-collapse-fs-btn');
+      if (!modal || !sheet || !scrollBody) return null;
+
+      let currentY = 0;
+      let isFullscreen = false;
+      let dragging = false;
+      let startTouchY = 0;
+      let startTouchX = 0;
+      let startSheetY = 0;
+      let lastMoveY = 0;
+      let lastMoveTime = 0;
+      let velocityY = 0;
+      let rafPending = false;
+      let dragLocked = false;
+
+      const isMobileShutter = () => window.innerWidth < 640;
+
+      const getViewportH = () => {
+        const vv = window.visualViewport;
+        return vv ? Math.round(vv.height) : window.innerHeight;
+      };
+
+      const getHalfOffset = () => {
+        const vh = getViewportH();
+        return Math.max(130, Math.round(vh * 0.22));
+      };
+
+      const applyShutterVisuals = (y, animate = false) => {
+        if (!isMobileShutter()) {
+          sheet.style.transform = '';
+          sheet.style.borderTopLeftRadius = '';
+          sheet.style.borderTopRightRadius = '';
+          sheet.classList.remove('is-fullscreen', 'is-snapping');
+          scrollBody.style.paddingBottom = '';
+          return;
+        }
+
+        const halfY = getHalfOffset();
+        const clampedY = Math.max(0, y);
+        currentY = clampedY;
+
+        // محاسبه نرم انحنای گوشه‌ها هنگام نزدیک شدن به سقف گوشی (30px -> 0px)
+        const expandProgress = Math.max(0, Math.min(1, 1 - clampedY / Math.max(1, halfY)));
+        const topRadius = Math.round(30 * (1 - Math.pow(expandProgress, 2.2)));
+
+        sheet.classList.toggle('is-snapping', animate);
+        sheet.style.setProperty('--shutter-y', `${clampedY}px`);
+        sheet.style.setProperty('--shutter-top-radius', `${topRadius}px`);
+        sheet.style.transform = `translate3d(0, ${clampedY}px, 0)`;
+        sheet.style.borderTopLeftRadius = `${topRadius}px`;
+        sheet.style.borderTopRightRadius = `${topRadius}px`;
+
+        const nearTop = clampedY <= Math.max(24, halfY * 0.22);
+        if (nearTop !== isFullscreen) {
+          isFullscreen = nearTop;
+          sheet.classList.toggle('is-fullscreen', isFullscreen);
+        }
+
+        // تنظیم فضای اسکرول انتهای فرم تا در حالت نیمه‌باز هم تمام گزینه‌ها در دسترس باشند
+        const bottomPad = isFullscreen
+          ? 'calc(2.5rem + env(safe-area-inset-bottom, 0px))'
+          : `${halfY + 36}px`;
+        scrollBody.style.paddingBottom = bottomPad;
+
+        if (clampedY > halfY) {
+          const closeProgress = Math.min(1, (clampedY - halfY) / 260);
+          modal.style.opacity = String(Math.max(0.25, 1 - closeProgress * 0.72));
+        } else {
+          modal.style.opacity = '1';
+        }
+      };
+
+      const snapToHalf = () => {
+        boostCompositorFrames(440);
+        const halfY = getHalfOffset();
+        applyShutterVisuals(halfY, true);
+      };
+
+      const snapToFullscreen = () => {
+        boostCompositorFrames(440);
+        applyShutterVisuals(0, true);
+        playTactileSound('pop');
+        triggerHaptic(8);
+      };
+
+      const animateOpen = () => {
+        if (!isMobileShutter()) {
+          sheet.classList.remove('is-fullscreen');
+          return;
+        }
+        const vh = getViewportH();
+        const halfY = getHalfOffset();
+        isFullscreen = false;
+        sheet.classList.remove('is-fullscreen');
+        scrollBody.scrollTop = 0;
+
+        // شروع از پایین صفحه و بالا آمدن نرم تا تراز نیمه‌باز (مثل کرکره)
+        applyShutterVisuals(vh, false);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            applyShutterVisuals(halfY, true);
+          });
+        });
+      };
+
+      const animateClose = () => {
+        if (!isMobileShutter()) return;
+        const vh = getViewportH();
+        applyShutterVisuals(vh, true);
+      };
+
+      const resetState = () => {
+        isFullscreen = false;
+        dragging = false;
+        dragLocked = false;
+        sheet.classList.remove('is-fullscreen', 'is-snapping');
+        sheet.style.transform = '';
+        sheet.style.borderTopLeftRadius = '';
+        sheet.style.borderTopRightRadius = '';
+        scrollBody.style.paddingBottom = '';
+      };
+
+      collapseFsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        snapToHalf();
+        playTactileSound('pop');
+      });
+
+      const renderDragFrame = () => {
+        rafPending = false;
+        if (!dragging) return;
+        applyShutterVisuals(currentY, false);
+      };
+
+      sheet.addEventListener(
+        'touchstart',
+        (e) => {
+          if (!isMobileShutter() || e.touches.length !== 1) return;
+          if (e.target.closest('button') || e.target.closest('input')) return;
+
+          const touch = e.touches[0];
+          startTouchY = touch.clientY;
+          startTouchX = touch.clientX;
+          startSheetY = currentY;
+          lastMoveY = touch.clientY;
+          lastMoveTime = performance.now();
+          velocityY = 0;
+          dragging = false;
+          dragLocked = false;
+        },
+        { passive: true }
+      );
+
+      sheet.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!isMobileShutter() || !startTouchY || dragLocked) return;
+          const touch = e.touches[0];
+          const dy = touch.clientY - startTouchY;
+          const dx = touch.clientX - startTouchX;
+          const startedOnDragZone = Boolean(e.target.closest('[data-composer-drag-zone]'));
+
+          if (!dragging) {
+            if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 10) {
+              dragLocked = true;
+              return;
+            }
+            if (Math.abs(dy) < 9) return;
+
+            // اگر روی دستگیره/نوار بالا کشیده شود همیشه کرکره حرکت می‌کند
+            if (startedOnDragZone) {
+              dragging = true;
+            } else if (!isFullscreen && dy < 0) {
+              // در حالت نیمه‌باز، کشیدن به بالا کرکره را تمام‌صفحه می‌کند
+              dragging = true;
+            } else if (dy > 0 && scrollBody.scrollTop <= 2) {
+              // وقتی اسکرول در بالاترین نقطه است، کشیدن به پایین کرکره را پایین می‌آورد
+              dragging = true;
+            } else {
+              dragLocked = true;
+              return;
+            }
+
+            if (dragging) {
+              sheet.classList.remove('is-snapping');
+              boostCompositorFrames(600);
+            }
+          }
+
+          if (dragging) {
+            if (e.cancelable) e.preventDefault();
+            const now = performance.now();
+            const dt = Math.max(1, now - lastMoveTime);
+            velocityY = (touch.clientY - lastMoveY) / dt;
+            lastMoveY = touch.clientY;
+            lastMoveTime = now;
+
+            let nextY = startSheetY + dy;
+            // مقاومت کشسانی نرم (Rubber-banding) وقتی از سقف بالاتر کشیده می‌شود
+            if (nextY < 0) {
+              nextY = nextY * 0.22;
+            }
+            currentY = nextY;
+
+            if (!rafPending) {
+              rafPending = true;
+              requestAnimationFrame(renderDragFrame);
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      const finishShutterDrag = () => {
+        startTouchY = 0;
+        dragLocked = false;
+        if (!dragging) return;
+        dragging = false;
+        rafPending = false;
+
+        const halfY = getHalfOffset();
+        const vh = getViewportH();
+
+        // تصمیم‌گیری هوشمند بر اساس موقعیت و سرعت حرکت انگشت (Flick Velocity)
+        if (currentY <= halfY * 0.52 || (velocityY < -0.42 && currentY < halfY * 0.92)) {
+          snapToFullscreen();
+        } else if (currentY >= halfY + 105 || (velocityY > 0.55 && currentY > halfY * 0.85)) {
+          applyShutterVisuals(vh, true);
+          playTactileSound('pop');
+          triggerHaptic(8);
+          closeModal('task-composer-modal', true);
+        } else {
+          snapToHalf();
+        }
+      };
+
+      sheet.addEventListener('touchend', finishShutterDrag);
+      sheet.addEventListener('touchcancel', finishShutterDrag);
+
+      return {
+        animateOpen,
+        animateClose,
+        resetState,
+        snapToHalf,
+        snapToFullscreen,
+        isFullscreenMode: () => isFullscreen,
+      };
     }
 
     function setupSheetSwipeToClose(modalId) {
@@ -5807,12 +6151,13 @@
       const titleInput = document.getElementById('composer-title-input');
       const descInput = document.getElementById('composer-desc-input');
       const submitBtn = document.getElementById('composer-submit-btn');
+      const fsSubmitBtn = document.getElementById('composer-fs-submit-btn');
       if (!badgesEl || !titleInput) return;
 
       const titleVal = titleInput.value.trim();
-      if (submitBtn) {
-        submitBtn.disabled = titleVal.length === 0;
-      }
+      const isDisabled = titleVal.length === 0;
+      if (submitBtn) submitBtn.disabled = isDisabled;
+      if (fsSubmitBtn) fsSubmitBtn.disabled = isDisabled;
 
       const weights = analyzeTaskSmartDimensions({
         title: titleVal,
@@ -5939,6 +6284,10 @@
       renderComposerSubtasks();
       updateComposerSmartBadges();
       openModal('task-composer-modal');
+
+      if (composerShutterController) {
+        composerShutterController.animateOpen();
+      }
 
       const isMobileTouch =
         window.innerWidth < 768 ||
@@ -6127,6 +6476,15 @@
       const handleHardwareBackAction = () => {
         for (let i = 0; i < orderedModals.length; i++) {
           if (isModalVisible(orderedModals[i])) {
+            if (
+              orderedModals[i] === 'task-composer-modal' &&
+              composerShutterController &&
+              composerShutterController.isFullscreenMode()
+            ) {
+              composerShutterController.snapToHalf();
+              playTactileSound('pop');
+              return true;
+            }
             closeModal(orderedModals[i]);
             playTactileSound('pop');
             return true;
@@ -6238,6 +6596,8 @@
       setupFullScreenViewportSync();
       setupAndroidBackButtonHandler();
       registerOfflineServiceWorker();
+
+      composerShutterController = initComposerShutterGesture();
 
       const islandEl = document.getElementById('dynamic-island');
       if (islandEl) {
@@ -6692,14 +7052,6 @@
         if (state.soundEnabled) playTactileSound('pop');
       });
 
-      document.getElementById('tg-row-battery')?.addEventListener('click', () => {
-        state.batterySaver = !state.batterySaver;
-        applyAdaptiveRenderCalibration();
-        saveState();
-        renderSecondaryTabViews();
-        playTactileSound('pop');
-      });
-
       document.getElementById('close-profile-modal')?.addEventListener('click', () => closeModal('profile-modal'));
       document.querySelectorAll('.avatar-choice-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -6948,8 +7300,7 @@
         playTactileSound('pop');
       });
 
-      document.getElementById('task-composer-form')?.addEventListener('submit', (e) => {
-        e.preventDefault();
+      const submitComposerForm = () => {
         const title = document.getElementById('composer-title-input')?.value.trim();
         if (!title) return;
         const description = document.getElementById('composer-desc-input')?.value.trim() || '';
@@ -6965,7 +7316,14 @@
         });
 
         closeModal('task-composer-modal');
+      };
+
+      document.getElementById('task-composer-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitComposerForm();
       });
+
+      document.getElementById('composer-fs-submit-btn')?.addEventListener('click', submitComposerForm);
 
       const cmdInput = document.getElementById('command-palette-input');
       cmdInput?.addEventListener('input', () => {
@@ -7008,7 +7366,6 @@
         });
       });
 
-      setupSheetSwipeToClose('task-composer-modal');
       setupSheetSwipeToClose('task-edit-modal');
 
       document.addEventListener('keydown', (e) => {
