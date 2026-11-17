@@ -62,8 +62,22 @@
       --glass-blur: 10px;
       --island-blur: 12px;
       --motion-scale: 1;
-      --spring-curve: cubic-bezier(0.32, 1.22, 0.36, 1);
-      --sheet-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
+      /* منحنی‌های فنری چندنقطه‌ای منطبق با فیزیک iOS & HyperOS */
+      --spring-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
+      --spring-curve: linear(
+        0, 0.012 2.2%, 0.048 4.5%, 0.185 9.5%, 0.56 18%, 0.84 26%,
+        0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
+      );
+      --sheet-curve: cubic-bezier(0.22, 1, 0.36, 1);
+      --sheet-curve: linear(
+        0, 0.011 2.2%, 0.044 4.5%, 0.17 9.5%, 0.52 18.5%, 0.80 27.5%,
+        0.935 36%, 0.988 45%, 1.004 55%, 1.003 67%, 1.000 82%, 1
+      );
+      --ios-fluid-curve: cubic-bezier(0.2, 0.9, 0.25, 1);
+      --ios-fluid-curve: linear(
+        0, 0.010 2.5%, 0.040 5.2%, 0.155 11%, 0.47 21%, 0.75 32%,
+        0.90 43%, 0.968 55%, 0.992 68%, 0.999 83%, 1
+      );
       --bg-primary: #0b1012;
       --bg-elevated: #131a1c;
       --bg-input: #12191b;
@@ -114,7 +128,7 @@
       --island-subtext: #52636b;
     }
 
-    /* سطوح بهینه‌سازی GPU برای نرخ فریم‌های مختلف و پردازنده‌های گرافیکی موبایل (Mali / Adreno) */
+    /* سطوح بهینه‌سازی GPU برای نرخ فریم‌های مختلف و پردازنده‌های گرافیکی موبایل */
     body.gpu-tier-balanced {
       --glass-blur: 6px;
       --island-blur: 8px;
@@ -168,7 +182,7 @@
       user-select: none;
       -webkit-user-select: none;
       text-rendering: optimizeSpeed;
-      transition: background-color 0.22s ease, color 0.22s ease;
+      transition: background-color 0.24s ease, color 0.24s ease;
     }
 
     input,
@@ -181,6 +195,23 @@
       min-height: 100lvh;
       padding-top: calc(4.85rem + env(safe-area-inset-top, 0px));
       padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px) + var(--keyboard-offset));
+      transform-origin: top center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .app-safe-main.is-stage-animating {
+      will-change: transform;
+    }
+
+    .app-safe-main.is-stage-settled-back {
+      transition: transform calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve);
+      transform: translate3d(0, 10px, 0) scale3d(0.955, 0.955, 1);
+    }
+
+    .app-safe-main.is-stage-restoring {
+      transition: transform calc(0.44s * var(--motion-scale)) var(--ios-fluid-curve);
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 
     @media (min-width: 1024px) {
@@ -194,11 +225,11 @@
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-      background-color: rgba(6, 10, 12, 0.74) !important;
+      background-color: rgba(6, 10, 12, 0.72) !important;
     }
 
     body.theme-light [id$="-modal"] {
-      background-color: rgba(15, 23, 42, 0.44) !important;
+      background-color: rgba(15, 23, 42, 0.42) !important;
     }
 
     [id$="-modal"]:not(#task-composer-modal) .sheet-animate {
@@ -281,7 +312,7 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — لایه سخت‌افزاری خالص بدون Reflow و Repaint */
+    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — کنترل کامل توسط موتور فیزیک فنری */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -298,8 +329,9 @@
         bottom: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: var(--app-viewport-height) !important;
-        max-height: var(--app-viewport-height) !important;
+        height: calc(var(--app-viewport-height) + 44px) !important;
+        max-height: calc(var(--app-viewport-height) + 44px) !important;
+        padding-bottom: 44px !important;
         background: var(--glass-modal-surface) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
@@ -309,8 +341,8 @@
         border-bottom: none !important;
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
-        border-top-left-radius: 28px !important;
-        border-top-right-radius: 28px !important;
+        border-top-left-radius: 30px !important;
+        border-top-right-radius: 30px !important;
         transform: translate3d(0, 22vh, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
@@ -323,10 +355,6 @@
       #composer-shutter-sheet.is-fullscreen {
         border-top-left-radius: 0px !important;
         border-top-right-radius: 0px !important;
-      }
-
-      #composer-shutter-sheet.is-snapping {
-        transition: transform calc(0.36s * var(--motion-scale)) cubic-bezier(0.22, 1.05, 0.32, 1) !important;
       }
 
       #composer-scroll-body {
@@ -370,38 +398,46 @@
       padding-bottom: 8px;
       opacity: 0;
       pointer-events: none;
-      transform: translate3d(0, -10px, 0);
+      transform: translate3d(0, -14px, 0) scale3d(0.97, 0.97, 1);
       will-change: transform, opacity;
       transition:
-        opacity 0.2s ease,
-        transform calc(0.28s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1);
+        opacity calc(0.26s * var(--motion-scale)) ease,
+        transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-fs-header {
       opacity: 1;
       pointer-events: auto;
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 
     #composer-grabber-zone {
       opacity: 1;
-      will-change: opacity;
-      transition: opacity 0.16s ease;
+      transform: scale3d(1, 1, 1);
+      will-change: opacity, transform;
+      transition:
+        opacity calc(0.2s * var(--motion-scale)) ease,
+        transform calc(0.32s * var(--motion-scale)) var(--ios-fluid-curve);
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
       opacity: 0;
+      transform: scale3d(0.85, 0.85, 1);
       pointer-events: none;
     }
 
     #composer-inline-header {
       opacity: 1;
-      will-change: opacity;
-      transition: opacity 0.16s ease;
+      transform: translate3d(0, 0, 0);
+      will-change: opacity, transform;
+      transition:
+        opacity calc(0.2s * var(--motion-scale)) ease,
+        transform calc(0.32s * var(--motion-scale)) var(--ios-fluid-curve);
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-inline-header {
       opacity: 0;
+      transform: translate3d(0, -6px, 0);
       pointer-events: none;
     }
 
@@ -411,7 +447,15 @@
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: var(--card-radius);
       contain: layout style;
-      transition: transform calc(0.18s * var(--motion-scale)) var(--sheet-curve), border-color 0.16s ease, opacity 0.16s ease;
+      transition:
+        transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
+        border-color 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .liquid-card.is-card-pressing {
+      transform: scale3d(0.982, 0.982, 1) !important;
+      transition: transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
 
     body.theme-light [id$="-modal"] > .liquid-glass {
@@ -495,10 +539,15 @@
       touch-action: manipulation;
       user-select: none;
       line-height: 1;
-      transition: transform calc(0.15s * var(--motion-scale)) var(--spring-curve), background-color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+      transition:
+        transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+        background-color 0.18s ease,
+        opacity 0.18s ease,
+        border-color 0.18s ease;
     }
     .spring-btn:active {
-      transform: scale(0.94);
+      transform: scale3d(0.925, 0.925, 1);
+      transition: transform 0.1s cubic-bezier(0.2, 0.9, 0.3, 1);
     }
 
     .icon-circle-btn {
@@ -548,23 +597,48 @@
       overflow: hidden;
       cursor: pointer;
       contain: layout style paint;
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       transform-origin: top center;
       transition:
-        width calc(0.36s * var(--motion-scale)) var(--spring-curve),
-        height calc(0.36s * var(--motion-scale)) var(--spring-curve),
-        border-radius calc(0.36s * var(--motion-scale)) var(--spring-curve),
-        transform calc(0.18s * var(--motion-scale)) var(--spring-curve),
-        background 0.2s ease,
-        border-color 0.2s ease;
+        width calc(0.48s * var(--motion-scale)) var(--spring-curve),
+        height calc(0.48s * var(--motion-scale)) var(--spring-curve),
+        border-radius calc(0.48s * var(--motion-scale)) var(--spring-curve),
+        transform calc(0.36s * var(--motion-scale)) var(--spring-curve),
+        background 0.22s ease,
+        border-color 0.22s ease;
     }
 
     .obsidian-shell:not(.is-expanded):hover {
-      border-color: rgba(var(--mint-accent-rgb), 0.32);
+      border-color: rgba(var(--mint-accent-rgb), 0.34);
     }
 
-    .obsidian-shell:not(.is-expanded):active {
-      transform: translate3d(0, 0, 0) scale(0.955);
+    .obsidian-shell:not(.is-expanded).is-island-pressing {
+      transform: translate3d(0, 1px, 0) scale3d(1.038, 1.038, 1) !important;
+      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    .obsidian-shell.is-expanded.is-island-pressing {
+      transform: translate3d(0, 0, 0) scale3d(0.986, 0.986, 1) !important;
+      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    @keyframes islandCelebrateBounce {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+      35% {
+        transform: translate3d(0, -1px, 0) scale3d(1.045, 1.045, 1);
+      }
+      70% {
+        transform: translate3d(0, 0, 0) scale3d(0.99, 0.99, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    .obsidian-shell.is-popping {
+      animation: islandCelebrateBounce calc(0.46s * var(--motion-scale)) var(--spring-curve);
     }
 
     .obsidian-shell.is-live {
@@ -591,11 +665,12 @@
       top: 0;
       left: 50%;
       transform-origin: top center;
-      transform: translate3d(-50%, 0, 0) scale(1);
+      transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
       opacity: 1;
+      filter: blur(0px);
       transition:
-        opacity calc(0.2s * var(--motion-scale)) ease 0.04s,
-        transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
+        opacity calc(0.26s * var(--motion-scale)) ease 0.05s,
+        transform calc(0.46s * var(--motion-scale)) var(--spring-curve);
     }
 
     #island-idle-layer {
@@ -632,10 +707,10 @@
     .island-layer.is-hidden {
       opacity: 0;
       pointer-events: none;
-      transform: translate3d(-50%, -3px, 0) scale(0.92);
+      transform: translate3d(-50%, -4px, 0) scale3d(0.9, 0.9, 1);
       transition:
-        opacity 0.12s ease,
-        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 0.14s ease,
+        transform 0.24s var(--ios-fluid-curve);
     }
 
     .island-primary-text {
@@ -651,7 +726,7 @@
         opacity: 1;
       }
       50% {
-        transform: scale(1.22);
+        transform: scale(1.24);
         opacity: 0.72;
       }
     }
@@ -677,7 +752,7 @@
       transform-origin: left center;
       transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: transform calc(0.38s * var(--motion-scale)) var(--sheet-curve);
+      transition: transform calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve);
     }
 
     .audio-wave-bar {
@@ -704,6 +779,21 @@
       }
     }
 
+    @keyframes checkStrokeDraw {
+      from {
+        stroke-dashoffset: 24;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .check-stroke-anim {
+      stroke-dasharray: 24;
+      stroke-dashoffset: 0;
+      animation: checkStrokeDraw calc(0.28s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
     .check-circle {
       width: 24px;
       height: 24px;
@@ -713,13 +803,16 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform calc(0.2s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
+      transition:
+        transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
+        background-color 0.18s ease,
+        border-color 0.18s ease;
     }
 
     .check-circle.checked {
       background-color: var(--mint-accent);
       border-color: var(--mint-accent);
-      transform: scale(1.06);
+      transform: scale3d(1.06, 1.06, 1);
     }
 
     .subtask-check {
@@ -731,19 +824,24 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve), background-color 0.15s ease, border-color 0.15s ease;
+      transition:
+        transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+        background-color 0.18s ease,
+        border-color 0.18s ease;
     }
 
     .subtask-check.checked {
       background-color: var(--mint-accent);
       border-color: var(--mint-accent);
-      transform: scale(1.05);
+      transform: scale3d(1.05, 1.05, 1);
     }
 
     .composer-create-btn {
       background-color: var(--mint-accent);
       color: var(--mint-contrast-text);
-      transition: opacity 0.16s ease, transform calc(0.15s * var(--motion-scale)) var(--spring-curve);
+      transition:
+        opacity 0.18s ease,
+        transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
     }
 
     .composer-create-btn:disabled {
@@ -765,7 +863,7 @@
       transform-origin: right center;
       transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: transform calc(0.38s * var(--motion-scale)) var(--sheet-curve);
+      transition: transform calc(0.48s * var(--motion-scale)) var(--ios-fluid-curve);
     }
 
     .ambient-chip.is-active {
@@ -776,7 +874,7 @@
 
     .chart-bar-fill {
       background: linear-gradient(180deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
-      transition: height calc(0.38s * var(--motion-scale)) var(--sheet-curve);
+      transition: height calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve);
     }
 
     .radar-stage-box {
@@ -809,7 +907,10 @@
     }
 
     .radar-axis-pill {
-      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
+      transition:
+        transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+        background-color 0.18s ease,
+        border-color 0.18s ease;
     }
 
     .radar-axis-pill.is-selected {
@@ -838,72 +939,72 @@
     @keyframes sheetSlideUpMobile {
       from {
         opacity: 0;
-        transform: translate3d(0, 56px, 0);
+        transform: translate3d(0, 72px, 0) scale3d(0.97, 0.97, 1);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
     @keyframes sheetSlideDownMobile {
       from {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 56px, 0);
+        transform: translate3d(0, 68px, 0) scale3d(0.97, 0.97, 1);
       }
     }
 
     @keyframes sheetScaleInDesktop {
       from {
         opacity: 0;
-        transform: translate3d(0, 14px, 0) scale(0.96);
+        transform: translate3d(0, 16px, 0) scale3d(0.94, 0.94, 1);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
     @keyframes sheetScaleOutDesktop {
       from {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 10px, 0) scale(0.96);
+        transform: translate3d(0, 12px, 0) scale3d(0.95, 0.95, 1);
       }
     }
 
     [id$="-modal"] {
-      animation: modalBackdropIn calc(0.22s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: modalBackdropIn calc(0.28s * var(--motion-scale)) var(--ios-fluid-curve) both;
     }
 
     [id$="-modal"].is-closing {
       pointer-events: none;
-      animation: modalBackdropOut calc(0.18s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: modalBackdropOut calc(0.22s * var(--motion-scale)) var(--ios-fluid-curve) forwards;
     }
 
     .sheet-animate {
-      animation: sheetSlideUpMobile calc(0.3s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: sheetSlideUpMobile calc(0.42s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     [id$="-modal"]:not(#task-composer-modal).is-closing .sheet-animate {
-      animation: sheetSlideDownMobile calc(0.18s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
+      animation: sheetSlideDownMobile calc(0.22s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
     }
 
     @media (min-width: 640px) {
       .sheet-animate {
-        animation: sheetScaleInDesktop calc(0.24s * var(--motion-scale)) var(--sheet-curve) both;
+        animation: sheetScaleInDesktop calc(0.36s * var(--motion-scale)) var(--sheet-curve) both;
       }
 
       [id$="-modal"].is-closing .sheet-animate {
-        animation: sheetScaleOutDesktop calc(0.17s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
+        animation: sheetScaleOutDesktop calc(0.2s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
       }
     }
 
@@ -931,13 +1032,14 @@
       padding: 0.78rem 0.95rem;
       text-align: right;
       cursor: pointer;
-      transition: background-color 0.14s ease;
+      transition: background-color 0.16s ease, transform 0.24s var(--ios-fluid-curve);
     }
     .tg-settings-row:hover {
       background-color: rgba(147, 163, 165, 0.08);
     }
     .tg-settings-row:active {
       background-color: rgba(147, 163, 165, 0.14);
+      transform: scale3d(0.988, 0.988, 1);
     }
 
     .tg-icon-circle {
@@ -959,7 +1061,7 @@
       padding: 2px;
       position: relative;
       flex-shrink: 0;
-      transition: background-color 0.18s ease;
+      transition: background-color 0.24s var(--ios-fluid-curve);
     }
     .tg-switch.is-on {
       background-color: var(--mint-accent);
@@ -970,7 +1072,7 @@
       border-radius: 999px;
       background-color: #ffffff;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve);
+      transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
       transform: translate3d(0, 0, 0);
     }
     .tg-switch.is-on .tg-switch-knob {
@@ -1014,7 +1116,7 @@
       width: calc(25% - 2px);
       height: calc(100% - 8px);
       will-change: transform;
-      transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
+      transition: transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
       pointer-events: none;
     }
 
@@ -1032,35 +1134,35 @@
 
     @keyframes liquidPillStretchX {
       0% {
-        transform: scale(1, 1);
+        transform: scale3d(1, 1, 1);
       }
-      36% {
-        transform: scale(1.2, 0.91);
+      34% {
+        transform: scale3d(1.22, 0.89, 1);
       }
-      72% {
-        transform: scale(0.96, 1.03);
+      70% {
+        transform: scale3d(0.96, 1.03, 1);
       }
       100% {
-        transform: scale(1, 1);
+        transform: scale3d(1, 1, 1);
       }
     }
 
     .tg-nav-indicator-blob.is-stretching {
-      animation: liquidPillStretchX calc(0.34s * var(--motion-scale)) var(--spring-curve);
+      animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
     }
 
     @keyframes navIconSpring {
       0% {
-        transform: scale(1) translate3d(0, 0, 0);
+        transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
       }
-      40% {
-        transform: scale(1.16) translate3d(0, -1.5px, 0);
+      38% {
+        transform: scale3d(1.16, 1.16, 1) translate3d(0, -1.5px, 0);
       }
-      75% {
-        transform: scale(0.96) translate3d(0, 0.5px, 0);
+      72% {
+        transform: scale3d(0.96, 0.96, 1) translate3d(0, 0.5px, 0);
       }
       100% {
-        transform: scale(1) translate3d(0, 0, 0);
+        transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
       }
     }
 
@@ -1077,48 +1179,48 @@
       font-weight: 700;
       border-radius: 999px;
       cursor: pointer;
-      transition: color 0.16s ease, transform 0.14s ease;
+      transition: color 0.18s ease, transform 0.24s var(--spring-curve);
     }
     .tg-nav-btn.is-active {
       color: var(--mint-accent);
     }
     .tg-nav-btn.is-bouncing svg,
     .rail-nav-btn.is-bouncing svg {
-      animation: navIconSpring calc(0.32s * var(--motion-scale)) var(--spring-curve);
+      animation: navIconSpring calc(0.4s * var(--motion-scale)) var(--spring-curve);
     }
     .tg-nav-btn:active {
-      transform: scale(0.92);
+      transform: scale3d(0.91, 0.91, 1);
     }
 
     @keyframes tabEnterFromLeft {
       from {
         opacity: 0;
-        transform: translate3d(-18px, 0, 0);
+        transform: translate3d(-24px, 0, 0) scale3d(0.986, 0.986, 1);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
     @keyframes tabEnterFromRight {
       from {
         opacity: 0;
-        transform: translate3d(18px, 0, 0);
+        transform: translate3d(24px, 0, 0) scale3d(0.986, 0.986, 1);
       }
       to {
         opacity: 1;
-        transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
     .tab-view.tab-enter-from-left {
-      animation: tabEnterFromLeft calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: tabEnterFromLeft calc(0.36s * var(--motion-scale)) var(--ios-fluid-curve) both;
       will-change: transform, opacity;
     }
 
     .tab-view.tab-enter-from-right {
-      animation: tabEnterFromRight calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: tabEnterFromRight calc(0.36s * var(--motion-scale)) var(--ios-fluid-curve) both;
       will-change: transform, opacity;
     }
 
@@ -1180,7 +1282,7 @@
       padding: 0 1.25rem;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.14s ease, background-color 0.14s ease;
+      transition: opacity 0.16s ease, background-color 0.16s ease;
     }
 
     .task-swipe-slot.is-swiping-complete .task-swipe-backdrop {
@@ -1246,7 +1348,7 @@
         width: 46px;
         height: 46px;
         will-change: transform;
-        transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
+        transition: transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
         pointer-events: none;
       }
 
@@ -1263,21 +1365,21 @@
 
       @keyframes liquidPillStretchY {
         0% {
-          transform: scale(1, 1);
+          transform: scale3d(1, 1, 1);
         }
-        36% {
-          transform: scale(0.91, 1.2);
+        34% {
+          transform: scale3d(0.89, 1.22, 1);
         }
-        72% {
-          transform: scale(1.03, 0.96);
+        70% {
+          transform: scale3d(1.03, 0.96, 1);
         }
         100% {
-          transform: scale(1, 1);
+          transform: scale3d(1, 1, 1);
         }
       }
 
       .rail-nav-indicator-blob.is-stretching {
-        animation: liquidPillStretchY calc(0.34s * var(--motion-scale)) var(--spring-curve);
+        animation: liquidPillStretchY calc(0.42s * var(--motion-scale)) var(--spring-curve);
       }
 
       .rail-nav-btn {
@@ -1294,7 +1396,7 @@
         color: var(--text-muted);
         border: 1px solid transparent;
         cursor: pointer;
-        transition: color 0.16s ease, background-color 0.16s ease, transform 0.15s var(--spring-curve);
+        transition: color 0.18s ease, background-color 0.18s ease, transform 0.28s var(--spring-curve);
       }
 
       .rail-nav-btn:hover:not(.is-active) {
@@ -1326,7 +1428,7 @@
     }
 
     #desktop-focus-dropzone {
-      transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+      transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.28s var(--spring-curve);
     }
 
     #desktop-focus-dropzone.is-drag-target {
@@ -1336,7 +1438,7 @@
     }
 
     .cmd-item {
-      transition: background-color 0.14s ease, border-color 0.14s ease;
+      transition: background-color 0.16s ease, border-color 0.16s ease;
     }
 
     .cmd-item.is-selected {
@@ -1568,7 +1670,7 @@
   </aside>
 
   <!-- ==================== بدنه اصلی برنامه ==================== -->
-  <main class="app-safe-main relative z-10 max-w-2xl lg:max-w-[1140px] mx-auto px-4 lg:pr-28 lg:pl-7">
+  <main id="app-main-stage" class="app-safe-main relative z-10 max-w-2xl lg:max-w-[1140px] mx-auto px-4 lg:pr-28 lg:pl-7">
     <div id="tab-view-tasks" class="tab-view flex flex-col gap-3.5 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start">
       <div class="lg:col-span-7 flex flex-col gap-3.5 lg:gap-3 min-w-0">
         <section class="liquid-surface-fast rounded-3xl p-4 lg:px-4 lg:py-3 flex flex-col gap-3 lg:gap-2.5">
@@ -2358,7 +2460,7 @@
         </div>
 
         <p class="text-center text-[11px] text-[#7d8e90] pt-1">
-          Daily Flow Glass Studio • موتور رندر تطبیقی ۶۰ تا ۱۴۴ هرتز
+          Daily Flow Glass Studio • فیزیک فنری iOS و HyperOS
         </p>
       </div>
 
@@ -2998,6 +3100,104 @@
     let syncBackLayerCallback = null;
     let composerShutterController = null;
 
+    /* ==================== موتور فیزیک فنری واقعی iOS & HyperOS (Harmonic Spring Engine) ==================== */
+    function createSpringSimulator(options = {}) {
+      let stiffness = options.stiffness || 340;
+      let damping = options.damping || 32;
+      let mass = options.mass || 1;
+      let position = options.initialValue || 0;
+      let velocity = 0;
+      let target = position;
+      let rafId = null;
+      let lastTime = 0;
+      let onUpdate = options.onUpdate || null;
+      let onComplete = null;
+
+      function stop() {
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        lastTime = 0;
+      }
+
+      function setImmediate(val) {
+        stop();
+        position = val;
+        target = val;
+        velocity = 0;
+        if (onUpdate) onUpdate(position);
+      }
+
+      function step(now) {
+        if (!lastTime) lastTime = now;
+        // محدودسازی گام زمانی برای پایداری کامل در نرخ‌های ۶۰ تا ۱۴۴ هرتز
+        const dt = Math.min((now - lastTime) / 1000, 0.032);
+        lastTime = now;
+
+        // زیرگام‌زنی دوگانه برای دقت ریاضی بالا در فریم‌ریت‌های مختلف
+        const subSteps = 2;
+        const subDt = dt / subSteps;
+        for (let i = 0; i < subSteps; i++) {
+          const displacement = position - target;
+          const springForce = -stiffness * displacement;
+          const dampingForce = -damping * velocity;
+          const acceleration = (springForce + dampingForce) / mass;
+          velocity += acceleration * subDt;
+          position += velocity * subDt;
+        }
+
+        if (onUpdate) onUpdate(position);
+
+        if (Math.abs(position - target) < 0.35 && Math.abs(velocity) < 3.5) {
+          position = target;
+          velocity = 0;
+          rafId = null;
+          lastTime = 0;
+          if (onUpdate) onUpdate(position);
+          const doneCb = onComplete;
+          onComplete = null;
+          if (doneCb) doneCb();
+        } else {
+          rafId = requestAnimationFrame(step);
+        }
+      }
+
+      function animateTo(nextTarget, initialVel = 0, completeCb = null, customConfig = null) {
+        if (customConfig) {
+          if (typeof customConfig.stiffness === 'number') stiffness = customConfig.stiffness;
+          if (typeof customConfig.damping === 'number') damping = customConfig.damping;
+          if (typeof customConfig.mass === 'number') mass = customConfig.mass;
+        }
+        target = nextTarget;
+        if (typeof initialVel === 'number' && !Number.isNaN(initialVel)) {
+          // سقف‌گذاری منطقی سرعت پرتاب انگشت (px/sec)
+          velocity = Math.max(-3600, Math.min(3600, initialVel));
+        }
+        onComplete = completeCb;
+        if (rafId === null) {
+          lastTime = 0;
+          rafId = requestAnimationFrame(step);
+        }
+      }
+
+      return {
+        stop,
+        setImmediate,
+        animateTo,
+        getValue: () => position,
+        isRunning: () => rafId !== null,
+      };
+    }
+
+    /* تابع کشسانی لبه iOS Rubber-Banding برای حس لمسی واقعی هنگام کشیدن بیش از حد */
+    function computeIosRubberBand(offset, dimension = 64) {
+      const absOffset = Math.abs(offset);
+      const sign = offset < 0 ? -1 : 1;
+      const damped = (absOffset * dimension * 0.52) / (absOffset + dimension);
+      return sign * damped;
+    }
+
     const DEFAULT_FOLDERS = [
       { name: 'شخصی', emoji: '✨', builtIn: true },
       { name: 'کار', emoji: '💼', builtIn: true },
@@ -3144,21 +3344,13 @@
       const body = document.body;
 
       if (hz <= 60) {
-        root.style.setProperty('--motion-scale', '0.86');
-        root.style.setProperty('--spring-curve', 'cubic-bezier(0.22, 1, 0.36, 1)');
-        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1, 0.36, 1)');
+        root.style.setProperty('--motion-scale', '0.9');
       } else if (hz <= 90) {
-        root.style.setProperty('--motion-scale', '0.94');
-        root.style.setProperty('--spring-curve', 'cubic-bezier(0.28, 1.14, 0.36, 1)');
-        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.1, 0.36, 1)');
+        root.style.setProperty('--motion-scale', '0.96');
       } else if (hz <= 120) {
         root.style.setProperty('--motion-scale', '1');
-        root.style.setProperty('--spring-curve', 'cubic-bezier(0.32, 1.22, 0.36, 1)');
-        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.12, 0.36, 1)');
       } else {
-        root.style.setProperty('--motion-scale', '1.05');
-        root.style.setProperty('--spring-curve', 'cubic-bezier(0.34, 1.25, 0.36, 1)');
-        root.style.setProperty('--sheet-curve', 'cubic-bezier(0.22, 1.14, 0.36, 1)');
+        root.style.setProperty('--motion-scale', '1.03');
       }
 
       let tier = forcedTier;
@@ -3793,6 +3985,7 @@
         state.toastTimeout = null;
       }
 
+      const shell = document.getElementById('dynamic-island');
       const iconEl = document.getElementById('island-toast-icon');
       const textEl = document.getElementById('island-toast-text');
       const actionBtn = document.getElementById('island-undo-btn');
@@ -3821,6 +4014,12 @@
       }
 
       setIslandMode('toast');
+      if (shell) {
+        shell.classList.remove('is-popping');
+        void shell.offsetWidth;
+        shell.classList.add('is-popping');
+      }
+
       state.toastTimeout = setTimeout(() => {
         state.toastActionCallback = null;
         setIslandMode('idle');
@@ -4569,7 +4768,7 @@
                         >
                           ${
                             sub.completed
-                              ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
+                              ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.2"><path class="check-stroke-anim" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
                               : ''
                           }
                         </button>
@@ -4612,7 +4811,7 @@
                     >
                       ${
                         task.completed
-                          ? '<svg class="w-3.5 h-3.5 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
+                          ? '<svg class="w-3.5 h-3.5 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path class="check-stroke-anim" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
                           : ''
                       }
                     </button>
@@ -4732,6 +4931,7 @@
             currentDeltaX = 0;
             swiping = false;
             lastSwipeState = 0;
+            card.classList.add('is-card-pressing');
           },
           { passive: true }
         );
@@ -4743,6 +4943,9 @@
             const touch = e.touches[0];
             const dx = touch.clientX - startX;
             const dy = touch.clientY - startY;
+            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+              card.classList.remove('is-card-pressing');
+            }
             if (!swiping && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.4) {
               swiping = true;
               if (slot) slot.classList.add('is-actively-swiping');
@@ -4758,7 +4961,8 @@
           { passive: true }
         );
 
-        card.addEventListener('touchend', () => {
+        const clearCardTouch = () => {
+          card.classList.remove('is-card-pressing');
           if (swiping) {
             suppressNextCardClick = true;
             setTimeout(() => {
@@ -4777,7 +4981,10 @@
           startX = 0;
           swiping = false;
           swipeRafPending = false;
-        });
+        };
+
+        card.addEventListener('touchend', clearCardTouch);
+        card.addEventListener('touchcancel', clearCardTouch);
 
         card.addEventListener('dragstart', (e) => {
           draggedTaskId = taskId;
@@ -5001,7 +5208,7 @@
               <div class="flex items-center justify-between gap-2 rounded-2xl bg-white/[0.04] border border-white/[0.07] px-3 py-2">
                 <button type="button" data-inspector-sub-toggle="${sub.id}" class="flex items-center gap-2 min-w-0 flex-1 text-right cursor-pointer">
                   <span class="subtask-check ${sub.completed ? 'checked' : ''}">
-                    ${sub.completed ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
+                    ${sub.completed ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path class="check-stroke-anim" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
                   </span>
                   <span dir="auto" class="text-xs truncate ${sub.completed ? 'line-through text-[#7d8e90]' : 'text-white'}">${escapeHtml(sub.title)}</span>
                 </button>
@@ -5142,7 +5349,7 @@
 
       const startScores = { ...state.radarCurrentScores };
       const startTime = performance.now();
-      const duration = state.detectedHz <= 60 ? 300 : 380;
+      const duration = state.detectedHz <= 60 ? 320 : 400;
       const cx = 170;
       const cy = 135;
       const maxRadius = 84;
@@ -5447,6 +5654,39 @@
 
     const modalCloseTimers = new Map();
 
+    /* ایجاد عمق پس‌زمینه همگام با شیت (iOS UISheetPresentation Depth Effect) */
+    function updateMainStageDepth(depthRatio, smoothTransition = true) {
+      const mainStage = document.getElementById('app-main-stage');
+      if (!mainStage) return;
+
+      if (depthRatio <= 0.001) {
+        mainStage.classList.remove('is-stage-settled-back');
+        if (smoothTransition) {
+          mainStage.classList.add('is-stage-animating', 'is-stage-restoring');
+          mainStage.style.transform = '';
+          setTimeout(() => {
+            mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
+          }, 460);
+        } else {
+          mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
+          mainStage.style.transform = '';
+        }
+        return;
+      }
+
+      const clamped = Math.max(0, Math.min(1, depthRatio));
+      const scale = 1 - clamped * 0.048;
+      const translateY = clamped * 11;
+
+      mainStage.classList.add('is-stage-animating');
+      if (smoothTransition) {
+        mainStage.style.transition = 'transform calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve)';
+      } else {
+        mainStage.style.transition = 'none';
+      }
+      mainStage.style.transform = `translate3d(0, ${translateY.toFixed(1)}px, 0) scale3d(${scale.toFixed(4)}, ${scale.toFixed(4)}, 1)`;
+    }
+
     function resetSheetInlineStyles(modalEl) {
       if (!modalEl) return;
       modalEl.style.opacity = '';
@@ -5469,6 +5709,11 @@
       resetSheetInlineStyles(el);
       el.classList.remove('hidden', 'is-closing');
       el.classList.add('flex');
+
+      if (id !== 'task-composer-modal' && window.innerWidth < 1024) {
+        updateMainStageDepth(0.65, true);
+      }
+
       if (typeof syncBackLayerCallback === 'function') {
         syncBackLayerCallback();
       }
@@ -5484,10 +5729,13 @@
         resetSheetInlineStyles(el);
       }
       el.classList.add('is-closing');
+      updateMainStageDepth(0, true);
+
       if (typeof syncBackLayerCallback === 'function') {
         syncBackLayerCallback();
       }
 
+      const closeDelay = id === 'task-composer-modal' ? 280 : 230;
       const timer = setTimeout(() => {
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
@@ -5496,17 +5744,18 @@
           composerShutterController.resetState();
         }
         modalCloseTimers.delete(id);
-      }, 220);
+      }, closeDelay);
 
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — ۱۰۰٪ GPU-Only بدون هیچ Reflow یا تغییر کلاس حین کشیدن */
+    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram با انتگرال‌گیر فنری واقعی (Real Velocity-Preserving Spring) */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
       const scrollBody = document.getElementById('composer-scroll-body');
       const collapseFsBtn = document.getElementById('composer-collapse-fs-btn');
+      const grabberZone = document.getElementById('composer-grabber-zone');
       if (!modal || !sheet || !scrollBody) return null;
 
       let currentY = 0;
@@ -5536,81 +5785,122 @@
         return Math.max(130, Math.round(vh * 0.22));
       };
 
-      /* حین درگ فقط translate3d آپدیت می‌شود؛ تغییر وضعیت تمام‌صفحه فقط موقع رها کردن (snap) انجام می‌شود */
-      const applyShutterVisuals = (y, animate = false, targetFullscreen = null) => {
-        if (!isMobileShutter()) {
-          sheet.style.transform = '';
-          sheet.classList.remove('is-fullscreen', 'is-snapping');
-          return;
-        }
+      const syncShutterTransformFrame = (yVal, syncDepth = true) => {
+        currentY = yVal;
+        sheet.style.transform = `translate3d(0, ${yVal.toFixed(2)}px, 0)`;
 
-        const clampedY = Math.max(0, y);
-        currentY = clampedY;
-
-        sheet.classList.toggle('is-snapping', animate);
-        sheet.style.transform = `translate3d(0, ${clampedY}px, 0)`;
-
-        if (targetFullscreen !== null && targetFullscreen !== isFullscreen) {
-          isFullscreen = targetFullscreen;
-          sheet.classList.toggle('is-fullscreen', isFullscreen);
+        if (syncDepth) {
+          const vh = cachedVh || getViewportH();
+          const progress = Math.max(0, Math.min(1, 1 - yVal / Math.max(1, vh)));
+          updateMainStageDepth(progress, false);
         }
       };
 
-      const snapToHalf = () => {
+      const shutterSpring = createSpringSimulator({
+        stiffness: 350,
+        damping: 31,
+        mass: 1,
+        initialValue: 0,
+        onUpdate: (val) => {
+          if (!isMobileShutter()) return;
+          syncShutterTransformFrame(val, true);
+        },
+      });
+
+      const setFullscreenState = (nextFs) => {
+        if (isFullscreen === nextFs) return;
+        isFullscreen = nextFs;
+        sheet.classList.toggle('is-fullscreen', isFullscreen);
+      };
+
+      const snapToHalf = (initialVel = 0) => {
+        if (!isMobileShutter()) return;
         const halfY = getHalfOffset();
-        applyShutterVisuals(halfY, true, false);
+        cachedHalfY = halfY;
+        cachedVh = getViewportH();
+        setFullscreenState(false);
+        shutterSpring.animateTo(halfY, initialVel, null, {
+          stiffness: 340,
+          damping: 30,
+          mass: 1,
+        });
       };
 
-      const snapToFullscreen = () => {
-        applyShutterVisuals(0, true, true);
+      const snapToFullscreen = (initialVel = 0) => {
+        if (!isMobileShutter()) return;
+        cachedVh = getViewportH();
+        setFullscreenState(true);
+        shutterSpring.animateTo(0, initialVel, null, {
+          stiffness: 370,
+          damping: 33,
+          mass: 1,
+        });
         playTactileSound('pop');
         triggerHaptic(8);
       };
 
       const animateOpen = () => {
         if (!isMobileShutter()) {
-          sheet.classList.remove('is-fullscreen');
+          setFullscreenState(false);
           return;
         }
         const vh = getViewportH();
         const halfY = getHalfOffset();
-        isFullscreen = false;
-        sheet.classList.remove('is-fullscreen');
+        cachedVh = vh;
+        cachedHalfY = halfY;
+        setFullscreenState(false);
         scrollBody.scrollTop = 0;
 
-        applyShutterVisuals(vh, false, false);
+        shutterSpring.setImmediate(vh);
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            applyShutterVisuals(halfY, true, false);
+          shutterSpring.animateTo(halfY, -220, null, {
+            stiffness: 330,
+            damping: 29,
+            mass: 1,
           });
         });
       };
 
-      const animateClose = () => {
+      const animateClose = (initialVel = 0) => {
         if (!isMobileShutter()) return;
         const vh = getViewportH();
-        applyShutterVisuals(vh, true, false);
+        cachedVh = vh;
+        setFullscreenState(false);
+        shutterSpring.animateTo(vh, Math.max(0, initialVel), null, {
+          stiffness: 390,
+          damping: 35,
+          mass: 1,
+        });
       };
 
       const resetState = () => {
+        shutterSpring.stop();
         isFullscreen = false;
         dragging = false;
         dragLocked = false;
         rafPending = false;
-        sheet.classList.remove('is-fullscreen', 'is-snapping');
+        sheet.classList.remove('is-fullscreen');
         sheet.style.transform = '';
       };
 
       collapseFsBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        snapToHalf();
+        snapToHalf(260);
         playTactileSound('pop');
+      });
+
+      grabberZone?.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        if (!isMobileShutter() || dragging) return;
+        if (!isFullscreen) {
+          snapToFullscreen(-450);
+        }
       });
 
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
-        sheet.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        syncShutterTransformFrame(currentY, true);
       };
 
       sheet.addEventListener(
@@ -5619,6 +5909,7 @@
           if (!isMobileShutter() || e.touches.length !== 1) return;
           if (e.target.closest('button') || e.target.closest('input')) return;
 
+          shutterSpring.stop();
           const touch = e.touches[0];
           startTouchY = touch.clientY;
           startTouchX = touch.clientX;
@@ -5648,7 +5939,7 @@
               dragLocked = true;
               return;
             }
-            if (Math.abs(dy) < 8) return;
+            if (Math.abs(dy) < 7) return;
 
             if (startedOnDragZone) {
               dragging = true;
@@ -5660,23 +5951,22 @@
               dragLocked = true;
               return;
             }
-
-            if (dragging) {
-              sheet.classList.remove('is-snapping');
-            }
           }
 
           if (dragging) {
             if (e.cancelable) e.preventDefault();
             const now = performance.now();
             const dt = Math.max(1, now - lastMoveTime);
-            velocityY = (touch.clientY - lastMoveY) / dt;
+            // سرعت لحظه‌ای به پیکسل بر ثانیه (px/sec) با فیلتر نرم‌کننده
+            const instantVel = ((touch.clientY - lastMoveY) / dt) * 1000;
+            velocityY = velocityY * 0.35 + instantVel * 0.65;
             lastMoveY = touch.clientY;
             lastMoveTime = now;
 
             let nextY = startSheetY + dy;
             if (nextY < 0) {
-              nextY = 0;
+              // کشسانی نرم بالای صفحه مثل iOS Rubber-Band
+              nextY = computeIosRubberBand(nextY, 44);
             }
             currentY = nextY;
 
@@ -5699,15 +5989,16 @@
         const halfY = cachedHalfY || getHalfOffset();
         const vh = cachedVh || getViewportH();
 
-        if (currentY <= halfY * 0.55 || (velocityY < -0.35 && currentY < halfY * 0.94)) {
-          snapToFullscreen();
-        } else if (currentY >= halfY + 105 || (velocityY > 0.55 && currentY > halfY * 0.85)) {
-          applyShutterVisuals(vh, true, false);
+        // تصمیم‌گیری هوشمند بر اساس موقعیت + سرعت پرتاب انگشت (Velocity Handoff)
+        if (currentY <= halfY * 0.56 || (velocityY < -420 && currentY < halfY * 0.96)) {
+          snapToFullscreen(velocityY);
+        } else if (currentY >= halfY + 95 || (velocityY > 560 && currentY > halfY * 0.78)) {
+          animateClose(velocityY);
           playTactileSound('pop');
           triggerHaptic(8);
           closeModal('task-composer-modal', true);
         } else {
-          snapToHalf();
+          snapToHalf(velocityY);
         }
       };
 
@@ -5735,6 +6026,9 @@
       let canDrag = false;
       let isDragging = false;
       let sheetRafPending = false;
+      let lastY = 0;
+      let lastT = 0;
+      let velY = 0;
 
       const applySheetDragFrame = () => {
         sheetRafPending = false;
@@ -5751,6 +6045,9 @@
           if (!canDrag) return;
           startY = e.touches[0].clientY;
           startX = e.touches[0].clientX;
+          lastY = startY;
+          lastT = performance.now();
+          velY = 0;
           currentDy = 0;
           isDragging = false;
         },
@@ -5769,7 +6066,7 @@
               canDrag = false;
               return;
             }
-            if (dy > 12 && dy > Math.abs(dx) * 1.25 && sheet.scrollTop <= 0) {
+            if (dy > 10 && dy > Math.abs(dx) * 1.2 && sheet.scrollTop <= 0) {
               isDragging = true;
               sheet.style.animation = 'none';
               sheet.style.transition = 'none';
@@ -5779,6 +6076,12 @@
           }
 
           if (e.cancelable) e.preventDefault();
+          const now = performance.now();
+          const dt = Math.max(1, now - lastT);
+          velY = ((e.touches[0].clientY - lastY) / dt) * 1000;
+          lastY = e.touches[0].clientY;
+          lastT = now;
+
           currentDy = Math.max(0, dy);
           if (!sheetRafPending) {
             sheetRafPending = true;
@@ -5797,15 +6100,15 @@
         canDrag = false;
         sheetRafPending = false;
 
-        if (currentDy > 95) {
-          sheet.style.transition = 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease';
+        if (currentDy > 90 || velY > 580) {
+          sheet.style.transition = 'transform 0.24s var(--ios-fluid-curve), opacity 0.2s ease';
           sheet.style.transform = 'translate3d(0, 100%, 0)';
           sheet.style.opacity = '0';
           playTactileSound('pop');
           triggerHaptic(8);
           closeModal(modalId, true);
         } else {
-          sheet.style.transition = 'transform 0.26s cubic-bezier(0.22, 1.28, 0.36, 1)';
+          sheet.style.transition = 'transform 0.42s var(--spring-curve)';
           sheet.style.transform = 'translate3d(0, 0, 0)';
         }
       };
@@ -5985,7 +6288,7 @@
             <div class="flex items-center justify-between gap-2 rounded-2xl bg-white/[0.04] border border-white/[0.08] px-3 py-2">
               <button type="button" data-edit-sub-toggle="${sub.id}" class="flex items-center gap-2 min-w-0 flex-1 text-right cursor-pointer">
                 <span class="subtask-check ${sub.completed ? 'checked' : ''}">
-                  ${sub.completed ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
+                  ${sub.completed ? '<svg class="w-3 h-3 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path class="check-stroke-anim" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
                 </span>
                 <span dir="auto" class="text-xs truncate ${sub.completed ? 'line-through text-[#7d8e90]' : 'text-white'}">${escapeHtml(sub.title)}</span>
               </button>
@@ -6578,6 +6881,7 @@
           (e) => {
             if (e.touches.length === 1) {
               islandTouchStartY = e.touches[0].clientY;
+              islandEl.classList.add('is-island-pressing');
             }
           },
           { passive: true }
@@ -6586,13 +6890,27 @@
         islandEl.addEventListener(
           'touchend',
           (e) => {
-            if (state.islandMode === 'expanded' && islandTouchStartY && e.changedTouches.length === 1) {
+            islandEl.classList.remove('is-island-pressing');
+            if (islandTouchStartY && e.changedTouches.length === 1) {
               const dy = e.changedTouches[0].clientY - islandTouchStartY;
-              if (dy < -28) {
+              if (state.islandMode === 'expanded' && dy < -26) {
                 setIslandMode('idle');
                 playTactileSound('pop');
+              } else if (state.islandMode === 'idle' && dy > 20) {
+                setIslandMode('expanded');
+                playTactileSound('pop');
+                triggerHaptic(8);
               }
             }
+            islandTouchStartY = 0;
+          },
+          { passive: true }
+        );
+
+        islandEl.addEventListener(
+          'touchcancel',
+          () => {
+            islandEl.classList.remove('is-island-pressing');
             islandTouchStartY = 0;
           },
           { passive: true }
