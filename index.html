@@ -59,9 +59,8 @@
       --mint-accent-rgb: 127, 213, 216;
       --mint-contrast-text: #0b1617;
       --card-radius: 24px;
-      --glass-blur: 14px;
-      --island-blur: 16px;
-      --modal-backdrop-blur: 8px;
+      --glass-blur: 10px;
+      --island-blur: 12px;
       --motion-scale: 1;
       --spring-curve: cubic-bezier(0.32, 1.22, 0.36, 1);
       --sheet-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
@@ -69,23 +68,21 @@
       --bg-elevated: #131a1c;
       --bg-input: #12191b;
       --bg-chip: #1a2224;
-      --glass-bg: rgba(20, 27, 29, 0.82);
-      --glass-card-bg: rgba(22, 30, 32, 0.88);
-      --glass-modal-surface: rgba(18, 25, 28, 0.96);
+      --glass-bg: rgba(20, 27, 29, 0.88);
+      --glass-card-bg: rgba(22, 30, 32, 0.92);
+      --glass-modal-surface: rgba(18, 25, 28, 0.98);
       --glass-border: rgba(255, 255, 255, 0.09);
-      --specular-edge: rgba(255, 255, 255, 0.16);
+      --specular-edge: rgba(255, 255, 255, 0.14);
       --text-main: #f4f7f7;
       --text-muted: #93a3a5;
       --scrim-bg: rgba(11, 16, 18, 0.86);
-      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.94) 0%, rgba(15, 21, 23, 0.97) 100%);
+      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.95) 0%, rgba(15, 21, 23, 0.98) 100%);
       --island-border: rgba(255, 255, 255, 0.1);
       --island-shadow:
-        0 2px 6px -1px rgba(0, 0, 0, 0.35),
-        0 10px 24px -6px rgba(0, 0, 0, 0.45),
+        0 4px 14px -2px rgba(0, 0, 0, 0.42),
         inset 0 1px 0 rgba(255, 255, 255, 0.11);
       --island-shadow-expanded:
-        0 4px 12px -2px rgba(0, 0, 0, 0.32),
-        0 18px 38px -10px rgba(0, 0, 0, 0.5),
+        0 14px 34px -8px rgba(0, 0, 0, 0.52),
         inset 0 1px 0 rgba(255, 255, 255, 0.13);
       --island-text: #ffffff;
       --island-subtext: #9fb0b2;
@@ -97,23 +94,21 @@
       --bg-elevated: #ffffff;
       --bg-input: #f4f7f8;
       --bg-chip: #e6eef0;
-      --glass-bg: rgba(255, 255, 255, 0.90);
-      --glass-card-bg: rgba(255, 255, 255, 0.96);
-      --glass-modal-surface: rgba(242, 245, 247, 0.98);
+      --glass-bg: rgba(255, 255, 255, 0.93);
+      --glass-card-bg: rgba(255, 255, 255, 0.97);
+      --glass-modal-surface: rgba(244, 247, 249, 0.99);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
       --text-muted: #5b6b73;
       --scrim-bg: rgba(238, 243, 245, 0.88);
-      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 250, 251, 0.98) 100%);
+      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 250, 251, 0.99) 100%);
       --island-border: rgba(15, 23, 42, 0.08);
       --island-shadow:
-        0 2px 5px -1px rgba(15, 23, 42, 0.05),
-        0 8px 20px -6px rgba(15, 23, 42, 0.09),
+        0 4px 14px -4px rgba(15, 23, 42, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.95);
       --island-shadow-expanded:
-        0 4px 10px -2px rgba(15, 23, 42, 0.05),
-        0 16px 34px -10px rgba(15, 23, 42, 0.12),
+        0 14px 32px -8px rgba(15, 23, 42, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.98);
       --island-text: #0f172a;
       --island-subtext: #52636b;
@@ -121,27 +116,25 @@
 
     /* سطوح بهینه‌سازی GPU برای نرخ فریم‌های مختلف و پردازنده‌های گرافیکی موبایل (Mali / Adreno) */
     body.gpu-tier-balanced {
-      --glass-blur: 9px;
-      --island-blur: 11px;
-      --modal-backdrop-blur: 4px;
-      --glass-bg: rgba(20, 27, 29, 0.89);
-      --glass-card-bg: rgba(22, 30, 32, 0.94);
+      --glass-blur: 6px;
+      --island-blur: 8px;
+      --glass-bg: rgba(20, 27, 29, 0.92);
+      --glass-card-bg: rgba(22, 30, 32, 0.95);
     }
     body.theme-light.gpu-tier-balanced {
-      --glass-bg: rgba(255, 255, 255, 0.94);
-      --glass-card-bg: rgba(255, 255, 255, 0.98);
+      --glass-bg: rgba(255, 255, 255, 0.96);
+      --glass-card-bg: rgba(255, 255, 255, 0.99);
     }
 
     body.gpu-tier-performance {
       --glass-blur: 0px;
       --island-blur: 0px;
-      --modal-backdrop-blur: 0px;
-      --glass-bg: linear-gradient(180deg, rgba(25, 34, 37, 0.96) 0%, rgba(18, 25, 27, 0.98) 100%);
-      --glass-card-bg: linear-gradient(180deg, rgba(27, 36, 39, 0.97) 0%, rgba(20, 28, 30, 0.99) 100%);
-      --island-bg: linear-gradient(180deg, rgba(26, 36, 40, 0.98) 0%, rgba(16, 22, 25, 0.99) 100%);
+      --glass-bg: rgba(22, 30, 33, 0.97);
+      --glass-card-bg: rgba(24, 33, 36, 0.98);
+      --island-bg: linear-gradient(180deg, rgba(26, 36, 40, 0.99) 0%, rgba(16, 22, 25, 0.99) 100%);
     }
     body.theme-light.gpu-tier-performance {
-      --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 250, 252, 0.99) 100%);
+      --glass-bg: #ffffff;
       --glass-card-bg: #ffffff;
       --island-bg: linear-gradient(180deg, #ffffff 0%, #f4f8fa 100%);
     }
@@ -175,7 +168,7 @@
       user-select: none;
       -webkit-user-select: none;
       text-rendering: optimizeSpeed;
-      transition: background-color 0.25s ease, color 0.25s ease;
+      transition: background-color 0.22s ease, color 0.22s ease;
     }
 
     input,
@@ -197,11 +190,15 @@
       }
     }
 
+    /* حذف backdrop-filter تمام‌صفحه از مودال‌ها برای جلوگیری از افت فریم GPU در اندروید */
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-      backdrop-filter: blur(var(--modal-backdrop-blur));
-      -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+      background-color: rgba(6, 10, 12, 0.74) !important;
+    }
+
+    body.theme-light [id$="-modal"] {
+      background-color: rgba(15, 23, 42, 0.44) !important;
     }
 
     [id$="-modal"]:not(#task-composer-modal) .sheet-animate {
@@ -229,10 +226,9 @@
       height: 100lvh;
       pointer-events: none;
       z-index: 0;
-      transform: translateZ(0);
       background:
-        radial-gradient(circle at 18% 12%, rgba(var(--mint-accent-rgb), 0.12) 0%, transparent 42%),
-        radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 46%);
+        radial-gradient(circle at 18% 12%, rgba(var(--mint-accent-rgb), 0.11) 0%, transparent 42%),
+        radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.07) 0%, transparent 46%);
     }
 
     .status-bar-scrim {
@@ -265,17 +261,27 @@
       -webkit-backdrop-filter: blur(var(--glass-blur));
       border-radius: var(--card-radius);
       contain: layout style;
-      transition: background-color 0.22s ease, border-color 0.22s ease, border-radius 0.2s ease;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* سطح شیشه‌ای فوق‌سریع بدون پاس بلور اضافه برای کارت‌های داخلی صفحه */
+    .liquid-surface-fast {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 0 var(--specular-edge);
+      border-radius: var(--card-radius);
+      contain: layout style;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     [id$="-modal"] > .liquid-glass {
       background: var(--glass-modal-surface) !important;
       backdrop-filter: none !important;
       -webkit-backdrop-filter: none !important;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 var(--specular-edge) !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram برای ایجاد کار جدید */
+    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram (۱۰۰٪ سخت‌افزاری بدون Reflow) */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -296,18 +302,30 @@
         max-height: var(--app-viewport-height) !important;
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
-        border-top-left-radius: var(--shutter-top-radius, 30px) !important;
-        border-top-right-radius: var(--shutter-top-radius, 30px) !important;
-        transform: translate3d(0, var(--shutter-y, 22vh), 0);
-        will-change: transform, border-radius;
+        border-top-left-radius: 28px !important;
+        border-top-right-radius: 28px !important;
+        transform: translate3d(0, 22vh, 0);
+        will-change: transform;
         animation: none !important;
         overflow: hidden !important;
+        contain: layout style paint;
+      }
+
+      #composer-shutter-sheet.is-fullscreen {
+        border-top-left-radius: 0px !important;
+        border-top-right-radius: 0px !important;
       }
 
       #composer-shutter-sheet.is-snapping {
         transition:
-          transform calc(0.42s * var(--motion-scale)) cubic-bezier(0.22, 1.08, 0.32, 1),
-          border-radius calc(0.32s * var(--motion-scale)) ease !important;
+          transform calc(0.38s * var(--motion-scale)) cubic-bezier(0.22, 1.06, 0.32, 1),
+          border-radius 0.24s ease !important;
+      }
+
+      #composer-scroll-body {
+        padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
       }
     }
 
@@ -327,8 +345,6 @@
       background: var(--island-bg);
       border: 1px solid var(--island-border);
       box-shadow: var(--island-shadow);
-      backdrop-filter: blur(var(--island-blur));
-      -webkit-backdrop-filter: blur(var(--island-blur));
     }
 
     #composer-fs-header {
@@ -336,19 +352,19 @@
       opacity: 0;
       overflow: hidden;
       pointer-events: none;
-      transform: translate3d(0, -10px, 0) scale(0.97);
+      transform: translate3d(0, -8px, 0);
       transition:
-        max-height calc(0.34s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
-        opacity calc(0.24s * var(--motion-scale)) ease,
-        transform calc(0.34s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
-        padding calc(0.34s * var(--motion-scale)) ease;
+        max-height calc(0.3s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease,
+        transform calc(0.3s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        padding calc(0.3s * var(--motion-scale)) ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-fs-header {
       max-height: calc(68px + env(safe-area-inset-top, 0px));
       opacity: 1;
       pointer-events: auto;
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translate3d(0, 0, 0);
       padding-top: calc(10px + env(safe-area-inset-top, 0px));
       padding-bottom: 8px;
     }
@@ -365,11 +381,11 @@
     #composer-grabber-zone {
       max-height: 28px;
       opacity: 1;
-      transition: opacity 0.2s ease, max-height 0.28s ease, padding 0.28s ease;
+      transition: opacity 0.18s ease, max-height 0.24s ease, padding 0.24s ease;
     }
 
     #composer-inline-header {
-      transition: opacity 0.22s ease, max-height 0.28s ease, padding 0.28s ease;
+      transition: opacity 0.2s ease, max-height 0.24s ease, padding 0.24s ease;
       max-height: 56px;
       overflow: hidden;
     }
@@ -388,13 +404,13 @@
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: var(--card-radius);
       contain: layout style;
-      transition: transform calc(0.2s * var(--motion-scale)) var(--sheet-curve), border-color 0.18s ease, opacity 0.18s ease;
+      transition: transform calc(0.18s * var(--motion-scale)) var(--sheet-curve), border-color 0.16s ease, opacity 0.16s ease;
     }
 
     body.theme-light [id$="-modal"] > .liquid-glass {
       background: var(--glass-modal-surface) !important;
       border-color: rgba(15, 23, 42, 0.1) !important;
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
     }
     body.theme-light .text-white {
       color: #0f172a !important;
@@ -470,7 +486,7 @@
       touch-action: manipulation;
       user-select: none;
       line-height: 1;
-      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, opacity 0.16s ease, border-color 0.16s ease;
+      transition: transform calc(0.15s * var(--motion-scale)) var(--spring-curve), background-color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
     }
     .spring-btn:active {
       transform: scale(0.94);
@@ -526,13 +542,12 @@
       transform: translate3d(0, 0, 0) scale(1);
       transform-origin: top center;
       transition:
-        width calc(0.38s * var(--motion-scale)) var(--spring-curve),
-        height calc(0.38s * var(--motion-scale)) var(--spring-curve),
-        border-radius calc(0.38s * var(--motion-scale)) var(--spring-curve),
-        transform calc(0.2s * var(--motion-scale)) var(--spring-curve),
-        box-shadow 0.25s ease,
-        background 0.22s ease,
-        border-color 0.22s ease;
+        width calc(0.36s * var(--motion-scale)) var(--spring-curve),
+        height calc(0.36s * var(--motion-scale)) var(--spring-curve),
+        border-radius calc(0.36s * var(--motion-scale)) var(--spring-curve),
+        transform calc(0.18s * var(--motion-scale)) var(--spring-curve),
+        background 0.2s ease,
+        border-color 0.2s ease;
     }
 
     .obsidian-shell:not(.is-expanded):hover {
@@ -570,8 +585,8 @@
       transform: translate3d(-50%, 0, 0) scale(1);
       opacity: 1;
       transition:
-        opacity calc(0.22s * var(--motion-scale)) ease 0.05s,
-        transform calc(0.36s * var(--motion-scale)) var(--spring-curve);
+        opacity calc(0.2s * var(--motion-scale)) ease 0.04s,
+        transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
     }
 
     #island-idle-layer {
@@ -611,7 +626,7 @@
       transform: translate3d(-50%, -3px, 0) scale(0.92);
       transition:
         opacity 0.12s ease,
-        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .island-primary-text {
@@ -653,7 +668,7 @@
       transform-origin: left center;
       transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: transform calc(0.4s * var(--motion-scale)) var(--sheet-curve);
+      transition: transform calc(0.38s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .audio-wave-bar {
@@ -689,7 +704,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform calc(0.22s * var(--motion-scale)) var(--spring-curve), background-color 0.18s ease, border-color 0.18s ease;
+      transition: transform calc(0.2s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
     }
 
     .check-circle.checked {
@@ -707,7 +722,7 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
+      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve), background-color 0.15s ease, border-color 0.15s ease;
     }
 
     .subtask-check.checked {
@@ -719,7 +734,7 @@
     .composer-create-btn {
       background-color: var(--mint-accent);
       color: var(--mint-contrast-text);
-      transition: opacity 0.18s ease, transform calc(0.16s * var(--motion-scale)) var(--spring-curve);
+      transition: opacity 0.16s ease, transform calc(0.15s * var(--motion-scale)) var(--spring-curve);
     }
 
     .composer-create-btn:disabled {
@@ -741,7 +756,7 @@
       transform-origin: right center;
       transform: scaleX(0);
       background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-      transition: transform calc(0.4s * var(--motion-scale)) var(--sheet-curve);
+      transition: transform calc(0.38s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .ambient-chip.is-active {
@@ -752,8 +767,7 @@
 
     .chart-bar-fill {
       background: linear-gradient(180deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
-      box-shadow: 0 0 12px rgba(var(--mint-accent-rgb), 0.28);
-      transition: height calc(0.4s * var(--motion-scale)) var(--sheet-curve);
+      transition: height calc(0.38s * var(--motion-scale)) var(--sheet-curve);
     }
 
     .radar-stage-box {
@@ -786,7 +800,7 @@
     }
 
     .radar-axis-pill {
-      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.18s ease, border-color 0.18s ease;
+      transition: transform calc(0.16s * var(--motion-scale)) var(--spring-curve), background-color 0.16s ease, border-color 0.16s ease;
     }
 
     .radar-axis-pill.is-selected {
@@ -815,7 +829,7 @@
     @keyframes sheetSlideUpMobile {
       from {
         opacity: 0;
-        transform: translate3d(0, 64px, 0);
+        transform: translate3d(0, 56px, 0);
       }
       to {
         opacity: 1;
@@ -830,14 +844,14 @@
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 64px, 0);
+        transform: translate3d(0, 56px, 0);
       }
     }
 
     @keyframes sheetScaleInDesktop {
       from {
         opacity: 0;
-        transform: translate3d(0, 16px, 0) scale(0.96);
+        transform: translate3d(0, 14px, 0) scale(0.96);
       }
       to {
         opacity: 1;
@@ -852,35 +866,35 @@
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 12px, 0) scale(0.96);
+        transform: translate3d(0, 10px, 0) scale(0.96);
       }
     }
 
     [id$="-modal"] {
-      animation: modalBackdropIn calc(0.24s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: modalBackdropIn calc(0.22s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
     [id$="-modal"].is-closing {
       pointer-events: none;
-      animation: modalBackdropOut calc(0.2s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: modalBackdropOut calc(0.18s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .sheet-animate {
-      animation: sheetSlideUpMobile calc(0.32s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: sheetSlideUpMobile calc(0.3s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     [id$="-modal"]:not(#task-composer-modal).is-closing .sheet-animate {
-      animation: sheetSlideDownMobile calc(0.19s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
+      animation: sheetSlideDownMobile calc(0.18s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
     }
 
     @media (min-width: 640px) {
       .sheet-animate {
-        animation: sheetScaleInDesktop calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
+        animation: sheetScaleInDesktop calc(0.24s * var(--motion-scale)) var(--sheet-curve) both;
       }
 
       [id$="-modal"].is-closing .sheet-animate {
-        animation: sheetScaleOutDesktop calc(0.18s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
+        animation: sheetScaleOutDesktop calc(0.17s * var(--motion-scale)) cubic-bezier(0.32, 0, 0.67, 0) forwards;
       }
     }
 
@@ -892,13 +906,11 @@
     .avatar-surface {
       background: linear-gradient(145deg, rgba(var(--mint-accent-rgb), 0.22), rgba(var(--mint-accent-rgb), 0.08));
       border: 1.5px solid rgba(var(--mint-accent-rgb), 0.42);
-      box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.16);
     }
 
     body.theme-light .avatar-surface {
       background: linear-gradient(145deg, #ffffff, rgba(var(--mint-accent-rgb), 0.2));
       border-color: rgba(var(--mint-accent-rgb), 0.55);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     }
 
     .tg-settings-row {
@@ -910,7 +922,7 @@
       padding: 0.78rem 0.95rem;
       text-align: right;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: background-color 0.14s ease;
     }
     .tg-settings-row:hover {
       background-color: rgba(147, 163, 165, 0.08);
@@ -938,7 +950,7 @@
       padding: 2px;
       position: relative;
       flex-shrink: 0;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.18s ease;
     }
     .tg-switch.is-on {
       background-color: var(--mint-accent);
@@ -949,7 +961,7 @@
       border-radius: 999px;
       background-color: #ffffff;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-      transition: transform calc(0.2s * var(--motion-scale)) var(--spring-curve);
+      transition: transform calc(0.18s * var(--motion-scale)) var(--spring-curve);
       transform: translate3d(0, 0, 0);
     }
     .tg-switch.is-on .tg-switch-knob {
@@ -978,7 +990,7 @@
       border: 1px solid var(--glass-border);
       backdrop-filter: blur(var(--glass-blur));
       -webkit-backdrop-filter: blur(var(--glass-blur));
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       padding: 4px;
@@ -993,7 +1005,7 @@
       width: calc(25% - 2px);
       height: calc(100% - 8px);
       will-change: transform;
-      transition: transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
+      transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
       pointer-events: none;
     }
 
@@ -1004,7 +1016,7 @@
       border-radius: 999px;
       background: rgba(var(--mint-accent-rgb), 0.18);
       border: 1px solid rgba(var(--mint-accent-rgb), 0.36);
-      box-shadow: 0 4px 14px rgba(var(--mint-accent-rgb), 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
       transform-origin: center;
       will-change: transform;
     }
@@ -1014,7 +1026,7 @@
         transform: scale(1, 1);
       }
       36% {
-        transform: scale(1.22, 0.9);
+        transform: scale(1.2, 0.91);
       }
       72% {
         transform: scale(0.96, 1.03);
@@ -1025,7 +1037,7 @@
     }
 
     .tg-nav-indicator-blob.is-stretching {
-      animation: liquidPillStretchX calc(0.36s * var(--motion-scale)) var(--spring-curve);
+      animation: liquidPillStretchX calc(0.34s * var(--motion-scale)) var(--spring-curve);
     }
 
     @keyframes navIconSpring {
@@ -1033,7 +1045,7 @@
         transform: scale(1) translate3d(0, 0, 0);
       }
       40% {
-        transform: scale(1.18) translate3d(0, -1.5px, 0);
+        transform: scale(1.16) translate3d(0, -1.5px, 0);
       }
       75% {
         transform: scale(0.96) translate3d(0, 0.5px, 0);
@@ -1056,14 +1068,14 @@
       font-weight: 700;
       border-radius: 999px;
       cursor: pointer;
-      transition: color 0.18s ease, transform 0.15s ease;
+      transition: color 0.16s ease, transform 0.14s ease;
     }
     .tg-nav-btn.is-active {
       color: var(--mint-accent);
     }
     .tg-nav-btn.is-bouncing svg,
     .rail-nav-btn.is-bouncing svg {
-      animation: navIconSpring calc(0.34s * var(--motion-scale)) var(--spring-curve);
+      animation: navIconSpring calc(0.32s * var(--motion-scale)) var(--spring-curve);
     }
     .tg-nav-btn:active {
       transform: scale(0.92);
@@ -1072,7 +1084,7 @@
     @keyframes tabEnterFromLeft {
       from {
         opacity: 0;
-        transform: translate3d(-22px, 0, 0);
+        transform: translate3d(-18px, 0, 0);
       }
       to {
         opacity: 1;
@@ -1083,7 +1095,7 @@
     @keyframes tabEnterFromRight {
       from {
         opacity: 0;
-        transform: translate3d(22px, 0, 0);
+        transform: translate3d(18px, 0, 0);
       }
       to {
         opacity: 1;
@@ -1092,12 +1104,12 @@
     }
 
     .tab-view.tab-enter-from-left {
-      animation: tabEnterFromLeft calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: tabEnterFromLeft calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
     .tab-view.tab-enter-from-right {
-      animation: tabEnterFromRight calc(0.28s * var(--motion-scale)) var(--sheet-curve) both;
+      animation: tabEnterFromRight calc(0.26s * var(--motion-scale)) var(--sheet-curve) both;
       will-change: transform, opacity;
     }
 
@@ -1108,7 +1120,7 @@
       border-radius: 999px;
       background: linear-gradient(135deg, var(--mint-accent), var(--mint-accent-strong));
       color: var(--mint-contrast-text);
-      box-shadow: 0 10px 26px rgba(var(--mint-accent-rgb), 0.38);
+      box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.34);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1141,9 +1153,7 @@
       position: relative;
       border-radius: var(--card-radius);
       overflow: hidden;
-      contain: layout style paint;
-      content-visibility: auto;
-      contain-intrinsic-size: auto 84px;
+      contain: layout style;
     }
 
     .task-swipe-slot.is-actively-swiping .task-card {
@@ -1182,7 +1192,6 @@
       .liquid-card:hover {
         border-color: rgba(var(--mint-accent-rgb), 0.34);
         transform: translate3d(0, -1.5px, 0);
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 0 var(--specular-edge);
       }
     }
 
@@ -1210,7 +1219,7 @@
         border-radius: 34px;
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32), inset 0 1px 0 0 var(--specular-edge);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 0 var(--specular-edge);
         backdrop-filter: blur(var(--glass-blur));
         -webkit-backdrop-filter: blur(var(--glass-blur));
         display: flex;
@@ -1228,7 +1237,7 @@
         width: 46px;
         height: 46px;
         will-change: transform;
-        transition: transform calc(0.34s * var(--motion-scale)) var(--spring-curve);
+        transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
         pointer-events: none;
       }
 
@@ -1239,7 +1248,6 @@
         border-radius: 18px;
         background: rgba(var(--mint-accent-rgb), 0.18);
         border: 1px solid rgba(var(--mint-accent-rgb), 0.38);
-        box-shadow: 0 6px 16px rgba(var(--mint-accent-rgb), 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18);
         transform-origin: center;
         will-change: transform;
       }
@@ -1249,7 +1257,7 @@
           transform: scale(1, 1);
         }
         36% {
-          transform: scale(0.9, 1.22);
+          transform: scale(0.91, 1.2);
         }
         72% {
           transform: scale(1.03, 0.96);
@@ -1260,7 +1268,7 @@
       }
 
       .rail-nav-indicator-blob.is-stretching {
-        animation: liquidPillStretchY calc(0.36s * var(--motion-scale)) var(--spring-curve);
+        animation: liquidPillStretchY calc(0.34s * var(--motion-scale)) var(--spring-curve);
       }
 
       .rail-nav-btn {
@@ -1277,7 +1285,7 @@
         color: var(--text-muted);
         border: 1px solid transparent;
         cursor: pointer;
-        transition: color 0.18s ease, background-color 0.18s ease, transform 0.16s var(--spring-curve);
+        transition: color 0.16s ease, background-color 0.16s ease, transform 0.15s var(--spring-curve);
       }
 
       .rail-nav-btn:hover:not(.is-active) {
@@ -1309,7 +1317,7 @@
     }
 
     #desktop-focus-dropzone {
-      transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+      transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
     }
 
     #desktop-focus-dropzone.is-drag-target {
@@ -1554,7 +1562,7 @@
   <main class="app-safe-main relative z-10 max-w-2xl lg:max-w-[1140px] mx-auto px-4 lg:pr-28 lg:pl-7">
     <div id="tab-view-tasks" class="tab-view flex flex-col gap-3.5 lg:grid lg:grid-cols-12 lg:gap-5 lg:items-start">
       <div class="lg:col-span-7 flex flex-col gap-3.5 lg:gap-3 min-w-0">
-        <section class="liquid-glass rounded-3xl p-4 lg:px-4 lg:py-3 flex flex-col gap-3 lg:gap-2.5">
+        <section class="liquid-surface-fast rounded-3xl p-4 lg:px-4 lg:py-3 flex flex-col gap-3 lg:gap-2.5">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5 min-w-0">
               <button
@@ -1624,7 +1632,7 @@
             type="text"
             dir="auto"
             placeholder="جستجو در کارها و پوشه‌ها..."
-            class="w-full liquid-glass rounded-2xl py-2.5 pr-9 pl-9 text-xs text-white placeholder-[#7d8e90] outline-none"
+            class="w-full liquid-surface-fast rounded-2xl py-2.5 pr-9 pl-9 text-xs text-white placeholder-[#7d8e90] outline-none"
           />
           <svg class="w-4 h-4 text-[#93a3a5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
@@ -1679,7 +1687,7 @@
       </div>
 
       <div class="lg:col-span-5 flex flex-col gap-3.5 lg:sticky lg:top-20 min-w-0">
-        <section id="desktop-task-inspector" class="hidden liquid-glass rounded-3xl p-4 flex-col gap-3.5 border border-[#7fd5d8]/35">
+        <section id="desktop-task-inspector" class="hidden liquid-surface-fast rounded-3xl p-4 flex-col gap-3.5 border border-[#7fd5d8]/35">
           <div class="flex items-center justify-between gap-2">
             <button
               id="close-desktop-inspector-btn"
@@ -1785,7 +1793,7 @@
         </section>
 
         <div id="desktop-overview-stack" class="flex flex-col gap-3.5">
-          <section id="desktop-focus-widget" class="hidden lg:flex liquid-glass rounded-3xl p-3.5 flex-col gap-2.5">
+          <section id="desktop-focus-widget" class="hidden lg:flex liquid-surface-fast rounded-3xl p-3.5 flex-col gap-2.5">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-1.5 min-w-0">
                 <span class="w-2 h-2 rounded-full bg-[#7fd5d8]"></span>
@@ -1838,7 +1846,7 @@
             </div>
           </section>
 
-          <section id="quick-notes-card" class="liquid-glass rounded-3xl p-3.5 flex flex-col gap-2.5">
+          <section id="quick-notes-card" class="liquid-surface-fast rounded-3xl p-3.5 flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs">🔖</span>
@@ -1871,7 +1879,7 @@
     </div>
 
     <div id="tab-view-focus" class="tab-view hidden is-tab-hidden max-w-lg mx-auto">
-      <section class="liquid-glass rounded-3xl p-6 flex flex-col items-center text-center gap-4">
+      <section class="liquid-surface-fast rounded-3xl p-6 flex flex-col items-center text-center gap-4">
         <span class="text-xs font-bold px-3 py-1 rounded-full bg-[#7fd5d8]/15 text-[#7fd5d8]">
           اتاق تمرکز عمیق (همگام با داینامیک آیلند)
         </span>
@@ -1940,7 +1948,7 @@
     </div>
 
     <div id="tab-view-stats" class="tab-view hidden is-tab-hidden max-w-3xl mx-auto flex flex-col gap-3.5">
-      <section class="liquid-glass rounded-3xl p-4 sm:p-5 flex flex-col gap-3.5">
+      <section class="liquid-surface-fast rounded-3xl p-4 sm:p-5 flex flex-col gap-3.5">
         <div class="flex items-center justify-between gap-2">
           <div>
             <div class="flex items-center gap-1.5">
@@ -2058,21 +2066,21 @@
       </section>
 
       <div class="grid grid-cols-3 gap-2.5">
-        <div class="liquid-glass rounded-3xl p-3.5 text-center">
+        <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">تکمیل‌شده</span>
           <div id="stat-done-count" class="text-xl font-extrabold text-[#7fd5d8] mt-1">۰</div>
         </div>
-        <div class="liquid-glass rounded-3xl p-3.5 text-center">
+        <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">در جریان</span>
           <div id="stat-active-count" class="text-xl font-extrabold text-white mt-1">۰</div>
         </div>
-        <div class="liquid-glass rounded-3xl p-3.5 text-center">
+        <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">استریک</span>
           <div id="stat-streak-count" class="text-xl font-extrabold text-amber-300 mt-1">۱ روز</div>
         </div>
       </div>
 
-      <section class="liquid-glass rounded-3xl p-4 flex flex-col gap-3">
+      <section class="liquid-surface-fast rounded-3xl p-4 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-sm font-bold text-white">عملکرد ۷ روز گذشته</h2>
@@ -2083,7 +2091,7 @@
         <div id="weekly-chart-bars" class="grid grid-cols-7 gap-2 items-end h-32 pt-3 px-1"></div>
       </section>
 
-      <section class="liquid-glass rounded-3xl p-4 flex flex-col gap-3">
+      <section class="liquid-surface-fast rounded-3xl p-4 flex flex-col gap-3">
         <h2 class="text-sm font-bold text-white">پیشرفت بر اساس پوشه‌ها</h2>
         <div id="category-breakdown-list" class="flex flex-col gap-3"></div>
       </section>
@@ -2096,7 +2104,7 @@
             id="tg-top-sync-btn"
             type="button"
             title="انتقال سریع بین دستگاه‌ها"
-            class="spring-btn w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-white cursor-pointer"
+            class="spring-btn w-9 h-9 rounded-full liquid-surface-fast flex items-center justify-center text-white cursor-pointer"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
@@ -2104,7 +2112,7 @@
             </svg>
           </button>
 
-          <div class="flex items-center gap-1.5 rounded-full liquid-glass px-2 py-1">
+          <div class="flex items-center gap-1.5 rounded-full liquid-surface-fast px-2 py-1">
             <button
               id="tg-top-mode-btn"
               type="button"
@@ -2162,7 +2170,7 @@
 
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حساب و شخصی‌سازی</span>
-          <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
             <button id="tg-row-profile" type="button" class="tg-settings-row">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="tg-icon-circle bg-[#0ea5e9]">
@@ -2197,7 +2205,7 @@
 
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">تمرکز و رفتار هوشمند</span>
-          <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
             <button id="tg-row-daily-goal" type="button" class="tg-settings-row">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="tg-icon-circle bg-[#10b981]">
@@ -2277,7 +2285,7 @@
 
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">حریم خصوصی، داده‌ها و صدا</span>
-          <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
             <button id="tg-row-privacy" type="button" class="tg-settings-row">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="tg-icon-circle bg-[#22c55e]">
@@ -2350,7 +2358,7 @@
           <button
             id="tg-appearance-back-btn"
             type="button"
-            class="spring-btn flex items-center gap-1.5 px-3 py-2 rounded-full liquid-glass text-xs font-bold text-white cursor-pointer"
+            class="spring-btn flex items-center gap-1.5 px-3 py-2 rounded-full liquid-surface-fast text-xs font-bold text-white cursor-pointer"
           >
             <span>→</span>
             <span>بازگشت</span>
@@ -2359,7 +2367,7 @@
           <span class="w-16"></span>
         </div>
 
-        <div class="liquid-glass rounded-3xl p-4 flex flex-col gap-3">
+        <div class="liquid-surface-fast rounded-3xl p-4 flex flex-col gap-3">
           <span class="text-[11px] font-bold text-[#7fd5d8]">پیش‌نمایش زنده رابط کاربری</span>
           <div class="rounded-2xl p-3 bg-black/15 border border-white/10 flex flex-col gap-2.5">
             <div class="mx-auto w-44 h-8 rounded-full px-3 flex items-center justify-between" style="background: var(--island-bg); border: 1px solid var(--island-border);">
@@ -2380,7 +2388,7 @@
           </div>
         </div>
 
-        <div class="liquid-glass rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+        <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
           <div class="p-4 flex flex-col gap-3">
             <span class="text-xs font-bold text-[#7fd5d8]">تم رنگی (Color Theme)</span>
             <div class="grid grid-cols-4 gap-2">
@@ -2430,7 +2438,7 @@
           </button>
         </div>
 
-        <div class="liquid-glass rounded-3xl p-4 flex flex-col gap-2.5">
+        <div class="liquid-surface-fast rounded-3xl p-4 flex flex-col gap-2.5">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-[#7fd5d8]">انحنای گوشه کارت‌ها (Card Corners)</span>
             <span id="card-radius-val" class="ltr font-mono text-xs font-bold text-[#7fd5d8]">24px</span>
@@ -2492,7 +2500,7 @@
   </nav>
 
   <!-- ==================== MODALS ==================== -->
-  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
+  <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">ویرایش پروفایل و آواتار</h3>
@@ -2544,7 +2552,7 @@
     </div>
   </div>
 
-  <div id="sync-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
+  <div id="sync-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-3.5">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">انتقال و پشتیبان‌گیری آفلاین</h3>
@@ -2582,7 +2590,7 @@
     </div>
   </div>
 
-  <div id="cleanup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
+  <div id="cleanup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-sm p-5 flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">پاک‌سازی داده‌ها</h3>
@@ -2603,7 +2611,7 @@
     </div>
   </div>
 
-  <div id="task-edit-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4 bg-black/70">
+  <div id="task-edit-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-3 sm:p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div data-sheet-handle class="sm:hidden pt-0.5 pb-1.5 -mt-2 cursor-grab active:cursor-grabbing touch-none flex justify-center">
         <div class="w-10 h-1 rounded-full bg-white/25"></div>
@@ -2702,7 +2710,7 @@
     </div>
   </div>
 
-  <div id="folders-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70">
+  <div id="folders-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-extrabold text-white">مدیریت پوشه‌های سفارشی</h3>
@@ -2744,7 +2752,7 @@
   </div>
 
   <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار (iOS 27 / HyperOS 4 / Telegram) ==================== -->
-  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70">
+  <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
     <div id="composer-shutter-sheet" class="liquid-glass sheet-animate rounded-3xl w-full max-w-md flex flex-col">
       <!-- دستگیره کرکره در حالت نیمه‌باز -->
       <div id="composer-grabber-zone" data-composer-drag-zone class="pt-2.5 pb-1.5 cursor-grab active:cursor-grabbing touch-none flex flex-col items-center shrink-0">
@@ -2784,7 +2792,7 @@
       </div>
 
       <!-- بدنه قابل اسکرول فرم ایجاد کار -->
-      <div id="composer-scroll-body" class="flex-1 overflow-y-auto px-4 pt-1 pb-8">
+      <div id="composer-scroll-body" class="flex-1 overflow-y-auto px-4 pt-1">
         <form id="task-composer-form" action="javascript:void(0)" class="flex flex-col gap-3.5">
           <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
             <div id="composer-inline-header" data-composer-drag-zone class="flex items-center justify-between px-4 pt-3.5 pb-2 touch-none">
@@ -2944,7 +2952,7 @@
     </div>
   </div>
 
-  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden items-start justify-center pt-16 sm:pt-24 p-4 bg-black/70">
+  <div id="command-palette-modal" class="fixed inset-0 z-50 hidden items-start justify-center pt-16 sm:pt-24 p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-lg overflow-hidden border border-white/15 shadow-2xl">
       <div class="flex items-center gap-2.5 px-4 py-3.5 border-b border-white/10">
         <span class="text-sm text-[#7fd5d8]">⌘</span>
@@ -2979,7 +2987,6 @@
     let currentCmdItems = [];
     let draggedTaskId = null;
     let syncBackLayerCallback = null;
-    let compositorBoostRaf = null;
     let composerShutterController = null;
 
     const DEFAULT_FOLDERS = [
@@ -3122,22 +3129,6 @@
       return 60;
     }
 
-    function boostCompositorFrames(durationMs = 420) {
-      if (compositorBoostRaf) {
-        cancelAnimationFrame(compositorBoostRaf);
-        compositorBoostRaf = null;
-      }
-      const endAt = performance.now() + durationMs;
-      function tick(now) {
-        if (now < endAt) {
-          compositorBoostRaf = requestAnimationFrame(tick);
-        } else {
-          compositorBoostRaf = null;
-        }
-      }
-      compositorBoostRaf = requestAnimationFrame(tick);
-    }
-
     function applyAdaptiveRenderCalibration(forcedTier = null) {
       const hz = state.detectedHz || 120;
       const root = document.documentElement;
@@ -3206,7 +3197,7 @@
       let frameDeltas = [];
       let lastTs = 0;
       let sampleCount = 0;
-      const maxInitialSamples = 28;
+      const maxInitialSamples = 26;
 
       function measureLoop(now) {
         if (lastTs > 0) {
@@ -3228,7 +3219,7 @@
 
           const medianDelta = frameDeltas[Math.floor(frameDeltas.length * 0.5)];
           const frameBudget = 1000 / estimatedHz;
-          const hasGpuPressure = medianDelta > frameBudget * 1.38;
+          const hasGpuPressure = medianDelta > frameBudget * 1.35;
 
           if (state.gpuQualityMode === 'auto' && hasGpuPressure) {
             applyAdaptiveRenderCalibration(estimatedHz <= 60 ? 'performance' : 'balanced');
@@ -3724,10 +3715,10 @@
       const colors = ['#7fd5d8', '#34d399', '#fbbf24', '#60a5fa', '#c084fc'];
       const cx = window.innerWidth / 2;
       const cy = 140;
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < 16; i++) {
         const dot = document.createElement('span');
         dot.className = 'sparkle-particle';
-        const angle = (Math.PI * 2 * i) / 18;
+        const angle = (Math.PI * 2 * i) / 16;
         const dist = 55 + Math.random() * 85;
         dot.style.left = `${cx}px`;
         dot.style.top = `${cy}px`;
@@ -3735,7 +3726,7 @@
         dot.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
         dot.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
         document.body.appendChild(dot);
-        setTimeout(() => dot.remove(), 860);
+        setTimeout(() => dot.remove(), 840);
       }
     }
 
@@ -3773,8 +3764,6 @@
       const toastLayer = document.getElementById('island-toast-layer');
       const expandedLayer = document.getElementById('island-expanded-layer');
       if (!shell || !idleLayer || !toastLayer || !expandedLayer) return;
-
-      boostCompositorFrames(440);
 
       shell.classList.toggle('is-toast', mode === 'toast');
       shell.classList.toggle('is-expanded', mode === 'expanded');
@@ -4536,7 +4525,7 @@
           ? 'نتیجه‌ای برای جستجوی شما پیدا نشد'
           : 'هیچ کاری در این بخش ثبت نشده است';
         container.innerHTML = `
-          <div class="liquid-glass rounded-3xl p-8 text-center flex flex-col items-center gap-2">
+          <div class="liquid-surface-fast rounded-3xl p-8 text-center flex flex-col items-center gap-2">
             <span class="text-2xl">🌿</span>
             <p class="text-sm font-bold text-white">${emptyMsg}</p>
             <p class="text-xs text-[#93a3a5]">برای ثبت کار جدید و زیرکارها، دکمه <strong class="text-[#7fd5d8]">+</strong> را بزن</p>
@@ -5144,7 +5133,7 @@
 
       const startScores = { ...state.radarCurrentScores };
       const startTime = performance.now();
-      const duration = state.detectedHz <= 60 ? 320 : 400;
+      const duration = state.detectedHz <= 60 ? 300 : 380;
       const cx = 170;
       const cy = 135;
       const maxRadius = 84;
@@ -5397,9 +5386,6 @@
       const isSameTab = state.activeTab === tabName;
 
       state.activeTab = tabName;
-      if (!isSameTab) {
-        boostCompositorFrames(420);
-      }
 
       document.querySelectorAll('.tab-view').forEach((view) => {
         const isTarget = view.id === `tab-view-${tabName}`;
@@ -5471,7 +5457,6 @@
         clearTimeout(modalCloseTimers.get(id));
         modalCloseTimers.delete(id);
       }
-      boostCompositorFrames(420);
       resetSheetInlineStyles(el);
       el.classList.remove('hidden', 'is-closing');
       el.classList.add('flex');
@@ -5484,7 +5469,6 @@
       const el = document.getElementById(id);
       if (!el || el.classList.contains('hidden') || el.classList.contains('is-closing')) return;
 
-      boostCompositorFrames(340);
       if (id === 'task-composer-modal' && composerShutterController && !fromDrag) {
         composerShutterController.animateClose();
       } else if (!fromDrag) {
@@ -5503,12 +5487,12 @@
           composerShutterController.resetState();
         }
         modalCloseTimers.delete(id);
-      }, 240);
+      }, 220);
 
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram برای پنجره ایجاد کار */
+    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram (۱۰۰٪ GPU Compositor بدون Reflow) */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -5543,10 +5527,7 @@
       const applyShutterVisuals = (y, animate = false) => {
         if (!isMobileShutter()) {
           sheet.style.transform = '';
-          sheet.style.borderTopLeftRadius = '';
-          sheet.style.borderTopRightRadius = '';
           sheet.classList.remove('is-fullscreen', 'is-snapping');
-          scrollBody.style.paddingBottom = '';
           return;
         }
 
@@ -5554,45 +5535,22 @@
         const clampedY = Math.max(0, y);
         currentY = clampedY;
 
-        // محاسبه نرم انحنای گوشه‌ها هنگام نزدیک شدن به سقف گوشی (30px -> 0px)
-        const expandProgress = Math.max(0, Math.min(1, 1 - clampedY / Math.max(1, halfY)));
-        const topRadius = Math.round(30 * (1 - Math.pow(expandProgress, 2.2)));
-
         sheet.classList.toggle('is-snapping', animate);
-        sheet.style.setProperty('--shutter-y', `${clampedY}px`);
-        sheet.style.setProperty('--shutter-top-radius', `${topRadius}px`);
         sheet.style.transform = `translate3d(0, ${clampedY}px, 0)`;
-        sheet.style.borderTopLeftRadius = `${topRadius}px`;
-        sheet.style.borderTopRightRadius = `${topRadius}px`;
 
         const nearTop = clampedY <= Math.max(24, halfY * 0.22);
         if (nearTop !== isFullscreen) {
           isFullscreen = nearTop;
           sheet.classList.toggle('is-fullscreen', isFullscreen);
         }
-
-        // تنظیم فضای اسکرول انتهای فرم تا در حالت نیمه‌باز هم تمام گزینه‌ها در دسترس باشند
-        const bottomPad = isFullscreen
-          ? 'calc(2.5rem + env(safe-area-inset-bottom, 0px))'
-          : `${halfY + 36}px`;
-        scrollBody.style.paddingBottom = bottomPad;
-
-        if (clampedY > halfY) {
-          const closeProgress = Math.min(1, (clampedY - halfY) / 260);
-          modal.style.opacity = String(Math.max(0.25, 1 - closeProgress * 0.72));
-        } else {
-          modal.style.opacity = '1';
-        }
       };
 
       const snapToHalf = () => {
-        boostCompositorFrames(440);
         const halfY = getHalfOffset();
         applyShutterVisuals(halfY, true);
       };
 
       const snapToFullscreen = () => {
-        boostCompositorFrames(440);
         applyShutterVisuals(0, true);
         playTactileSound('pop');
         triggerHaptic(8);
@@ -5609,7 +5567,6 @@
         sheet.classList.remove('is-fullscreen');
         scrollBody.scrollTop = 0;
 
-        // شروع از پایین صفحه و بالا آمدن نرم تا تراز نیمه‌باز (مثل کرکره)
         applyShutterVisuals(vh, false);
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -5630,9 +5587,6 @@
         dragLocked = false;
         sheet.classList.remove('is-fullscreen', 'is-snapping');
         sheet.style.transform = '';
-        sheet.style.borderTopLeftRadius = '';
-        sheet.style.borderTopRightRadius = '';
-        scrollBody.style.paddingBottom = '';
       };
 
       collapseFsBtn?.addEventListener('click', (e) => {
@@ -5680,16 +5634,13 @@
               dragLocked = true;
               return;
             }
-            if (Math.abs(dy) < 9) return;
+            if (Math.abs(dy) < 8) return;
 
-            // اگر روی دستگیره/نوار بالا کشیده شود همیشه کرکره حرکت می‌کند
             if (startedOnDragZone) {
               dragging = true;
             } else if (!isFullscreen && dy < 0) {
-              // در حالت نیمه‌باز، کشیدن به بالا کرکره را تمام‌صفحه می‌کند
               dragging = true;
             } else if (dy > 0 && scrollBody.scrollTop <= 2) {
-              // وقتی اسکرول در بالاترین نقطه است، کشیدن به پایین کرکره را پایین می‌آورد
               dragging = true;
             } else {
               dragLocked = true;
@@ -5698,7 +5649,6 @@
 
             if (dragging) {
               sheet.classList.remove('is-snapping');
-              boostCompositorFrames(600);
             }
           }
 
@@ -5711,9 +5661,8 @@
             lastMoveTime = now;
 
             let nextY = startSheetY + dy;
-            // مقاومت کشسانی نرم (Rubber-banding) وقتی از سقف بالاتر کشیده می‌شود
             if (nextY < 0) {
-              nextY = nextY * 0.22;
+              nextY = nextY * 0.2;
             }
             currentY = nextY;
 
@@ -5736,7 +5685,6 @@
         const halfY = getHalfOffset();
         const vh = getViewportH();
 
-        // تصمیم‌گیری هوشمند بر اساس موقعیت و سرعت حرکت انگشت (Flick Velocity)
         if (currentY <= halfY * 0.52 || (velocityY < -0.42 && currentY < halfY * 0.92)) {
           snapToFullscreen();
         } else if (currentY >= halfY + 105 || (velocityY > 0.55 && currentY > halfY * 0.85)) {
@@ -5778,7 +5726,6 @@
         sheetRafPending = false;
         if (!isDragging) return;
         sheet.style.transform = `translate3d(0, ${currentDy}px, 0)`;
-        modal.style.opacity = String(Math.max(0.28, 1 - currentDy / 360));
       };
 
       sheet.addEventListener(
@@ -5835,17 +5782,16 @@
         isDragging = false;
         canDrag = false;
         sheetRafPending = false;
-        modal.style.opacity = '';
 
         if (currentDy > 95) {
-          sheet.style.transition = 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease';
+          sheet.style.transition = 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease';
           sheet.style.transform = 'translate3d(0, 100%, 0)';
           sheet.style.opacity = '0';
           playTactileSound('pop');
           triggerHaptic(8);
           closeModal(modalId, true);
         } else {
-          sheet.style.transition = 'transform 0.28s cubic-bezier(0.22, 1.28, 0.36, 1)';
+          sheet.style.transition = 'transform 0.26s cubic-bezier(0.22, 1.28, 0.36, 1)';
           sheet.style.transform = 'translate3d(0, 0, 0)';
         }
       };
