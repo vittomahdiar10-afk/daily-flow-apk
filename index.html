@@ -85,7 +85,7 @@
       --glass-bg: rgba(20, 27, 29, 0.88);
       --glass-card-bg: rgba(22, 30, 32, 0.92);
       --glass-modal-surface: rgba(18, 25, 28, 0.98);
-      --composer-fs-scrim: linear-gradient(to bottom, rgba(18, 25, 28, 0.98) 66%, rgba(18, 25, 28, 0) 100%);
+      --composer-fs-scrim: linear-gradient(to bottom, rgba(18, 25, 28, 0.99) 74%, rgba(18, 25, 28, 0) 100%);
       --glass-border: rgba(255, 255, 255, 0.09);
       --specular-edge: rgba(255, 255, 255, 0.14);
       --text-main: #f4f7f7;
@@ -112,7 +112,7 @@
       --glass-bg: rgba(255, 255, 255, 0.93);
       --glass-card-bg: rgba(255, 255, 255, 0.97);
       --glass-modal-surface: rgba(244, 247, 249, 0.99);
-      --composer-fs-scrim: linear-gradient(to bottom, rgba(244, 247, 249, 0.99) 66%, rgba(244, 247, 249, 0) 100%);
+      --composer-fs-scrim: linear-gradient(to bottom, rgba(244, 247, 249, 0.99) 74%, rgba(244, 247, 249, 0) 100%);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
@@ -360,7 +360,7 @@
       }
 
       #composer-scroll-body {
-        padding-bottom: calc(12.5rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(13.5rem + env(safe-area-inset-bottom, 0px));
         overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
         contain: content;
@@ -370,7 +370,7 @@
       }
 
       #composer-shutter-sheet.is-fullscreen #composer-scroll-body {
-        transform: translate3d(0, 42px, 0);
+        transform: translate3d(0, 56px, 0);
       }
     }
 
@@ -396,14 +396,14 @@
       box-shadow: var(--island-shadow);
     }
 
-    /* هدر شناور تمام‌صفحه شبیه تلگرام — پایین‌تر از آیکون‌های وضعیت گوشی (ساعت، باتری و VPN) */
+    /* هدر شناور تمام‌صفحه شبیه تلگرام — فاصله کامل زیر نوار وضعیت و ناچ دوربین گوشی */
     #composer-fs-header {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       z-index: 25;
-      padding-top: max(42px, calc(14px + env(safe-area-inset-top, 0px)));
+      padding-top: max(52px, calc(18px + env(safe-area-inset-top, 0px)));
       padding-bottom: 14px;
       background: var(--composer-fs-scrim);
       opacity: 0;
@@ -2880,7 +2880,7 @@
         <div class="w-10 h-1.5 rounded-full bg-white/30"></div>
       </div>
 
-      <!-- نوار شناور تمام‌صفحه شبیه تلگرام / iOS 27 — پایین‌تر از نوار وضعیت گوشی (ساعت، باتری و VPN) -->
+      <!-- نوار شناور تمام‌صفحه شبیه تلگرام / iOS 27 — فاصله کامل زیر نوار وضعیت گوشی -->
       <div id="composer-fs-header" data-composer-drag-zone class="px-4 shrink-0 touch-none select-none">
         <div class="flex items-center justify-between gap-2.5">
           <div class="flex items-center gap-2">
@@ -6845,7 +6845,12 @@
       if (!('serviceWorker' in navigator)) return;
       if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+        navigator.serviceWorker
+          .register('./sw.js', { scope: './' })
+          .then((reg) => {
+            reg.update().catch(() => {});
+          })
+          .catch(() => {});
       });
     }
 
