@@ -68,7 +68,7 @@
         0, 0.012 2.2%, 0.048 4.5%, 0.185 9.5%, 0.56 18%, 0.84 26%,
         0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
       );
-      --sheet-curve: cubic-bezier(0.16, 1, 0.3, 1);
+      --sheet-curve: cubic-bezier(0.22, 1, 0.36, 1);
       --ios-fluid-curve: cubic-bezier(0.2, 0.9, 0.25, 1);
       --ios-fluid-curve: linear(
         0, 0.010 2.5%, 0.040 5.2%, 0.155 11%, 0.47 21%, 0.75 32%,
@@ -208,7 +208,7 @@
     }
 
     .app-safe-main.is-stage-restoring {
-      transition: transform calc(0.44s * var(--motion-scale)) var(--ios-fluid-curve);
+      transition: transform calc(0.42s * var(--motion-scale)) var(--ios-fluid-curve);
       transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 
@@ -223,7 +223,7 @@
     [id$="-modal"] {
       height: var(--app-viewport-height);
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-      background-color: rgba(6, 10, 12, 0.72) !important;
+      background-color: rgba(6, 10, 12, 0.68) !important;
     }
 
     body.theme-light [id$="-modal"] {
@@ -310,14 +310,17 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* شیت کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram — رندر ابریشمی مستقیم روی Compositor GPU */
+    /* شیت کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — کنترل یکپارچه ۱:۱ با لمس و GPU Compositor */
     #task-composer-modal {
       padding: 0 !important;
     }
 
     @media (max-width: 639px) {
-      #task-composer-modal {
+      #task-composer-modal,
+      #task-composer-modal.is-closing {
         align-items: flex-start !important;
+        animation: none !important;
+        will-change: opacity;
       }
 
       #composer-shutter-sheet {
@@ -327,13 +330,13 @@
         right: 0 !important;
         width: 100% !important;
         max-width: 100% !important;
-        height: calc(var(--app-viewport-height) + 60px) !important;
-        max-height: calc(var(--app-viewport-height) + 60px) !important;
-        padding-bottom: 60px !important;
+        height: calc(var(--app-viewport-height) + 64px) !important;
+        max-height: calc(var(--app-viewport-height) + 64px) !important;
+        padding-bottom: 64px !important;
         background: var(--glass-modal-surface) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.34), inset 0 1px 0 0 var(--specular-edge) !important;
+        box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.36), inset 0 1px 0 0 var(--specular-edge) !important;
         border-left: none !important;
         border-right: none !important;
         border-bottom: none !important;
@@ -341,7 +344,7 @@
         border-bottom-right-radius: 0 !important;
         border-top-left-radius: 28px !important;
         border-top-right-radius: 28px !important;
-        transform: translate3d(0, 22vh, 0);
+        transform: translate3d(0, 100%, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         will-change: transform;
@@ -357,19 +360,20 @@
       }
 
       #composer-scroll-body {
-        padding-bottom: calc(13.5rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(15rem + env(safe-area-inset-bottom, 0px));
         overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
         contain: content;
         transform: translate3d(0, 0, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         will-change: transform;
-        transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       #composer-shutter-sheet.is-fullscreen #composer-scroll-body {
-        transform: translate3d(0, 38px, 0);
+        transform: translate3d(0, 48px, 0);
       }
     }
 
@@ -412,8 +416,8 @@
       -webkit-backface-visibility: hidden;
       will-change: transform, opacity;
       transition:
-        opacity 0.24s ease,
-        transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        opacity 0.22s ease,
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-fs-header {
@@ -425,7 +429,7 @@
     #composer-grabber-zone {
       opacity: 1;
       will-change: opacity;
-      transition: opacity 0.18s ease;
+      transition: opacity 0.16s ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
@@ -436,7 +440,7 @@
     #composer-inline-header {
       opacity: 1;
       will-change: opacity;
-      transition: opacity 0.18s ease;
+      transition: opacity 0.16s ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-inline-header {
@@ -983,11 +987,11 @@
       }
     }
 
-    [id$="-modal"] {
+    [id$="-modal"]:not(#task-composer-modal) {
       animation: modalBackdropIn calc(0.28s * var(--motion-scale)) var(--ios-fluid-curve) both;
     }
 
-    [id$="-modal"].is-closing {
+    [id$="-modal"]:not(#task-composer-modal).is-closing {
       pointer-events: none;
       animation: modalBackdropOut calc(0.24s * var(--motion-scale)) var(--ios-fluid-curve) forwards;
     }
@@ -1002,6 +1006,15 @@
     }
 
     @media (min-width: 640px) {
+      #task-composer-modal {
+        animation: modalBackdropIn calc(0.28s * var(--motion-scale)) var(--ios-fluid-curve) both;
+      }
+
+      #task-composer-modal.is-closing {
+        pointer-events: none;
+        animation: modalBackdropOut calc(0.22s * var(--motion-scale)) var(--ios-fluid-curve) forwards;
+      }
+
       .sheet-animate {
         animation: sheetScaleInDesktop calc(0.36s * var(--motion-scale)) var(--sheet-curve) both;
       }
@@ -2865,7 +2878,7 @@
     </div>
   </div>
 
-  <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار (iOS 27 / HyperOS 4 / Telegram) ==================== -->
+  <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار (Telegram / iOS 27 / HyperOS 4) ==================== -->
   <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
     <div id="composer-shutter-sheet" class="liquid-glass sheet-animate rounded-3xl w-full max-w-md flex flex-col">
       <!-- دستگیره کرکره در حالت نیمه‌باز -->
@@ -5567,7 +5580,7 @@
 
     const modalCloseTimers = new Map();
 
-    /* ایجاد عمق پس‌زمینه همگام با شیت (iOS UISheetPresentation Depth Effect) */
+    /* ایجاد عمق پس‌زمینه همگام با شیت (Telegram / iOS UISheetPresentation Depth Effect) */
     function updateMainStageDepth(depthRatio, smoothTransition = true) {
       const mainStage = document.getElementById('app-main-stage');
       if (!mainStage) return;
@@ -5579,7 +5592,7 @@
           mainStage.style.transform = '';
           setTimeout(() => {
             mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
-          }, 460);
+          }, 440);
         } else {
           mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
           mainStage.style.transform = '';
@@ -5588,12 +5601,12 @@
       }
 
       const clamped = Math.max(0, Math.min(1, depthRatio));
-      const scale = 1 - clamped * 0.048;
-      const translateY = clamped * 11;
+      const scale = 1 - clamped * 0.046;
+      const translateY = clamped * 10;
 
       mainStage.classList.add('is-stage-animating');
       if (smoothTransition) {
-        mainStage.style.transition = 'transform calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve)';
+        mainStage.style.transition = 'transform calc(0.4s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1)';
       } else {
         mainStage.style.transition = 'none';
       }
@@ -5603,6 +5616,7 @@
     function resetSheetInlineStyles(modalEl) {
       if (!modalEl) return;
       modalEl.style.opacity = '';
+      modalEl.style.transition = '';
       const sheet = modalEl.querySelector('.sheet-animate');
       if (sheet) {
         sheet.style.transform = '';
@@ -5636,19 +5650,24 @@
       const el = document.getElementById(id);
       if (!el || el.classList.contains('hidden') || el.classList.contains('is-closing')) return;
 
-      if (id === 'task-composer-modal' && composerShutterController && !fromDrag) {
+      const isMobileComposer = id === 'task-composer-modal' && window.innerWidth < 640 && composerShutterController;
+
+      if (isMobileComposer && !fromDrag) {
         composerShutterController.animateClose();
       } else if (!fromDrag) {
         resetSheetInlineStyles(el);
       }
+
       el.classList.add('is-closing');
-      updateMainStageDepth(0, true);
+      if (!isMobileComposer) {
+        updateMainStageDepth(0, true);
+      }
 
       if (typeof syncBackLayerCallback === 'function') {
         syncBackLayerCallback();
       }
 
-      const closeDelay = id === 'task-composer-modal' ? 290 : 230;
+      const closeDelay = isMobileComposer ? 300 : 230;
       const timer = setTimeout(() => {
         el.classList.add('hidden');
         el.classList.remove('flex', 'is-closing');
@@ -5662,7 +5681,7 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته iOS 27 / HyperOS 4 / Telegram با انتقال سخت‌افزاری مستقیم روی GPU Compositor */
+    /* موتور کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — بدون چسبندگی مگنتی و لمس فعال روی کل صفحه */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -5674,7 +5693,9 @@
       let currentY = 0;
       let targetY = 0;
       let isFullscreen = false;
+      let startedInFullscreen = false;
       let dragging = false;
+      let suppressComposerTap = false;
       let startTouchY = 0;
       let startTouchX = 0;
       let startSheetY = 0;
@@ -5686,7 +5707,8 @@
       let dragLocked = false;
       let settleTimer = null;
 
-      const SILK_GLIDE_CURVE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+      const TELEGRAM_GLIDE_CURVE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      const TELEGRAM_EXIT_CURVE = 'cubic-bezier(0.32, 0.72, 0, 1)';
       const isMobileShutter = () => window.innerWidth < 640;
 
       const getViewportH = () => {
@@ -5696,7 +5718,7 @@
 
       const getHalfOffset = () => {
         const vh = getViewportH();
-        return Math.max(130, Math.round(vh * 0.22));
+        return Math.max(124, Math.round(vh * 0.21));
       };
 
       const readLiveTranslateY = () => {
@@ -5723,11 +5745,29 @@
         }
       };
 
-      const glideToPosition = (nextTargetY, durationMs, curve = SILK_GLIDE_CURVE, onDone = null) => {
+      const syncBackdropAndStage = (yPos, vhVal, halfYVal, smoothMs = 0, curve = TELEGRAM_GLIDE_CURVE) => {
+        const span = Math.max(1, vhVal - halfYVal);
+        const openRatio = Math.max(0, Math.min(1, (vhVal - yPos) / span));
+        const depthRatio = yPos <= halfYVal
+          ? 0.72 + Math.max(0, Math.min(1, (halfYVal - yPos) / Math.max(1, halfYVal))) * 0.28
+          : openRatio * 0.72;
+
+        if (smoothMs > 0) {
+          modal.style.transition = `opacity ${smoothMs}ms ${curve}`;
+          modal.style.opacity = openRatio.toFixed(3);
+          updateMainStageDepth(depthRatio, true);
+        } else {
+          modal.style.transition = 'none';
+          modal.style.opacity = openRatio.toFixed(3);
+          updateMainStageDepth(depthRatio, false);
+        }
+      };
+
+      const glideToPosition = (nextTargetY, durationMs, curve = TELEGRAM_GLIDE_CURVE, onDone = null) => {
         clearSettleTimer();
         targetY = nextTargetY;
         currentY = nextTargetY;
-        const scaledMs = Math.max(190, Math.round(durationMs * (state.detectedHz <= 60 ? 0.92 : 1)));
+        const scaledMs = Math.max(200, Math.round(durationMs * (state.detectedHz <= 60 ? 0.92 : 1)));
 
         sheet.style.transition = `transform ${scaledMs}ms ${curve}`;
         sheet.style.transform = `translate3d(0, ${nextTargetY.toFixed(1)}px, 0)`;
@@ -5744,27 +5784,32 @@
       const computeAdaptiveDuration = (fromY, toY, velY) => {
         const dist = Math.abs(toY - fromY);
         const speed = Math.abs(velY);
-        if (speed > 950) return 275;
-        if (speed > 450) return 325;
-        return Math.min(430, Math.max(300, Math.round(280 + dist * 0.42)));
+        if (speed > 950) return 265;
+        if (speed > 450) return 310;
+        return Math.min(400, Math.max(280, Math.round(260 + dist * 0.36)));
       };
 
       const snapToHalf = (initialVel = 0) => {
         if (!isMobileShutter()) return;
+        const vh = getViewportH();
         const halfY = getHalfOffset();
         cachedHalfY = halfY;
-        cachedVh = getViewportH();
+        cachedVh = vh;
         setFullscreenState(false);
         const dur = computeAdaptiveDuration(currentY, halfY, initialVel);
-        glideToPosition(halfY, dur, SILK_GLIDE_CURVE);
+        syncBackdropAndStage(halfY, vh, halfY, dur, TELEGRAM_GLIDE_CURVE);
+        glideToPosition(halfY, dur, TELEGRAM_GLIDE_CURVE);
       };
 
       const snapToFullscreen = (initialVel = 0) => {
         if (!isMobileShutter()) return;
-        cachedVh = getViewportH();
+        const vh = getViewportH();
+        const halfY = cachedHalfY || getHalfOffset();
+        cachedVh = vh;
         setFullscreenState(true);
         const dur = computeAdaptiveDuration(currentY, 0, initialVel);
-        glideToPosition(0, dur, SILK_GLIDE_CURVE);
+        syncBackdropAndStage(0, vh, halfY, dur, TELEGRAM_GLIDE_CURVE);
+        glideToPosition(0, dur, TELEGRAM_GLIDE_CURVE);
         playTactileSound('pop');
         triggerHaptic(8);
       };
@@ -5782,41 +5827,74 @@
         setFullscreenState(false);
         scrollBody.scrollTop = 0;
 
+        modal.style.transition = 'none';
+        modal.style.opacity = '0';
         sheet.style.transition = 'none';
         sheet.style.transform = `translate3d(0, ${vh}px, 0)`;
+        updateMainStageDepth(0, false);
+
         currentY = vh;
         targetY = halfY;
-        void sheet.offsetWidth;
+        void sheet.offsetHeight;
 
         requestAnimationFrame(() => {
-          glideToPosition(halfY, 410, SILK_GLIDE_CURVE);
+          syncBackdropAndStage(halfY, vh, halfY, 390, TELEGRAM_GLIDE_CURVE);
+          glideToPosition(halfY, 390, TELEGRAM_GLIDE_CURVE);
         });
       };
 
       const animateClose = (initialVel = 0) => {
         if (!isMobileShutter()) return;
         const vh = getViewportH();
+        const halfY = cachedHalfY || getHalfOffset();
         cachedVh = vh;
         setFullscreenState(false);
-        const dur = Math.min(280, Math.max(210, computeAdaptiveDuration(currentY, vh, initialVel)));
-        glideToPosition(vh, dur, 'cubic-bezier(0.22, 1, 0.36, 1)');
+        const dur = Math.min(290, Math.max(220, computeAdaptiveDuration(currentY, vh, initialVel)));
+        syncBackdropAndStage(vh, vh, halfY, dur, TELEGRAM_EXIT_CURVE);
+        glideToPosition(vh, dur, TELEGRAM_EXIT_CURVE);
       };
 
       const resetState = () => {
         clearSettleTimer();
         isFullscreen = false;
+        startedInFullscreen = false;
         dragging = false;
+        suppressComposerTap = false;
         dragLocked = false;
         rafPending = false;
         touchSamples = [];
+        modal.style.transition = '';
+        modal.style.opacity = '';
         sheet.classList.remove('is-fullscreen', 'is-settled-fullscreen');
         sheet.style.transition = 'none';
         sheet.style.transform = '';
       };
 
+      /* جلوگیری از کلیک ناخواسته روی دکمه‌ها و سوئیچ‌ها بعد از پایان کشیدن انگشت */
+      sheet.addEventListener(
+        'click',
+        (e) => {
+          if (suppressComposerTap) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            suppressComposerTap = false;
+          }
+        },
+        true
+      );
+
+      /* وقتی در حالت نیمه‌باز روی فیلد متنی زده می‌شود، مثل تلگرام نرم تمام‌صفحه شود تا کیبورد روی فرم نیفتد */
+      scrollBody.addEventListener('focusin', (e) => {
+        if (!isMobileShutter() || dragging) return;
+        const tag = e.target?.tagName;
+        if ((tag === 'INPUT' || tag === 'TEXTAREA') && !isFullscreen) {
+          snapToFullscreen(-280);
+        }
+      });
+
       collapseFsBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        snapToHalf(300);
+        snapToHalf(260);
         playTactileSound('pop');
       });
 
@@ -5824,7 +5902,7 @@
         if (e.target.closest('button')) return;
         if (!isMobileShutter() || dragging) return;
         if (!isFullscreen) {
-          snapToFullscreen(-450);
+          snapToFullscreen(-420);
         }
       });
 
@@ -5832,6 +5910,7 @@
         rafPending = false;
         if (!dragging) return;
         sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+        syncBackdropAndStage(currentY, cachedVh, cachedHalfY, 0);
       };
 
       const computeReleaseVelocity = () => {
@@ -5852,7 +5931,6 @@
         'touchstart',
         (e) => {
           if (!isMobileShutter() || e.touches.length !== 1) return;
-          if (e.target.closest('button') || e.target.closest('input')) return;
 
           clearSettleTimer();
           const liveY = readLiveTranslateY();
@@ -5865,11 +5943,13 @@
           startTouchY = touch.clientY;
           startTouchX = touch.clientX;
           startSheetY = liveY;
+          startedInFullscreen = isFullscreen;
           cachedVh = getViewportH();
-          cachedHalfY = Math.max(130, Math.round(cachedVh * 0.22));
+          cachedHalfY = Math.max(124, Math.round(cachedVh * 0.21));
           startedOnDragZone = Boolean(e.target.closest('[data-composer-drag-zone]'));
           touchSamples = [{ y: touch.clientY, t: now }];
           dragging = false;
+          suppressComposerTap = false;
           dragLocked = false;
         },
         { passive: true }
@@ -5884,23 +5964,35 @@
           const dx = touch.clientX - startTouchX;
 
           if (!dragging) {
-            if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 10) {
+            if (Math.abs(dx) > Math.abs(dy) * 1.25 && Math.abs(dx) > 10) {
               dragLocked = true;
               return;
             }
-            if (Math.abs(dy) < 6) return;
+            if (Math.abs(dy) < 7) return;
 
             if (startedOnDragZone) {
               dragging = true;
             } else if (!isFullscreen && dy < 0) {
               dragging = true;
-            } else if (dy > 0 && scrollBody.scrollTop <= 2) {
+            } else if (!isFullscreen && dy > 0 && scrollBody.scrollTop <= 2) {
               dragging = true;
+            } else if (isFullscreen && dy > 0 && scrollBody.scrollTop <= 2) {
+              dragging = true;
+            } else if (isFullscreen && dy > 0 && scrollBody.scrollTop > 2) {
+              /* اجازه اسکرول عادی به بالا تا رسیدن به ابتدای لیست */
+              return;
             } else {
               dragLocked = true;
               return;
             }
-            sheet.classList.remove('is-settled-fullscreen');
+
+            if (dragging) {
+              suppressComposerTap = true;
+              sheet.classList.remove('is-settled-fullscreen');
+              if (document.activeElement && document.activeElement.closest('#composer-shutter-sheet')) {
+                document.activeElement.blur();
+              }
+            }
           }
 
           if (dragging) {
@@ -5935,16 +6027,37 @@
         touchSamples = [];
         const halfY = cachedHalfY || getHalfOffset();
 
-        if (currentY <= halfY * 0.62 || (velocityY < -340 && currentY < halfY * 0.96)) {
-          snapToFullscreen(velocityY);
-        } else if (currentY >= halfY + 90 || (velocityY > 520 && currentY > halfY * 0.78)) {
-          animateClose(velocityY);
-          playTactileSound('pop');
-          triggerHaptic(8);
-          closeModal('task-composer-modal', true);
+        if (startedInFullscreen) {
+          /* آستانه سبک و غیرمگنتی هنگام پایین کشیدن از حالت تمام‌صفحه (دقیقاً مثل تلگرام) */
+          const pullDownThreshold = Math.min(48, Math.round(halfY * 0.28));
+          if (currentY >= halfY + 85 || (velocityY > 720 && currentY > halfY * 0.55)) {
+            animateClose(velocityY);
+            playTactileSound('pop');
+            triggerHaptic(8);
+            closeModal('task-composer-modal', true);
+          } else if (currentY >= pullDownThreshold || (velocityY > 175 && currentY > 14)) {
+            snapToHalf(velocityY);
+            playTactileSound('pop');
+          } else {
+            snapToFullscreen(velocityY);
+          }
         } else {
-          snapToHalf(velocityY);
+          /* آستانه‌های نرم و واکنش‌گرا از حالت نیمه‌باز */
+          if (currentY <= halfY * 0.68 || (velocityY < -230 && currentY < halfY * 0.96)) {
+            snapToFullscreen(velocityY);
+          } else if (currentY >= halfY + 80 || (velocityY > 360 && currentY > halfY + 18)) {
+            animateClose(velocityY);
+            playTactileSound('pop');
+            triggerHaptic(8);
+            closeModal('task-composer-modal', true);
+          } else {
+            snapToHalf(velocityY);
+          }
         }
+
+        setTimeout(() => {
+          suppressComposerTap = false;
+        }, 80);
       };
 
       sheet.addEventListener('touchend', finishShutterDrag);
