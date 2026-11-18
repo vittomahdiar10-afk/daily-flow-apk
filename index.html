@@ -80,8 +80,7 @@
       --bg-chip: #1a2224;
       --glass-bg: rgba(20, 27, 29, 0.88);
       --glass-card-bg: rgba(22, 30, 32, 0.92);
-      --glass-modal-surface: rgba(18, 25, 28, 0.985);
-      --composer-fs-scrim: linear-gradient(to bottom, rgba(18, 25, 28, 0.99) 76%, rgba(18, 25, 28, 0) 100%);
+      --glass-modal-surface: rgba(18, 25, 28, 0.995);
       --glass-border: rgba(255, 255, 255, 0.09);
       --specular-edge: rgba(255, 255, 255, 0.14);
       --text-main: #f4f7f7;
@@ -107,8 +106,7 @@
       --bg-chip: #e6eef0;
       --glass-bg: rgba(255, 255, 255, 0.93);
       --glass-card-bg: rgba(255, 255, 255, 0.97);
-      --glass-modal-surface: rgba(244, 247, 249, 0.99);
-      --composer-fs-scrim: linear-gradient(to bottom, rgba(244, 247, 249, 0.99) 76%, rgba(244, 247, 249, 0) 100%);
+      --glass-modal-surface: rgba(244, 247, 249, 0.995);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
       --text-main: #0f172a;
@@ -208,7 +206,7 @@
     }
 
     .app-safe-main.is-stage-restoring {
-      transition: transform calc(0.48s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1);
+      transition: transform calc(0.46s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1);
       transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
 
@@ -310,7 +308,9 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* شیت کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — دقیقاً به اندازه محتوا در پایین صفحه + انتقال ابریشمی به تمام‌صفحه */
+    /* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» ====================
+       گوشه‌های بالای شیت در تمام مراحل گرد و پیوسته باقی می‌مانند تا هیچ‌گاه
+       به صورت ناگهانی یا تیز چهارگوش نشوند */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -318,89 +318,54 @@
     @media (max-width: 639px) {
       #task-composer-modal,
       #task-composer-modal.is-closing {
-        align-items: flex-end !important;
+        align-items: stretch !important;
         animation: none !important;
         will-change: opacity;
       }
 
       #composer-shutter-sheet {
-        --fs-progress: 0;
-        position: fixed !important;
-        top: auto !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: 85dvh !important;
-        padding-bottom: 0 !important;
-        background: var(--glass-modal-surface) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.36), inset 0 1px 0 0 var(--specular-edge) !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
-        border-bottom-left-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        border-top-left-radius: 28px !important;
-        border-top-right-radius: 28px !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        height: var(--app-viewport-height);
+        max-height: var(--app-viewport-height);
+        background: var(--glass-modal-surface);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 0 var(--specular-edge);
+        border: 1px solid var(--glass-border);
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0px;
+        border-top-left-radius: 30px;
+        border-top-right-radius: 30px;
         transform: translate3d(0, 100%, 0);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         will-change: transform;
-        animation: none !important;
+        animation: none;
         transition: none;
-        overflow: hidden !important;
-        contain: layout paint;
-      }
-
-      #composer-shutter-sheet.is-fullscreen {
-        height: 100dvh !important;
-        max-height: 100dvh !important;
-      }
-
-      #composer-shutter-sheet.is-settled-fullscreen {
-        border-top-left-radius: 0px !important;
-        border-top-right-radius: 0px !important;
-      }
-
-      #composer-grabber-zone {
-        opacity: calc(1 - var(--fs-progress, 0));
-        transform: scaleX(calc(1 - var(--fs-progress, 0) * 0.35));
-        will-change: opacity, transform;
-      }
-
-      #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
-        pointer-events: none;
-      }
-
-      #composer-unified-header {
-        position: relative;
-        z-index: 25;
-        transform: translate3d(0, calc(var(--fs-progress, 0) * max(32px, env(safe-area-inset-top, 0px))), 0);
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-        will-change: transform;
+        overflow: hidden;
+        contain: layout style;
       }
 
       #composer-scroll-body {
-        flex: 1 1 auto;
-        min-height: 0;
-        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px));
         overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
-        transform: translate3d(0, calc(var(--fs-progress, 0) * max(32px, env(safe-area-inset-top, 0px))), 0);
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
+        transform: translate3d(0, 0, 0);
         will-change: transform;
+        transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       #composer-shutter-sheet.is-fullscreen #composer-scroll-body {
-        padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+        transform: translate3d(0, 26px, 0);
       }
     }
 
@@ -411,129 +376,35 @@
       }
 
       #composer-shutter-sheet {
-        --fs-progress: 0;
         max-height: 88vh;
-        background: var(--glass-modal-surface) !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
+        background: var(--glass-modal-surface);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge);
         overflow: hidden;
       }
 
       #composer-scroll-body {
-        padding-bottom: 1.25rem !important;
+        padding-bottom: 18px;
       }
     }
 
-    .composer-unified-pill {
-      background: linear-gradient(180deg, rgba(30, 41, 45, 0.92) 0%, rgba(19, 27, 30, 0.96) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow:
-        0 6px 18px -6px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
-    }
-
-    body.theme-light .composer-unified-pill {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 250, 0.98) 100%);
-      border: 1px solid rgba(15, 23, 42, 0.1);
-      box-shadow:
-        0 6px 16px -6px rgba(15, 23, 42, 0.12),
-        inset 0 1px 0 0 rgba(255, 255, 255, 1);
-    }
-
-    .composer-fs-dot-glow {
-      box-shadow: 0 0 8px rgba(var(--mint-accent-rgb), 0.72);
-    }
-
-    #composer-leading-icon-close,
-    #composer-leading-icon-collapse {
-      transition: opacity 0.22s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    #composer-leading-icon-close {
-      opacity: calc(1 - var(--fs-progress, 0));
-      transform: translate(-50%, -50%) rotate(calc(var(--fs-progress, 0) * -90deg)) scale(calc(1 - var(--fs-progress, 0) * 0.25)) !important;
-    }
-
-    #composer-leading-icon-collapse {
-      opacity: var(--fs-progress, 0);
-      transform: translate(-50%, -50%) rotate(calc((1 - var(--fs-progress, 0)) * 90deg)) scale(calc(0.75 + var(--fs-progress, 0) * 0.25)) !important;
-    }
-
-    #composer-folder-pill-meta {
-      opacity: var(--fs-progress, 0);
-      max-width: calc(var(--fs-progress, 0) * 110px);
-      overflow: hidden;
-      white-space: nowrap;
-      transition: opacity 0.2s ease, max-width 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .composer-fs-action-btn {
-      transition:
-        transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
-        box-shadow 0.24s ease,
-        background 0.24s ease,
-        color 0.2s ease,
-        border-color 0.2s ease;
-    }
-
-    .composer-fs-action-btn:disabled {
-      background: rgba(255, 255, 255, 0.065) !important;
-      color: rgba(255, 255, 255, 0.42) !important;
-      border: 1px solid rgba(255, 255, 255, 0.11) !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-      opacity: 1 !important;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    body.theme-light .composer-fs-action-btn:disabled {
-      background: rgba(15, 23, 42, 0.06) !important;
-      color: rgba(15, 23, 42, 0.38) !important;
-      border: 1px solid rgba(15, 23, 42, 0.09) !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-    }
-
-    .composer-fs-action-btn:not(:disabled) {
-      background: linear-gradient(135deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%) !important;
-      color: var(--mint-contrast-text) !important;
-      border: 1px solid rgba(255, 255, 255, 0.32) !important;
-      box-shadow:
-        0 8px 22px -4px rgba(var(--mint-accent-rgb), 0.52),
-        inset 0 1px 0 rgba(255, 255, 255, 0.48) !important;
-    }
-
-    /* هدر شناور تمام‌صفحه شبیه تلگرام / iOS 27 — فاصله کامل زیر نوار وضعیت گوشی و با فاصله مناسب از فرم */
-    #composer-fs-header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 25;
-      padding-top: max(48px, calc(16px + env(safe-area-inset-top, 0px)));
-      padding-bottom: 14px;
-      background: var(--composer-fs-scrim);
-      opacity: 0;
-      pointer-events: none;
-      transform: translate3d(0, -10px, 0);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      will-change: transform, opacity;
-      transition:
-        opacity 0.24s ease,
-        transform 0.44s cubic-bezier(0.19, 1, 0.22, 1);
-    }
-
-    #composer-shutter-sheet.is-fullscreen #composer-fs-header {
-      opacity: 1;
-      pointer-events: auto;
+    /* هدر شیشه‌ای یکپارچه بین حالت نیمه‌باز و تمام‌صفحه — ۱۰۰٪ مبتنی بر GPU بدون تغییر چیدمان */
+    #composer-unified-header {
+      padding: 4px 16px 12px;
       transform: translate3d(0, 0, 0);
+      will-change: transform;
+      transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #composer-shutter-sheet.is-fullscreen #composer-unified-header {
+      transform: translate3d(0, 26px, 0);
     }
 
     #composer-grabber-zone {
+      height: 22px;
       opacity: 1;
-      will-change: opacity;
-      transition: opacity 0.16s ease;
+      transition: opacity 0.35s ease;
     }
 
     #composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
@@ -541,15 +412,76 @@
       pointer-events: none;
     }
 
-    #composer-inline-header {
-      opacity: 1;
-      will-change: opacity;
-      transition: opacity 0.16s ease;
+    .composer-glass-capsule {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.095) 0%, rgba(255, 255, 255, 0.045) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
     }
 
-    #composer-shutter-sheet.is-fullscreen #composer-inline-header {
+    body.theme-light .composer-glass-capsule {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 246, 248, 0.92) 100%);
+      border: 1px solid rgba(15, 23, 42, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.98);
+    }
+
+    #composer-leading-btn .icon-close {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+      transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #composer-leading-btn .icon-chevron {
       opacity: 0;
-      pointer-events: none;
+      transform: translate(-50%, -50%) rotate(-90deg) scale(0.72) !important;
+      transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #composer-shutter-sheet.is-fullscreen #composer-leading-btn .icon-close {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(90deg) scale(0.72) !important;
+    }
+    #composer-shutter-sheet.is-fullscreen #composer-leading-btn .icon-chevron {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+    }
+
+    .composer-fs-folder-pill {
+      white-space: nowrap;
+      opacity: 0.92;
+    }
+
+    .composer-submit-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
+      color: var(--mint-contrast-text);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition:
+        transform calc(0.28s * var(--motion-scale)) var(--spring-curve),
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .composer-submit-pill:disabled {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.04) 100%);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    body.theme-light .composer-submit-pill:disabled {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(235, 242, 245, 0.88) 100%);
+      color: #7c8d95;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
 
     .liquid-card {
@@ -678,7 +610,6 @@
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
       margin: 0 !important;
-      display: block !important;
       pointer-events: none !important;
     }
 
@@ -947,20 +878,6 @@
       transform: scale3d(1.05, 1.05, 1);
     }
 
-    .composer-create-btn {
-      background-color: var(--mint-accent);
-      color: var(--mint-contrast-text);
-      transition:
-        opacity 0.18s ease,
-        transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
-    }
-
-    .composer-create-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
     .liquid-bar-track {
       background: rgba(147, 163, 165, 0.16);
       border-radius: 999px;
@@ -1049,22 +966,18 @@
 
     @keyframes sheetSlideUpMobile {
       from {
-        opacity: 0.96;
         transform: translate3d(0, 100%, 0);
       }
       to {
-        opacity: 1;
         transform: translate3d(0, 0, 0);
       }
     }
 
     @keyframes sheetSlideDownMobile {
       from {
-        opacity: 1;
         transform: translate3d(0, 0, 0);
       }
       to {
-        opacity: 0.96;
         transform: translate3d(0, 100%, 0);
       }
     }
@@ -1072,7 +985,7 @@
     @keyframes sheetScaleInDesktop {
       from {
         opacity: 0;
-        transform: translate3d(0, 18px, 0) scale3d(0.95, 0.95, 1);
+        transform: translate3d(0, 16px, 0) scale3d(0.95, 0.95, 1);
       }
       to {
         opacity: 1;
@@ -1087,44 +1000,44 @@
       }
       to {
         opacity: 0;
-        transform: translate3d(0, 14px, 0) scale3d(0.96, 0.96, 1);
+        transform: translate3d(0, 12px, 0) scale3d(0.96, 0.96, 1);
       }
     }
 
     [id$="-modal"]:not(#task-composer-modal) {
-      animation: modalBackdropIn calc(0.38s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1) both;
+      animation: modalBackdropIn calc(0.36s * var(--motion-scale)) var(--sheet-curve) both;
     }
 
     [id$="-modal"]:not(#task-composer-modal).is-closing {
       pointer-events: none;
-      animation: modalBackdropOut calc(0.34s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      animation: modalBackdropOut calc(0.32s * var(--motion-scale)) var(--sheet-curve) forwards;
     }
 
     .sheet-animate {
-      animation: sheetSlideUpMobile calc(0.5s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1) both;
-      will-change: transform, opacity;
+      animation: sheetSlideUpMobile calc(0.46s * var(--motion-scale)) var(--sheet-curve) both;
+      will-change: transform;
     }
 
     [id$="-modal"]:not(#task-composer-modal).is-closing .sheet-animate {
-      animation: sheetSlideDownMobile calc(0.36s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+      animation: sheetSlideDownMobile calc(0.32s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
     }
 
     @media (min-width: 640px) {
       #task-composer-modal {
-        animation: modalBackdropIn calc(0.36s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1) both;
+        animation: modalBackdropIn calc(0.34s * var(--motion-scale)) var(--sheet-curve) both;
       }
 
       #task-composer-modal.is-closing {
         pointer-events: none;
-        animation: modalBackdropOut calc(0.28s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        animation: modalBackdropOut calc(0.28s * var(--motion-scale)) var(--sheet-curve) forwards;
       }
 
       .sheet-animate {
-        animation: sheetScaleInDesktop calc(0.42s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1) both;
+        animation: sheetScaleInDesktop calc(0.4s * var(--motion-scale)) var(--sheet-curve) both;
       }
 
       [id$="-modal"].is-closing .sheet-animate {
-        animation: sheetScaleOutDesktop calc(0.28s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+        animation: sheetScaleOutDesktop calc(0.26s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
       }
     }
 
@@ -2982,59 +2895,54 @@
     </div>
   </div>
 
-  <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار (Telegram / iOS 27 / HyperOS 4) ==================== -->
+  <!-- ==================== شیت کرکره‌ای دوحالته ایجاد کار ==================== -->
   <div id="task-composer-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center">
     <div id="composer-shutter-sheet" class="liquid-glass sheet-animate rounded-3xl w-full max-w-md flex flex-col">
       <!-- دستگیره کرکره در حالت نیمه‌باز -->
-      <div id="composer-grabber-zone" data-composer-drag-zone class="sm:hidden pt-2.5 pb-1 cursor-grab active:cursor-grabbing touch-none flex flex-col items-center shrink-0">
-        <div class="w-10 h-1 rounded-full bg-white/30"></div>
+      <div id="composer-grabber-zone" data-composer-drag-zone class="pt-2.5 pb-1 cursor-grab active:cursor-grabbing touch-none flex flex-col items-center shrink-0">
+        <div class="w-10 h-1.5 rounded-full bg-white/30"></div>
       </div>
 
-      <!-- نوار یکپارچه و پیوسته بین حالت نیمه‌باز و تمام‌صفحه -->
-      <div id="composer-unified-header" data-composer-drag-zone class="px-4 pt-2 sm:pt-4 pb-3 shrink-0 touch-none select-none">
-        <div class="flex items-center justify-between gap-2.5">
-          <div class="flex items-center gap-2 min-w-0">
-            <button
-              id="composer-leading-btn"
-              type="button"
-              aria-label="بستن یا کوچک کردن پنجره"
-              class="spring-btn icon-circle-btn w-9 h-9 rounded-full composer-unified-pill text-white shrink-0 cursor-pointer"
-            >
-              <svg id="composer-leading-icon-close" width="15" height="15" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <svg id="composer-leading-icon-collapse" width="16" height="16" class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
-
-            <div class="composer-unified-pill h-9 px-3.5 rounded-full flex items-center gap-2 min-w-0">
-              <span class="w-2 h-2 rounded-full bg-[#7fd5d8] composer-fs-dot-glow shrink-0"></span>
-              <span class="text-xs font-extrabold text-white shrink-0">کار جدید</span>
-              <div id="composer-folder-pill-meta" class="flex items-center gap-2">
-                <span class="w-px h-3.5 bg-white/15 shrink-0" aria-hidden="true"></span>
-                <span id="composer-fs-folder-tag" class="text-[11px] font-bold text-[#7fd5d8] truncate">✨ شخصی</span>
-              </div>
-            </div>
-          </div>
-
+      <!-- هدر شیشه‌ای یکپارچه بین حالت نیمه‌باز و تمام‌صفحه -->
+      <div id="composer-unified-header" data-composer-drag-zone class="flex items-center justify-between gap-2.5 shrink-0 touch-none select-none">
+        <div class="flex items-center gap-2 min-w-0">
           <button
-            id="composer-submit-btn"
-            type="submit"
-            form="task-composer-form"
-            disabled
-            class="composer-create-btn composer-fs-action-btn spring-btn h-9 px-4 rounded-full text-xs font-extrabold inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+            id="composer-leading-btn"
+            type="button"
+            aria-label="بستن یا کوچک کردن"
+            class="spring-btn icon-circle-btn w-10 h-10 rounded-full composer-glass-capsule text-white shrink-0 cursor-pointer"
           >
-            <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            <svg width="16" height="16" class="icon-close w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <span>ایجاد کار</span>
+            <svg width="17" height="17" class="icon-chevron w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
           </button>
+
+          <div id="composer-title-pill" class="composer-glass-capsule h-10 px-4 rounded-full flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-[#7fd5d8] shrink-0"></span>
+            <span class="text-xs font-extrabold text-white whitespace-nowrap">کار جدید</span>
+            <span id="composer-fs-folder-tag" class="composer-fs-folder-pill text-[11px] font-bold text-[#7fd5d8] border-r border-white/15 pr-2">✨ شخصی</span>
+          </div>
         </div>
+
+        <button
+          id="composer-submit-btn"
+          type="submit"
+          form="task-composer-form"
+          disabled
+          class="composer-submit-pill spring-btn text-xs font-extrabold shrink-0 cursor-pointer"
+        >
+          <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          <span>ایجاد کار</span>
+        </button>
       </div>
 
       <!-- بدنه قابل اسکرول فرم ایجاد کار -->
-      <div id="composer-scroll-body" class="flex-1 overflow-y-auto px-4 pt-0.5">
+      <div id="composer-scroll-body" class="flex-1 overflow-y-auto px-4 pt-1">
         <form id="task-composer-form" action="javascript:void(0)" class="flex flex-col gap-3.5">
           <div class="rounded-3xl bg-[#12191b]/90 border border-white/10 overflow-hidden">
             <div class="px-4 pb-1.5 pt-3">
@@ -5682,7 +5590,7 @@
           mainStage.style.transform = '';
           setTimeout(() => {
             mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
-          }, 500);
+          }, 480);
         } else {
           mainStage.classList.remove('is-stage-animating', 'is-stage-restoring');
           mainStage.style.transform = '';
@@ -5696,7 +5604,7 @@
 
       mainStage.classList.add('is-stage-animating');
       if (smoothTransition) {
-        mainStage.style.transition = 'transform calc(0.5s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1)';
+        mainStage.style.transition = 'transform calc(0.46s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1)';
       } else {
         mainStage.style.transition = 'none';
       }
@@ -5710,9 +5618,6 @@
       const sheet = modalEl.querySelector('.sheet-animate');
       if (sheet) {
         sheet.style.transform = '';
-        sheet.style.transformOrigin = '';
-        sheet.style.borderTopLeftRadius = '';
-        sheet.style.borderTopRightRadius = '';
         sheet.style.transition = '';
         sheet.style.opacity = '';
         sheet.style.animation = '';
@@ -5774,37 +5679,38 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* موتور کرکره‌ای دوحالته تلگرام / iOS 27 / HyperOS 4 — کنترل میلی‌متری 1:1 و تبدیل نرم به تمام‌صفحه از ۹۰٪ باز بودن */
+    /* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» ====================
+       - شیت یک لایه واحد تمام‌قد است که در حالت عادی به اندازه ارتفاع واقعی فرم در پایین صفحه قرار می‌گیرد
+       - گوشه‌های بالای شیت در طول کل مسیر گرد و پیوسته باقی می‌مانند تا تغییر ناگهانی رخ ندهد
+       - بدون پرش مگنتی و با حرکت آرام، کشسان و یکدست روی GPU */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
       const scrollBody = document.getElementById('composer-scroll-body');
       const leadingBtn = document.getElementById('composer-leading-btn');
       const grabberZone = document.getElementById('composer-grabber-zone');
+      const unifiedHeader = document.getElementById('composer-unified-header');
+      const formEl = document.getElementById('task-composer-form');
       if (!modal || !sheet || !scrollBody) return null;
 
-      let currentY = 0;
       let isFullscreen = false;
-      let isFlipExpanded = false;
       let startedInFullscreen = false;
+      let currentY = 0;
+      let restY = 240;
+      let cachedVh = 0;
       let dragging = false;
       let suppressComposerTap = false;
       let startTouchY = 0;
       let startTouchX = 0;
       let startSheetY = 0;
-      let cachedHalfH = 0;
-      let cachedFullH = 0;
-      let cachedDeltaH = 0;
       let startedOnDragZone = false;
       let touchSamples = [];
       let rafPending = false;
       let dragLocked = false;
       let settleTimer = null;
-      let progressAnimFrame = null;
-      let currentFsProgress = 0;
 
-      const IOS_SHEET_OPEN_CURVE = 'cubic-bezier(0.22, 1, 0.36, 1)';
-      const IOS_SHEET_CLOSE_CURVE = 'cubic-bezier(0.32, 0.72, 0, 1)';
+      const IOS_SILK_CURVE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      const IOS_CLOSE_CURVE = 'cubic-bezier(0.32, 0.72, 0, 1)';
       const isMobileShutter = () => window.innerWidth < 640;
 
       const getViewportH = () => {
@@ -5812,11 +5718,11 @@
         return vv ? Math.round(vv.height) : window.innerHeight;
       };
 
-      const getContentSheetHeight = () => {
-        const rectH = Math.round(sheet.getBoundingClientRect().height);
-        if (rectH > 120) return rectH;
-        const maxH = Math.round(getViewportH() * 0.85);
-        return Math.min(maxH, Math.max(260, sheet.scrollHeight));
+      const clearSettleTimer = () => {
+        if (settleTimer) {
+          clearTimeout(settleTimer);
+          settleTimer = null;
+        }
       };
 
       const readLiveTranslateY = () => {
@@ -5827,225 +5733,140 @@
         return currentY;
       };
 
-      const clearSettleTimer = () => {
-        if (settleTimer) {
-          clearTimeout(settleTimer);
-          settleTimer = null;
-        }
-      };
-
-      const cancelProgressAnim = () => {
-        if (progressAnimFrame) {
-          cancelAnimationFrame(progressAnimFrame);
-          progressAnimFrame = null;
-        }
-      };
-
-      const setFsProgressImmediate = (val) => {
-        cancelProgressAnim();
-        const clamped = Math.max(0, Math.min(1, val));
-        currentFsProgress = clamped;
-        sheet.style.setProperty('--fs-progress', clamped.toFixed(4));
-      };
-
-      const animateFsProgressTo = (targetVal, durationMs) => {
-        cancelProgressAnim();
-        const startVal = currentFsProgress;
-        const clampedTarget = Math.max(0, Math.min(1, targetVal));
-        if (Math.abs(clampedTarget - startVal) < 0.004) {
-          setFsProgressImmediate(clampedTarget);
-          return;
-        }
-        const startTime = performance.now();
-        const step = (now) => {
-          const t = Math.min(1, (now - startTime) / Math.max(120, durationMs));
-          const eased = 1 - Math.pow(1 - t, 3);
-          const next = startVal + (clampedTarget - startVal) * eased;
-          currentFsProgress = next;
-          sheet.style.setProperty('--fs-progress', next.toFixed(4));
-          if (t < 1) {
-            progressAnimFrame = requestAnimationFrame(step);
-          } else {
-            progressAnimFrame = null;
-          }
-        };
-        progressAnimFrame = requestAnimationFrame(step);
-      };
-
       const setFullscreenState = (nextFs) => {
         if (isFullscreen === nextFs) return;
         isFullscreen = nextFs;
         sheet.classList.toggle('is-fullscreen', isFullscreen);
-        if (!isFullscreen) {
-          sheet.classList.remove('is-settled-fullscreen');
-        }
       };
 
-      /* تبدیل لایه شیت به ارتفاع تمام‌صفحه با جبران هم‌زمان مختصات FLIP بدون پرش */
-      const promoteToFlipLayer = (initialOffset = 0) => {
-        if (isFlipExpanded) return cachedDeltaH;
-        const halfH = getContentSheetHeight();
-        const fullH = getViewportH();
-        const deltaH = Math.max(0, fullH - halfH);
-        cachedHalfH = halfH;
-        cachedFullH = fullH;
-        cachedDeltaH = deltaH;
-        isFlipExpanded = true;
+      /* محاسبه دقیق موقعیت استراحت حالت نیمه‌باز */
+      const computeHalfMetrics = () => {
+        const vh = getViewportH();
+        const grabH = grabberZone ? grabberZone.offsetHeight : 22;
+        const headH = unifiedHeader ? unifiedHeader.offsetHeight : 56;
+        const formH = formEl ? formEl.offsetHeight : 360;
+        const bottomSafePad = 22;
 
-        sheet.style.transition = 'none';
-        sheet.style.setProperty('height', `${fullH}px`, 'important');
-        sheet.style.setProperty('max-height', `${fullH}px`, 'important');
-        sheet.style.transform = `translate3d(0, ${(deltaH + initialOffset).toFixed(1)}px, 0)`;
-        void sheet.offsetHeight;
-        return deltaH;
+        const totalContentH = grabH + headH + formH + bottomSafePad;
+        const maxHalfH = Math.round(vh * 0.85);
+        const visibleH = Math.min(maxHalfH, Math.max(260, totalContentH));
+        const computedRestY = Math.max(54, vh - visibleH);
+        const maxScrollBodyH = Math.max(160, visibleH - grabH - headH);
+
+        return { vh, restY: computedRestY, maxScrollBodyH };
       };
 
-      /* بازگرداندن شیت به ارتفاع خودکار محتوا پس از پایان انیمیشن GPU */
-      const restoreAutoContentHeight = () => {
-        isFlipExpanded = false;
-        sheet.style.transition = 'none';
-        sheet.style.removeProperty('height');
-        sheet.style.removeProperty('max-height');
-        sheet.style.transform = 'translate3d(0, 0, 0)';
-        currentY = 0;
-        cachedHalfH = getContentSheetHeight();
-        cachedDeltaH = Math.max(0, getViewportH() - cachedHalfH);
-      };
-
-      const syncBackdropAndStage = (yPos, openStartY, closeEndY, smoothMs = 0, curve = IOS_SHEET_OPEN_CURVE) => {
-        const span = Math.max(1, closeEndY - openStartY);
-        const openRatio = Math.max(0, Math.min(1, (closeEndY - yPos) / span));
-        const depthRatio = isFlipExpanded
-          ? 0.65 + (1 - Math.max(0, Math.min(1, yPos / Math.max(1, cachedDeltaH)))) * 0.35
-          : openRatio * 0.65;
-
-        if (smoothMs > 0) {
-          modal.style.transition = `opacity ${smoothMs}ms ${curve}`;
-          modal.style.opacity = openRatio.toFixed(3);
-          updateMainStageDepth(depthRatio, true);
-        } else {
-          modal.style.transition = 'none';
-          modal.style.opacity = openRatio.toFixed(3);
-          updateMainStageDepth(depthRatio, false);
-        }
-      };
-
-      const glideToPosition = (nextTargetY, durationMs, curve = IOS_SHEET_OPEN_CURVE, onDone = null) => {
-        clearSettleTimer();
-        currentY = nextTargetY;
-        const scaledMs = Math.max(260, Math.round(durationMs * (state.detectedHz <= 60 ? 0.94 : 1)));
-
-        sheet.style.transformOrigin = '';
-        sheet.style.borderTopLeftRadius = '';
-        sheet.style.borderTopRightRadius = '';
-        sheet.style.opacity = '1';
-        sheet.style.transition = `transform ${scaledMs}ms ${curve}`;
-        sheet.style.transform = `translate3d(0, ${nextTargetY.toFixed(1)}px, 0)`;
-
-        settleTimer = setTimeout(() => {
-          sheet.style.transition = 'none';
-          if (isFullscreen && nextTargetY === 0) {
-            sheet.classList.add('is-settled-fullscreen');
-          }
-          if (typeof onDone === 'function') onDone();
-        }, scaledMs + 22);
-      };
-
-      const computeAdaptiveDuration = (fromY, toY, velY) => {
-        const dist = Math.abs(toY - fromY);
+      const computeAdaptiveDuration = (distPx, velY) => {
         const speed = Math.abs(velY);
-        if (speed > 1200) return 330;
-        if (speed > 600) return 380;
-        return Math.min(460, Math.max(350, Math.round(340 + dist * 0.25)));
+        if (speed > 1400) return 440;
+        if (speed > 700) return 500;
+        return Math.min(600, Math.max(480, Math.round(460 + Math.abs(distPx) * 0.25)));
       };
 
       const snapToHalf = (initialVel = 0) => {
         if (!isMobileShutter()) return;
+        clearSettleTimer();
         setFullscreenState(false);
 
-        if (isFlipExpanded) {
-          const fullH = cachedFullH || getViewportH();
-          const deltaH = cachedDeltaH || Math.max(0, fullH - getContentSheetHeight());
-          const dur = computeAdaptiveDuration(currentY, deltaH, initialVel);
-          modal.style.transition = `opacity ${dur}ms ${IOS_SHEET_OPEN_CURVE}`;
-          modal.style.opacity = '1';
-          updateMainStageDepth(0.65, true);
-          animateFsProgressTo(0, dur);
-          glideToPosition(deltaH, dur, IOS_SHEET_OPEN_CURVE, () => {
-            restoreAutoContentHeight();
-          });
-        } else {
-          const halfH = cachedHalfH || getContentSheetHeight();
-          const dur = computeAdaptiveDuration(currentY, 0, initialVel);
-          setFsProgressImmediate(0);
-          syncBackdropAndStage(0, 0, halfH, dur, IOS_SHEET_OPEN_CURVE);
-          glideToPosition(0, dur, IOS_SHEET_OPEN_CURVE);
-        }
+        const metrics = computeHalfMetrics();
+        cachedVh = metrics.vh;
+        restY = metrics.restY;
+        const liveY = readLiveTranslateY();
+        const dur = computeAdaptiveDuration(restY - liveY, initialVel);
+
+        modal.style.transition = `opacity ${dur}ms ${IOS_SILK_CURVE}`;
+        modal.style.opacity = '1';
+        updateMainStageDepth(0.65, true);
+
+        sheet.style.opacity = '1';
+        sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
+        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+        currentY = restY;
+
+        settleTimer = setTimeout(() => {
+          sheet.style.transition = 'none';
+          if (!isFullscreen) {
+            scrollBody.style.maxHeight = `${metrics.maxScrollBodyH}px`;
+          }
+        }, dur + 20);
       };
 
       const snapToFullscreen = (initialVel = 0) => {
         if (!isMobileShutter()) return;
-        const wasPromoted = isFlipExpanded;
-        if (!wasPromoted) {
-          const deltaH = promoteToFlipLayer(0);
-          currentY = deltaH;
-        }
-        const dur = computeAdaptiveDuration(currentY, 0, initialVel);
+        clearSettleTimer();
 
-        const startFullscreenGlide = () => {
-          setFullscreenState(true);
-          modal.style.transition = `opacity ${dur}ms ${IOS_SHEET_OPEN_CURVE}`;
-          modal.style.opacity = '1';
-          updateMainStageDepth(1, true);
-          animateFsProgressTo(1, dur);
-          glideToPosition(0, dur, IOS_SHEET_OPEN_CURVE);
-          playTactileSound('pop');
-          triggerHaptic(8);
-        };
+        const liveY = readLiveTranslateY();
+        const dur = computeAdaptiveDuration(liveY, initialVel);
+        scrollBody.style.maxHeight = '';
+        setFullscreenState(true);
 
-        if (!wasPromoted) {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(startFullscreenGlide);
-          });
-        } else {
-          startFullscreenGlide();
-        }
+        modal.style.transition = `opacity ${dur}ms ${IOS_SILK_CURVE}`;
+        modal.style.opacity = '1';
+        updateMainStageDepth(1, true);
+
+        sheet.style.opacity = '1';
+        sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
+        sheet.style.transform = 'translate3d(0, 0, 0)';
+        currentY = 0;
+
+        settleTimer = setTimeout(() => {
+          sheet.style.transition = 'none';
+        }, dur + 20);
+
+        playTactileSound('pop');
+        triggerHaptic(8);
+      };
+
+      const recalculateHalfHeight = () => {
+        if (!isMobileShutter() || isFullscreen || dragging) return;
+        if (modal.classList.contains('hidden') || modal.classList.contains('is-closing')) return;
+        const metrics = computeHalfMetrics();
+        cachedVh = metrics.vh;
+        restY = metrics.restY;
+        scrollBody.style.maxHeight = `${metrics.maxScrollBodyH}px`;
+        sheet.style.transition = `transform 340ms ${IOS_SILK_CURVE}`;
+        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+        currentY = restY;
       };
 
       const animateOpen = () => {
         clearSettleTimer();
         if (!isMobileShutter()) {
           setFullscreenState(false);
-          setFsProgressImmediate(0);
+          scrollBody.style.maxHeight = '';
           return;
         }
-        isFlipExpanded = false;
-        setFullscreenState(false);
-        setFsProgressImmediate(0);
-        scrollBody.scrollTop = 0;
 
-        sheet.style.transition = 'none';
-        sheet.style.removeProperty('height');
-        sheet.style.removeProperty('max-height');
+        setFullscreenState(false);
+        scrollBody.scrollTop = 0;
+        scrollBody.style.maxHeight = '';
+
+        const metrics = computeHalfMetrics();
+        cachedVh = metrics.vh;
+        restY = metrics.restY;
+        scrollBody.style.maxHeight = `${metrics.maxScrollBodyH}px`;
+
         modal.style.transition = 'none';
         modal.style.opacity = '0';
+        sheet.style.transition = 'none';
         sheet.style.opacity = '1';
-        sheet.style.transform = 'translate3d(0, 100%, 0)';
+        sheet.style.transform = `translate3d(0, ${metrics.vh}px, 0)`;
+        currentY = metrics.vh;
         updateMainStageDepth(0, false);
-
-        void sheet.offsetHeight;
-        const halfH = getContentSheetHeight();
-        const fullH = getViewportH();
-        cachedHalfH = halfH;
-        cachedFullH = fullH;
-        cachedDeltaH = Math.max(0, fullH - halfH);
-        currentY = halfH;
-        sheet.style.transform = `translate3d(0, ${halfH}px, 0)`;
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            syncBackdropAndStage(0, 0, halfH, 450, IOS_SHEET_OPEN_CURVE);
-            glideToPosition(0, 450, IOS_SHEET_OPEN_CURVE);
+            modal.style.transition = `opacity 480ms ${IOS_SILK_CURVE}`;
+            modal.style.opacity = '1';
+            updateMainStageDepth(0.65, true);
+
+            sheet.style.transition = `transform 500ms ${IOS_SILK_CURVE}`;
+            sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+            currentY = restY;
+
+            settleTimer = setTimeout(() => {
+              sheet.style.transition = 'none';
+            }, 520);
           });
         });
       };
@@ -6054,42 +5875,36 @@
         clearSettleTimer();
         if (!isMobileShutter()) return;
         setFullscreenState(false);
-        setFsProgressImmediate(0);
 
-        const endY = isFlipExpanded ? (cachedFullH || getViewportH()) : (cachedHalfH || getContentSheetHeight());
-        const dur = Math.min(410, Math.max(330, computeAdaptiveDuration(currentY, endY, initialVel)));
+        const vh = getViewportH();
+        const dist = Math.max(120, vh - currentY);
+        const dur = Math.min(440, Math.max(360, computeAdaptiveDuration(dist, initialVel)));
 
-        modal.style.transition = `opacity ${dur}ms ${IOS_SHEET_CLOSE_CURVE}`;
+        modal.style.transition = `opacity ${dur}ms ${IOS_CLOSE_CURVE}`;
         modal.style.opacity = '0';
         updateMainStageDepth(0, true);
 
-        sheet.style.transition = `transform ${dur}ms ${IOS_SHEET_CLOSE_CURVE}`;
+        sheet.style.transition = `transform ${dur}ms ${IOS_CLOSE_CURVE}`;
         sheet.style.opacity = '1';
-        sheet.style.transform = `translate3d(0, ${endY}px, 0)`;
+        sheet.style.transform = `translate3d(0, ${vh}px, 0)`;
+        currentY = vh;
       };
 
       const resetState = () => {
         clearSettleTimer();
-        cancelProgressAnim();
         isFullscreen = false;
-        isFlipExpanded = false;
         startedInFullscreen = false;
+        currentY = 0;
         dragging = false;
         suppressComposerTap = false;
         dragLocked = false;
         rafPending = false;
         touchSamples = [];
-        currentFsProgress = 0;
         modal.style.transition = '';
         modal.style.opacity = '';
-        sheet.classList.remove('is-fullscreen', 'is-settled-fullscreen');
-        sheet.style.setProperty('--fs-progress', '0');
+        scrollBody.style.maxHeight = '';
+        sheet.classList.remove('is-fullscreen');
         sheet.style.transition = 'none';
-        sheet.style.removeProperty('height');
-        sheet.style.removeProperty('max-height');
-        sheet.style.transformOrigin = '';
-        sheet.style.borderTopLeftRadius = '';
-        sheet.style.borderTopRightRadius = '';
         sheet.style.opacity = '';
         sheet.style.transform = '';
       };
@@ -6107,7 +5922,7 @@
         true
       );
 
-      /* وقتی در حالت نیمه‌باز روی فیلد متنی زده می‌شود، نرم تمام‌صفحه شود */
+      /* وقتی در حالت نیمه‌باز روی فیلد متنی زده می‌شود، نرم تمام‌صفحه شود تا کیبورد روی فرم نیفتد */
       scrollBody.addEventListener('focusin', (e) => {
         if (!isMobileShutter() || dragging) return;
         const tag = e.target?.tagName;
@@ -6134,24 +5949,11 @@
         }
       });
 
+      /* حین درگ فقط یک transform ساده روی GPU اجرا می‌شود (بدون لگ و بدون تغییر شفافیت) */
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
         sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
-
-        if (isFlipExpanded) {
-          const fullH = cachedFullH || getViewportH();
-          const deltaSpan = Math.max(1, cachedDeltaH);
-          const liveProgress = Math.max(0, Math.min(1, (deltaSpan - currentY) / deltaSpan));
-          setFsProgressImmediate(liveProgress);
-
-          const closeEndY = cachedDeltaH + (cachedHalfH || getContentSheetHeight());
-          syncBackdropAndStage(currentY, 0, Math.min(fullH, closeEndY), 0);
-        } else {
-          setFsProgressImmediate(0);
-          const halfH = cachedHalfH || getContentSheetHeight();
-          syncBackdropAndStage(currentY, 0, halfH, 0);
-        }
       };
 
       const computeReleaseVelocity = () => {
@@ -6174,11 +5976,14 @@
           if (!isMobileShutter() || e.touches.length !== 1) return;
 
           clearSettleTimer();
-          cancelProgressAnim();
           const liveY = readLiveTranslateY();
           sheet.style.transition = 'none';
+          sheet.style.opacity = '1';
           sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0)`;
           currentY = liveY;
+
+          modal.style.transition = 'none';
+          modal.style.opacity = '1';
 
           const touch = e.touches[0];
           const now = performance.now();
@@ -6186,11 +5991,7 @@
           startTouchX = touch.clientX;
           startSheetY = liveY;
           startedInFullscreen = isFullscreen;
-          cachedFullH = getViewportH();
-          if (!isFlipExpanded) {
-            cachedHalfH = getContentSheetHeight();
-            cachedDeltaH = Math.max(0, cachedFullH - cachedHalfH);
-          }
+          cachedVh = getViewportH();
           startedOnDragZone = Boolean(e.target.closest('[data-composer-drag-zone]'));
           touchSamples = [{ y: touch.clientY, t: now }];
           dragging = false;
@@ -6215,16 +6016,10 @@
             }
             if (Math.abs(dy) < 7) return;
 
-            const canBodyScroll = scrollBody.scrollHeight > scrollBody.clientHeight + 4;
-
             if (startedOnDragZone) {
               dragging = true;
             } else if (!isFullscreen && dy < 0) {
-              /* اگر محتوای فرم از ارتفاع نیمه‌باز بیشتر است، ابتدا اسکرول عادی انجام شود تا با فول‌اسکرین قاطی نشود */
-              if (canBodyScroll) {
-                dragLocked = true;
-                return;
-              }
+              /* در حالت نیمه‌باز، اسکرول رو به بالا مستقیماً شیت را با انگشت بالا می‌آورد */
               dragging = true;
             } else if (!isFullscreen && dy > 0 && scrollBody.scrollTop <= 2) {
               dragging = true;
@@ -6239,13 +6034,9 @@
 
             if (dragging) {
               suppressComposerTap = true;
-              sheet.classList.remove('is-settled-fullscreen');
+              scrollBody.style.maxHeight = '';
               if (document.activeElement && document.activeElement.closest('#composer-shutter-sheet')) {
                 document.activeElement.blur();
-              }
-              if (dy < 0 && !isFlipExpanded) {
-                const deltaH = promoteToFlipLayer(startSheetY + dy);
-                startSheetY += deltaH;
               }
             }
           }
@@ -6257,14 +6048,10 @@
             if (touchSamples.length > 6) touchSamples.shift();
 
             let nextY = startSheetY + dy;
-            if (nextY < 0 && !isFlipExpanded) {
-              const deltaH = promoteToFlipLayer(nextY);
-              startSheetY += deltaH;
-              nextY = startSheetY + dy;
-            }
             if (nextY < 0) {
               nextY = computeIosRubberBand(nextY, 44);
             }
+
             currentY = nextY;
 
             if (!rafPending) {
@@ -6285,40 +6072,28 @@
 
         const velocityY = computeReleaseVelocity();
         touchSamples = [];
-        const fullH = cachedFullH || getViewportH();
-        const halfH = cachedHalfH || getContentSheetHeight();
-        const deltaH = cachedDeltaH;
-        /* آستانه ۹۰ درصد باز بودن شیت (۱۰ درصد بالایی صفحه) بدون کشش مگنتی زودهنگام */
-        const ninetyPercentOpenY = Math.round(fullH * 0.10);
+        const vh = cachedVh || getViewportH();
+        const ninetyPercentOpenY = Math.round(vh * 0.10);
 
         if (startedInFullscreen) {
-          const closeFromFsY = deltaH + halfH * 0.56;
-          if (currentY >= closeFromFsY || (velocityY > 1450 && currentY >= deltaH + halfH * 0.35)) {
+          const halfThresholdY = Math.round(vh * 0.22);
+          const closeThresholdY = Math.round(vh * 0.56);
+          if (currentY >= closeThresholdY || (velocityY > 1400 && currentY >= vh * 0.34)) {
             animateClose(velocityY);
             playTactileSound('pop');
             triggerHaptic(8);
             closeModal('task-composer-modal', true);
-          } else if (currentY > ninetyPercentOpenY || (velocityY > 240 && currentY > 18)) {
+          } else if (currentY >= halfThresholdY || (velocityY > 240 && currentY > 24)) {
             snapToHalf(velocityY);
             playTactileSound('pop');
           } else {
             snapToFullscreen(velocityY);
-          }
-        } else if (isFlipExpanded) {
-          const closeThreshold = deltaH + halfH * 0.56;
-          if (currentY <= ninetyPercentOpenY || (velocityY < -1150 && currentY <= fullH * 0.18)) {
-            snapToFullscreen(velocityY);
-          } else if (currentY >= closeThreshold || (velocityY > 980 && currentY >= deltaH + halfH * 0.38)) {
-            animateClose(velocityY);
-            playTactileSound('pop');
-            triggerHaptic(8);
-            closeModal('task-composer-modal', true);
-          } else {
-            snapToHalf(velocityY);
           }
         } else {
-          const closeThreshold = halfH * 0.54;
-          if (currentY >= closeThreshold || (velocityY > 920 && currentY >= halfH * 0.36)) {
+          /* بدون پرش مگنتی وسط حرکت: تا لحظه رها کردن انگشت تابع دست است و سپس نرم سر جای خود می‌نشیند */
+          if (currentY <= ninetyPercentOpenY || (velocityY < -720 && currentY < restY * 0.65)) {
+            snapToFullscreen(velocityY);
+          } else if (currentY >= restY + 85 || (velocityY > 680 && currentY > restY + 30)) {
             animateClose(velocityY);
             playTactileSound('pop');
             triggerHaptic(8);
@@ -6342,6 +6117,7 @@
         resetState,
         snapToHalf,
         snapToFullscreen,
+        recalculateHalfHeight,
         isFullscreenMode: () => isFullscreen,
       };
     }
@@ -6849,6 +6625,10 @@
           playTactileSound('delete');
         });
       });
+
+      if (composerShutterController) {
+        composerShutterController.recalculateHalfHeight();
+      }
     }
 
     function updateComposerTogglesUI() {
@@ -7195,6 +6975,11 @@
       setupFullScreenViewportSync();
       setupAndroidBackButtonHandler();
       registerOfflineServiceWorker();
+
+      /* پیش‌بارگذاری موتور صوتی در اولین لمس صفحه تا کلیک دکمه‌ها هیچ تاخیر یا افت فریم نداشته باشد */
+      document.addEventListener('pointerdown', () => {
+        if (state.soundEnabled) ensureAudioContext();
+      }, { once: true, passive: true });
 
       composerShutterController = initComposerShutterGesture();
 
@@ -7870,7 +7655,6 @@
         triggerIslandToast('📁', `پوشه «${name}» ساخته شد`);
       });
 
-      document.getElementById('close-composer-modal')?.addEventListener('click', () => closeModal('task-composer-modal'));
       document.getElementById('composer-title-input')?.addEventListener('input', updateComposerSmartBadges);
       document.getElementById('composer-desc-input')?.addEventListener('input', updateComposerSmartBadges);
 
@@ -7919,17 +7703,20 @@
         if (!title) return;
         const description = document.getElementById('composer-desc-input')?.value.trim() || '';
         const cleanSubs = state.composerSubtasks.map((s) => s.trim()).filter(Boolean);
-
-        addTask(title, {
+        const taskOptions = {
           description,
           category: state.composerCategory,
           urgent: state.composerUrgent,
           isHabit: state.composerHabit,
           autoCompleteSubtasks: state.composerAutoComplete,
           subtasks: cleanSubs,
-        });
+        };
 
+        /* شروع فوری انیمیشن بسته شدن شیت روی GPU و ثبت کار در فریم بعدی برای جلوگیری از افت فریم */
         closeModal('task-composer-modal');
+        requestAnimationFrame(() => {
+          addTask(title, taskOptions);
+        });
       };
 
       document.getElementById('task-composer-form')?.addEventListener('submit', (e) => {
