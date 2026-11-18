@@ -78,8 +78,9 @@
       --bg-elevated: #131a1c;
       --bg-input: #12191b;
       --bg-chip: #1a2224;
-      --glass-bg: rgba(20, 27, 29, 0.88);
-      --glass-card-bg: rgba(22, 30, 32, 0.92);
+      --glass-bg: #131a1c;
+      /* رنگ دقیق ترکیب‌شده کارت روی پس‌زمینه تیره برای حذف کامل پرش شفافیت در WebView */
+      --glass-card-bg: #151d1f;
       --glass-modal-surface: rgba(18, 25, 28, 0.995);
       --glass-border: rgba(255, 255, 255, 0.09);
       --specular-edge: rgba(255, 255, 255, 0.14);
@@ -104,8 +105,8 @@
       --bg-elevated: #ffffff;
       --bg-input: #f4f7f8;
       --bg-chip: #e6eef0;
-      --glass-bg: rgba(255, 255, 255, 0.93);
-      --glass-card-bg: rgba(255, 255, 255, 0.97);
+      --glass-bg: #f8fbfc;
+      --glass-card-bg: #fefeff;
       --glass-modal-surface: rgba(244, 247, 249, 0.995);
       --glass-border: rgba(15, 23, 42, 0.08);
       --specular-edge: rgba(255, 255, 255, 0.95);
@@ -128,19 +129,19 @@
     body.gpu-tier-balanced {
       --glass-blur: 6px;
       --island-blur: 8px;
-      --glass-bg: rgba(20, 27, 29, 0.92);
-      --glass-card-bg: rgba(22, 30, 32, 0.95);
+      --glass-bg: #141b1d;
+      --glass-card-bg: #161e20;
     }
     body.theme-light.gpu-tier-balanced {
-      --glass-bg: rgba(255, 255, 255, 0.96);
-      --glass-card-bg: rgba(255, 255, 255, 0.99);
+      --glass-bg: #fafcfd;
+      --glass-card-bg: #ffffff;
     }
 
     body.gpu-tier-performance {
       --glass-blur: 0px;
       --island-blur: 0px;
-      --glass-bg: rgba(22, 30, 33, 0.97);
-      --glass-card-bg: rgba(24, 33, 36, 0.98);
+      --glass-bg: #161e21;
+      --glass-card-bg: #182124;
       --island-bg: linear-gradient(180deg, rgba(26, 36, 40, 0.99) 0%, rgba(16, 22, 25, 0.99) 100%);
     }
     body.theme-light.gpu-tier-performance {
@@ -291,13 +292,16 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* سطح شیشه‌ای فوق‌سریع بدون پاس بلور اضافه برای کارت‌های داخلی صفحه */
+    /* سطح شیشه‌ای فوق‌سریع قفل‌شده روی GPU برای کارت‌های داخلی صفحه */
     .liquid-surface-fast {
       background: var(--glass-bg);
       border: 1px solid var(--glass-border);
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: var(--card-radius);
       contain: layout style;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
@@ -308,9 +312,123 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
-    /* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» ====================
-       گوشه‌های بالای شیت در تمام مراحل گرد و پیوسته باقی می‌مانند تا هیچ‌گاه
-       به صورت ناگهانی یا تیز چهارگوش نشوند */
+    /* ==================== سوییچر سه‌حالته زمان (دیروز • امروز • فردا) ==================== */
+    .day-switcher-bar {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 0 var(--specular-edge);
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      touch-action: pan-y;
+    }
+
+    .day-nav-indicator {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: calc((100% - 8px) / 3);
+      height: calc(100% - 8px);
+      will-change: transform;
+      transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .day-nav-indicator.is-scrubbing,
+    .tg-nav-indicator.is-scrubbing {
+      transition: none !important;
+    }
+
+    .day-nav-indicator-blob {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--mint-accent);
+      box-shadow:
+        0 4px 14px rgba(var(--mint-accent-rgb), 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.44);
+      transform-origin: center;
+      will-change: transform, filter;
+      --stretch-x: 1.16;
+      --squash-y: 0.92;
+    }
+
+    .day-nav-indicator-blob.is-stretching {
+      animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .day-nav-indicator-blob.is-scrubbing-blob,
+    .tg-nav-indicator-blob.is-scrubbing-blob {
+      transform: scale3d(1.06, 0.94, 1);
+      filter: brightness(1.06);
+      transition: transform 0.14s ease, filter 0.14s ease;
+    }
+
+    .day-tab-btn {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 36px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition:
+        color 0.18s ease,
+        transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .day-tab-btn.is-active {
+      color: var(--mint-contrast-text);
+      font-weight: 800;
+    }
+
+    .day-tab-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      color: inherit;
+      transition: background-color 0.18s ease;
+    }
+
+    .day-tab-btn.is-active .day-tab-badge {
+      background: rgba(0, 0, 0, 0.16);
+      color: var(--mint-contrast-text);
+    }
+
+    body.theme-light .day-tab-btn:not(.is-active) .day-tab-badge {
+      background: rgba(15, 23, 42, 0.08);
+    }
+
+    /* ==================== کانال‌های زنده سه‌روزه — تعویض آنی ۰ میلی‌ثانیه و ۱۰۰٪ شارپ ==================== */
+    .day-channel-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .day-channel-pane.is-channel-hidden {
+      display: none !important;
+    }
+
+    /* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» ==================== */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -484,16 +602,19 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
 
+    /* کارت‌های قفل‌شده روی GPU بدون انتقال شفافیت ناخواسته (رفع قطعی کم‌وزیاد شدن نور) */
     .liquid-card {
       background: var(--glass-card-bg);
       border: 1px solid var(--glass-border);
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: var(--card-radius);
       contain: layout style;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       transition:
         transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
-        border-color 0.2s ease,
-        opacity 0.2s ease;
+        border-color 0.2s ease;
     }
 
     .liquid-card.is-card-pressing {
@@ -502,10 +623,13 @@
     }
 
     .notebook-entry-card {
-      background: rgba(18, 25, 27, 0.92);
+      background: #12191b;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: inset 0 1px 0 0 var(--specular-edge);
       border-radius: calc(var(--card-radius) - 4px);
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       transition:
         transform calc(0.3s * var(--motion-scale)) var(--spring-curve),
         border-color 0.18s ease,
@@ -514,7 +638,7 @@
 
     .notebook-entry-card.is-pinned {
       border-color: rgba(var(--mint-accent-rgb), 0.38);
-      background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.09) 0%, rgba(18, 25, 27, 0.94) 100%);
+      background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.09) 0%, #12191b 100%);
     }
 
     body.theme-light .notebook-entry-card {
@@ -1183,6 +1307,7 @@
       padding: 4px;
       position: relative;
       contain: layout style paint;
+      touch-action: pan-y;
     }
 
     .tg-nav-indicator {
@@ -1205,21 +1330,27 @@
       border: 1px solid rgba(var(--mint-accent-rgb), 0.36);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
       transform-origin: center;
-      will-change: transform;
+      will-change: transform, filter;
+      --stretch-x: 1.18;
+      --squash-y: 0.91;
     }
 
     @keyframes liquidPillStretchX {
       0% {
         transform: scale3d(1, 1, 1);
+        filter: brightness(1);
       }
-      34% {
-        transform: scale3d(1.22, 0.89, 1);
+      32% {
+        transform: scale3d(var(--stretch-x, 1.2), var(--squash-y, 0.9), 1);
+        filter: brightness(1.1);
       }
-      70% {
+      68% {
         transform: scale3d(0.96, 1.03, 1);
+        filter: brightness(1.02);
       }
       100% {
         transform: scale3d(1, 1, 1);
+        filter: brightness(1);
       }
     }
 
@@ -1268,38 +1399,6 @@
       transform: scale3d(0.91, 0.91, 1);
     }
 
-    @keyframes tabEnterFromLeft {
-      from {
-        opacity: 0;
-        transform: translate3d(-24px, 0, 0) scale3d(0.986, 0.986, 1);
-      }
-      to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-      }
-    }
-
-    @keyframes tabEnterFromRight {
-      from {
-        opacity: 0;
-        transform: translate3d(24px, 0, 0) scale3d(0.986, 0.986, 1);
-      }
-      to {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-      }
-    }
-
-    .tab-view.tab-enter-from-left {
-      animation: tabEnterFromLeft calc(0.36s * var(--motion-scale)) var(--ios-fluid-curve) both;
-      will-change: transform, opacity;
-    }
-
-    .tab-view.tab-enter-from-right {
-      animation: tabEnterFromRight calc(0.36s * var(--motion-scale)) var(--ios-fluid-curve) both;
-      will-change: transform, opacity;
-    }
-
     .tg-fab-add {
       pointer-events: auto;
       width: 56px;
@@ -1341,6 +1440,9 @@
       border-radius: var(--card-radius);
       overflow: hidden;
       contain: layout style;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .task-swipe-slot.is-actively-swiping .task-card {
@@ -1436,21 +1538,27 @@
         background: rgba(var(--mint-accent-rgb), 0.18);
         border: 1px solid rgba(var(--mint-accent-rgb), 0.38);
         transform-origin: center;
-        will-change: transform;
+        will-change: transform, filter;
+        --stretch-y: 1.18;
+        --squash-x: 0.91;
       }
 
       @keyframes liquidPillStretchY {
         0% {
           transform: scale3d(1, 1, 1);
+          filter: brightness(1);
         }
-        34% {
-          transform: scale3d(0.89, 1.22, 1);
+        32% {
+          transform: scale3d(var(--squash-x, 0.9), var(--stretch-y, 1.2), 1);
+          filter: brightness(1.1);
         }
-        70% {
+        68% {
           transform: scale3d(1.03, 0.96, 1);
+          filter: brightness(1.02);
         }
         100% {
           transform: scale3d(1, 1, 1);
+          filter: brightness(1);
         }
       }
 
@@ -1693,11 +1801,11 @@
         <span id="rail-nav-indicator-blob" class="rail-nav-indicator-blob"></span>
       </div>
 
-      <button type="button" data-tab="tasks" title="کارهای امروز" class="rail-nav-btn is-active">
+      <button type="button" data-tab="tasks" title="برنامه روزانه" class="rail-nav-btn is-active">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span class="text-[9px] font-bold">امروز</span>
+        <span class="text-[9px] font-bold">برنامه</span>
       </button>
 
       <button type="button" data-tab="focus" title="اتاق تمرکز" class="rail-nav-btn">
@@ -1813,6 +1921,25 @@
           </div>
         </section>
 
+        <!-- ==================== نوار جابه‌جایی سه‌روزه: دیروز | امروز | فردا ==================== -->
+        <div id="day-switcher-bar" class="day-switcher-bar" role="tablist" aria-label="انتخاب روز برنامه">
+          <div id="day-nav-indicator" class="day-nav-indicator" style="transform: translate3d(-100%, 0, 0);">
+            <span id="day-nav-indicator-blob" class="day-nav-indicator-blob"></span>
+          </div>
+          <button type="button" data-day-view="yesterday" class="day-tab-btn spring-btn">
+            <span>⏪ دیروز</span>
+            <span id="day-badge-yesterday" class="day-tab-badge hidden">۰</span>
+          </button>
+          <button type="button" data-day-view="today" class="day-tab-btn is-active spring-btn">
+            <span>☀️ امروز</span>
+            <span id="day-badge-today" class="day-tab-badge">۰</span>
+          </button>
+          <button type="button" data-day-view="tomorrow" class="day-tab-btn spring-btn">
+            <span>🌅 فردا</span>
+            <span id="day-badge-tomorrow" class="day-tab-badge hidden">۰</span>
+          </button>
+        </div>
+
         <div class="relative">
           <input
             id="search-tasks-input"
@@ -1870,7 +1997,12 @@
           </div>
         </div>
 
-        <div id="task-list" class="flex flex-col gap-2.5"></div>
+        <!-- کانال‌های زنده مجزا برای دیروز، امروز و فردا (بدون تخریب و بازسازی DOM هنگام جابه‌جایی) -->
+        <div id="task-list" class="relative">
+          <div id="day-channel-yesterday" data-day-channel="yesterday" class="day-channel-pane is-channel-hidden"></div>
+          <div id="day-channel-today" data-day-channel="today" class="day-channel-pane"></div>
+          <div id="day-channel-tomorrow" data-day-channel="tomorrow" class="day-channel-pane is-channel-hidden"></div>
+        </div>
       </div>
 
       <div class="lg:col-span-5 flex flex-col gap-3.5 lg:sticky lg:top-20 min-w-0">
@@ -1926,6 +2058,15 @@
                 placeholder="افزودن یادداشت یا توضیحات..."
                 class="w-full bg-[#12191b] border border-white/10 focus:border-[#7fd5d8]/50 rounded-2xl px-3.5 py-2 text-xs text-slate-200 placeholder-[#7d8e90] outline-none"
               />
+            </div>
+
+            <div id="inspector-day-row">
+              <span class="block text-[11px] text-[#93a3a5] mb-1.5">روز اجرا</span>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" data-inspector-day="yesterday" class="inspector-day-btn spring-btn py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-[11px] font-bold text-slate-300 cursor-pointer">⏪ دیروز</button>
+                <button type="button" data-inspector-day="today" class="inspector-day-btn spring-btn py-1.5 rounded-xl bg-[#7fd5d8] text-[#0b1617] border border-[#7fd5d8] text-[11px] font-bold cursor-pointer">☀️ امروز</button>
+                <button type="button" data-inspector-day="tomorrow" class="inspector-day-btn spring-btn py-1.5 rounded-xl bg-white/[0.06] border border-white/10 text-[11px] font-bold text-slate-300 cursor-pointer">🌅 فردا</button>
+              </div>
             </div>
 
             <div>
@@ -2285,11 +2426,11 @@
 
       <div class="grid grid-cols-3 gap-2.5">
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
-          <span class="text-[11px] text-[#93a3a5]">تکمیل‌شده</span>
+          <span class="text-[11px] text-[#93a3a5]">تکمیل‌شده امروز</span>
           <div id="stat-done-count" class="text-xl font-extrabold text-[#7fd5d8] mt-1">۰</div>
         </div>
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
-          <span class="text-[11px] text-[#93a3a5]">در جریان</span>
+          <span class="text-[11px] text-[#93a3a5]">در جریان امروز</span>
           <div id="stat-active-count" class="text-xl font-extrabold text-white mt-1">۰</div>
         </div>
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
@@ -2684,7 +2825,7 @@
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>امروز</span>
+        <span>برنامه</span>
       </button>
 
       <button type="button" data-tab="focus" class="tg-nav-btn">
@@ -3009,7 +3150,7 @@
       </div>
 
       <button id="cleanup-completed-action" type="button" class="spring-btn w-full py-2.5 rounded-2xl bg-rose-500/20 border border-rose-400/35 text-rose-200 text-xs font-bold cursor-pointer">
-        حذف همه کارهای تکمیل‌شده
+        حذف کارهای تکمیل‌شده این روز
       </button>
 
       <button id="cleanup-reset-sample-action" type="button" class="spring-btn w-full py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold cursor-pointer">
@@ -3054,6 +3195,15 @@
             placeholder="توضیحات یا نکات مربوط به این کار..."
             class="w-full bg-[#12191b] border border-white/10 focus:border-[#7fd5d8]/50 rounded-2xl px-3.5 py-2 text-xs text-slate-200 placeholder-[#7d8e90] outline-none"
           />
+        </div>
+
+        <div id="edit-task-day-section">
+          <span class="block text-xs text-[#93a3a5] mb-1.5">روز اجرا</span>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-edit-day="yesterday" class="edit-day-choice-btn spring-btn py-2 rounded-2xl bg-white/[0.06] border border-white/10 text-xs font-bold text-slate-300 cursor-pointer">⏪ دیروز</button>
+            <button type="button" data-edit-day="today" class="edit-day-choice-btn spring-btn py-2 rounded-2xl bg-[#7fd5d8] text-[#0b1617] border border-[#7fd5d8] text-xs font-bold cursor-pointer">☀️ امروز</button>
+            <button type="button" data-edit-day="tomorrow" class="edit-day-choice-btn spring-btn py-2 rounded-2xl bg-white/[0.06] border border-white/10 text-xs font-bold text-slate-300 cursor-pointer">🌅 فردا</button>
+          </div>
         </div>
 
         <div>
@@ -3183,10 +3333,11 @@
             </svg>
           </button>
 
-          <div id="composer-title-pill" class="composer-glass-capsule h-10 px-4 rounded-full flex items-center gap-2 min-w-0">
+          <div id="composer-title-pill" class="composer-glass-capsule h-10 px-3.5 rounded-full flex items-center gap-1.5 min-w-0">
             <span class="w-2 h-2 rounded-full bg-[#7fd5d8] shrink-0"></span>
             <span class="text-xs font-extrabold text-white whitespace-nowrap">کار جدید</span>
-            <span id="composer-fs-folder-tag" class="composer-fs-folder-pill text-[11px] font-bold text-[#7fd5d8] border-r border-white/15 pr-2">✨ شخصی</span>
+            <span id="composer-fs-day-tag" class="text-[11px] font-bold text-amber-300 border-r border-white/15 pr-1.5 whitespace-nowrap">☀️ امروز</span>
+            <span id="composer-fs-folder-tag" class="composer-fs-folder-pill text-[11px] font-bold text-[#7fd5d8] border-r border-white/15 pr-1.5">✨ شخصی</span>
           </div>
         </div>
 
@@ -3275,6 +3426,27 @@
               <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
             </div>
 
+            <!-- انتخاب‌گر سریع روز اجرا: دیروز | امروز | فردا -->
+            <div class="px-4 py-3 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="tg-icon-circle bg-[#14b8a6]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">روز برنامه</div>
+                  <div id="composer-day-subtext" class="text-[10px] text-[#93a3a5] truncate">فقط در همان روز نمایش داده می‌شود</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1 bg-white/[0.06] p-1 rounded-full shrink-0" role="group" aria-label="انتخاب روز کار">
+                <button type="button" data-composer-day="yesterday" class="composer-day-chip spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">دیروز</button>
+                <button type="button" data-composer-day="today" class="composer-day-chip spring-btn text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-[#7fd5d8] text-[#0b1617] cursor-pointer">امروز</button>
+                <button type="button" data-composer-day="tomorrow" class="composer-day-chip spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">فردا</button>
+              </div>
+            </div>
+
             <button id="composer-row-category" type="button" class="tg-settings-row">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="tg-icon-circle bg-[#0ea5e9]">
@@ -3329,7 +3501,7 @@
                 </span>
                 <div class="min-w-0">
                   <div class="text-xs font-bold text-white">تکرار روزانه (عادت) 🔁</div>
-                  <div class="text-[10px] text-[#93a3a5] truncate">بازنشانی خودکار زیرکارها در صبح روز بعد</div>
+                  <div class="text-[10px] text-[#93a3a5] truncate">تکرار خودکار در هر روز جدید با حفظ سابقه دیروز</div>
                 </div>
               </div>
               <span id="composer-switch-habit" class="tg-switch"><span class="tg-switch-knob block"></span></span>
@@ -3487,6 +3659,7 @@
 
     const state = {
       tasks: [],
+      selectedDayView: 'today', // 'yesterday' | 'today' | 'tomorrow'
       filter: 'all',
       folderFilter: 'all',
       searchQuery: '',
@@ -3502,6 +3675,7 @@
       toastTimeout: null,
       toastActionCallback: null,
       undoSnapshot: null,
+      moveUndoSnapshot: null,
       noteUndoSnapshot: null,
       soundEnabled: true,
       gpuQualityMode: 'auto',
@@ -3528,10 +3702,12 @@
       editingTaskId: null,
       inspectedTaskId: null,
       draftEditCategory: 'شخصی',
+      draftEditDay: 'today',
       draftEditUrgent: false,
       draftEditHabit: false,
       draftFolderEmoji: '🎓',
       composerSubtasks: [],
+      composerDay: 'today',
       composerCategory: 'شخصی',
       composerAutoComplete: true,
       composerUrgent: false,
@@ -3676,9 +3852,44 @@
         .replace(/'/g, '&#039;');
     }
 
-    function getTodayKey() {
-      const d = new Date();
+    function getDayKeyFromDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getTodayKey() {
+      return getDayKeyFromDate(new Date());
+    }
+
+    function getOffsetDayKey(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return getDayKeyFromDate(d);
+    }
+
+    function getDayKeyForView(dayView) {
+      if (dayView === 'yesterday') return getOffsetDayKey(-1);
+      if (dayView === 'tomorrow') return getOffsetDayKey(1);
+      return getTodayKey();
+    }
+
+    function getDayViewFromKey(dayKey) {
+      const today = getTodayKey();
+      const yesterday = getOffsetDayKey(-1);
+      const tomorrow = getOffsetDayKey(1);
+      if (dayKey === yesterday) return 'yesterday';
+      if (dayKey === tomorrow) return 'tomorrow';
+      if (dayKey === today) return 'today';
+      return 'today';
+    }
+
+    function getDayViewMeta(dayView) {
+      if (dayView === 'yesterday') {
+        return { key: 'yesterday', label: 'دیروز', badge: '⏪ دیروز', dayKey: getOffsetDayKey(-1) };
+      }
+      if (dayView === 'tomorrow') {
+        return { key: 'tomorrow', label: 'فردا', badge: '🌅 فردا', dayKey: getOffsetDayKey(1) };
+      }
+      return { key: 'today', label: 'امروز', badge: '☀️ امروز', dayKey: getTodayKey() };
     }
 
     function getCalendarDaysDiff(fromKey, toKey) {
@@ -3716,8 +3927,7 @@
       return [jy, jm, jd];
     }
 
-    function formatJalaliToday() {
-      const now = new Date();
+    function formatJalaliForDateObj(dateObj) {
       const weekdays = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
       const months = [
         'فروردین',
@@ -3733,9 +3943,20 @@
         'بهمن',
         'اسفند',
       ];
-      const [, jm, jd] = gregorianToJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
-      const weekday = weekdays[now.getDay()];
+      const [, jm, jd] = gregorianToJalali(dateObj.getFullYear(), dateObj.getMonth() + 1, dateObj.getDate());
+      const weekday = weekdays[dateObj.getDay()];
       return `${weekday}، ${toPersianDigits(jd)} ${months[jm - 1]}`;
+    }
+
+    function formatJalaliToday() {
+      return formatJalaliForDateObj(new Date());
+    }
+
+    function formatJalaliForDayView(dayView) {
+      const d = new Date();
+      if (dayView === 'yesterday') d.setDate(d.getDate() - 1);
+      if (dayView === 'tomorrow') d.setDate(d.getDate() + 1);
+      return formatJalaliForDateObj(d);
     }
 
     function formatJalaliDateTime(timestamp) {
@@ -3807,7 +4028,7 @@
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const key = getDayKeyFromDate(d);
         result.push({
           key,
           label: i === 0 ? 'امروز' : shortDays[d.getDay()],
@@ -3818,8 +4039,73 @@
       return result;
     }
 
+    /* بررسی اینکه یک تسک متعلق به کدام روز است و وضعیت انجامش در آن روز چیست */
+    function isTaskScheduledForDayKey(task, targetDayKey) {
+      if (!task) return false;
+      const todayKey = getTodayKey();
+      const taskDay = task.scheduledDate || todayKey;
+
+      if (task.isHabit) {
+        const createdDay = task.createdAt ? getDayKeyFromDate(new Date(task.createdAt)) : todayKey;
+        const effectiveStartDay = createdDay < taskDay ? createdDay : taskDay;
+        return targetDayKey >= effectiveStartDay;
+      }
+
+      return taskDay === targetDayKey;
+    }
+
+    function getTaskStateForDayKey(task, targetDayKey) {
+      const todayKey = getTodayKey();
+      const rawSubs = Array.isArray(task.subtasks) ? task.subtasks : [];
+
+      if (task.isHabit && targetDayKey !== todayKey) {
+        const record = task.habitHistory && task.habitHistory[targetDayKey];
+        const doneSubIds = Array.isArray(record?.doneSubIds) ? record.doneSubIds : [];
+        return {
+          completed: Boolean(record?.completed),
+          subtasks: rawSubs.map((s) => ({
+            ...s,
+            completed: doneSubIds.includes(s.id),
+          })),
+        };
+      }
+
+      return {
+        completed: Boolean(task.completed),
+        subtasks: rawSubs,
+      };
+    }
+
+    function getTasksForDayView(dayView) {
+      const targetDayKey = getDayKeyForView(dayView);
+      return state.tasks
+        .filter((t) => isTaskScheduledForDayKey(t, targetDayKey))
+        .map((t) => {
+          const dayState = getTaskStateForDayKey(t, targetDayKey);
+          return {
+            ...t,
+            completed: dayState.completed,
+            subtasks: dayState.subtasks,
+            _viewDayKey: targetDayKey,
+          };
+        });
+    }
+
+    function syncHabitDaySnapshot(task, dayKey) {
+      if (!task || !task.isHabit) return;
+      if (!task.habitHistory || typeof task.habitHistory !== 'object') {
+        task.habitHistory = {};
+      }
+      const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
+      task.habitHistory[dayKey] = {
+        completed: Boolean(task.completed),
+        doneSubIds: subs.filter((s) => s.completed).map((s) => s.id),
+      };
+    }
+
     function getDefaultSampleTasks() {
       const now = Date.now();
+      const todayKey = getTodayKey();
       return [
         {
           id: 'sample_1',
@@ -3830,6 +4116,8 @@
           isHabit: true,
           autoCompleteSubtasks: true,
           completed: false,
+          scheduledDate: todayKey,
+          habitHistory: {},
           subtasks: [
             { id: 'sub_s1', title: '۱۰ دقیقه نرم‌دوی و حرکات کششی', completed: true },
             { id: 'sub_s2', title: '۳ ست شنا سوئدی و پلانک', completed: false },
@@ -3846,6 +4134,7 @@
           isHabit: false,
           autoCompleteSubtasks: true,
           completed: false,
+          scheduledDate: todayKey,
           subtasks: [],
           createdAt: now - 2400000,
         },
@@ -3858,6 +4147,8 @@
           isHabit: true,
           autoCompleteSubtasks: true,
           completed: false,
+          scheduledDate: todayKey,
+          habitHistory: {},
           subtasks: [],
           createdAt: now - 1200000,
         },
@@ -3866,8 +4157,15 @@
 
     function saveState() {
       const today = getTodayKey();
-      const completedCount = state.tasks.filter((t) => t.completed).length;
-      state.dailyHistory[today] = completedCount;
+      const yesterday = getOffsetDayKey(-1);
+
+      const todayTasks = getTasksForDayView('today');
+      state.dailyHistory[today] = todayTasks.filter((t) => t.completed).length;
+
+      const yesterdayTasks = getTasksForDayView('yesterday');
+      if (yesterdayTasks.length > 0 || state.dailyHistory[yesterday] !== undefined) {
+        state.dailyHistory[yesterday] = yesterdayTasks.filter((t) => t.completed).length;
+      }
 
       const payload = {
         tasks: state.tasks,
@@ -3904,6 +4202,8 @@
       } catch (e) {
         raw = memoryFallbackStorage;
       }
+
+      const today = getTodayKey();
 
       if (raw) {
         try {
@@ -3946,16 +4246,41 @@
         state.tasks = getDefaultSampleTasks();
       }
 
-      const today = getTodayKey();
+      const fallbackDayForLegacy = state.lastHabitResetDay || today;
+      state.tasks.forEach((task) => {
+        if (!task.scheduledDate) {
+          task.scheduledDate = fallbackDayForLegacy;
+        }
+        if (task.isHabit && (!task.habitHistory || typeof task.habitHistory !== 'object')) {
+          task.habitHistory = {};
+        }
+      });
+
       if (state.lastHabitResetDay && state.lastHabitResetDay !== today) {
+        const prevDay = state.lastHabitResetDay;
         state.tasks.forEach((task) => {
           if (task.isHabit) {
-            task.completed = false;
-            if (Array.isArray(task.subtasks)) {
-              task.subtasks.forEach((s) => {
-                s.completed = false;
-              });
+            if (!task.habitHistory[prevDay]) {
+              syncHabitDaySnapshot(task, prevDay);
             }
+            const todayRecord = task.habitHistory[today];
+            if (todayRecord) {
+              task.completed = Boolean(todayRecord.completed);
+              const doneIds = Array.isArray(todayRecord.doneSubIds) ? todayRecord.doneSubIds : [];
+              if (Array.isArray(task.subtasks)) {
+                task.subtasks.forEach((s) => {
+                  s.completed = doneIds.includes(s.id);
+                });
+              }
+            } else {
+              task.completed = false;
+              if (Array.isArray(task.subtasks)) {
+                task.subtasks.forEach((s) => {
+                  s.completed = false;
+                });
+              }
+            }
+            task.scheduledDate = today;
           }
         });
       }
@@ -3972,9 +4297,7 @@
       }
 
       const smartInitial = getSmartFocusCandidate();
-      if (smartInitial) {
-        state.focusedTaskId = smartInitial.id;
-      }
+      state.focusedTaskId = smartInitial ? smartInitial.id : null;
 
       saveState();
     }
@@ -4069,7 +4392,7 @@
       return audioCtx;
     }
 
-    function playTactileSound(type) {
+    function playTactileSound(type, directionStep = 0) {
       if (!state.soundEnabled) return;
       const ctx = ensureAudioContext();
       if (!ctx) return;
@@ -4097,6 +4420,29 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
           osc.start(now);
           osc.stop(now + 0.11);
+        } else if (type === 'nav-step') {
+          /* صدای شیشه‌ای جهت‌دار: حرکت به آینده/تب‌های جلو زیرتر و شاداب‌تر، برگشت بم‌تر */
+          const clampedStep = Math.max(-3, Math.min(3, Number(directionStep) || 0));
+          const baseFreq = 640 + clampedStep * 68;
+          const endFreq = baseFreq + (clampedStep >= 0 ? 115 : -85);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(Math.max(320, endFreq), now + 0.065);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+          osc.start(now);
+          osc.stop(now + 0.075);
+        } else if (type === 'scrub-tick') {
+          /* تیک کریستالی ظریف هنگام سر خوردن انگشت روی نوار تب‌ها */
+          const clampedStep = Math.max(-2, Math.min(2, Number(directionStep) || 0));
+          const tickFreq = 740 + clampedStep * 55;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(tickFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(tickFreq + 50, now + 0.024);
+          gain.gain.setValueAtTime(0.024, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+          osc.start(now);
+          osc.stop(now + 0.028);
         } else {
           osc.type = 'sine';
           osc.frequency.setValueAtTime(620, now);
@@ -4219,19 +4565,21 @@
     }
 
     function getSmartFocusCandidate() {
-      const current = state.tasks.find((t) => t.id === state.focusedTaskId);
+      const todayTasks = getTasksForDayView('today');
+      const current = todayTasks.find((t) => t.id === state.focusedTaskId);
       if (current && !current.completed) return current;
-      const urgentActive = state.tasks.find((t) => !t.completed && t.urgent);
+      const urgentActive = todayTasks.find((t) => !t.completed && t.urgent);
       if (urgentActive) return urgentActive;
-      const anyActive = state.tasks.find((t) => !t.completed);
+      const anyActive = todayTasks.find((t) => !t.completed);
       if (anyActive) return anyActive;
-      return current || state.tasks[0] || null;
+      return current || todayTasks[0] || null;
     }
 
     function advanceSmartFocusTask(cycleNext = false) {
-      const activeTasks = state.tasks.filter((t) => !t.completed);
+      const todayTasks = getTasksForDayView('today');
+      const activeTasks = todayTasks.filter((t) => !t.completed);
       if (activeTasks.length === 0) {
-        state.focusedTaskId = state.tasks[0]?.id || null;
+        state.focusedTaskId = todayTasks[0]?.id || null;
         return null;
       }
       if (cycleNext && activeTasks.length > 1) {
@@ -4411,12 +4759,12 @@
           playTactileSound('complete');
           spawnCelebrationSparkles();
 
-          const finishedTask = state.tasks.find((t) => t.id === state.focusedTaskId);
+          const finishedTask = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
           if (finishedTask && !finishedTask.completed) {
             triggerIslandToast('🎉', `تمرکز تمام شد: ${finishedTask.title}`, {
               label: '✓ تیک کار',
               duration: 5000,
-              onAction: () => toggleTask(finishedTask.id),
+              onAction: () => toggleTask(finishedTask.id, false, 'today'),
             });
           } else {
             triggerIslandToast('🎉', 'جلسه تمرکز با موفقیت به پایان رسید!');
@@ -4466,7 +4814,7 @@
     }
 
     function updateDesktopLiveWidgets() {
-      const focusedTask = state.tasks.find((t) => t.id === state.focusedTaskId);
+      const focusedTask = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
       const desktopFocusTitle = document.getElementById('desktop-focus-task-title');
       if (desktopFocusTitle) {
         desktopFocusTitle.textContent = focusedTask ? focusedTask.title : 'یک تسک را برای تمرکز انتخاب کن';
@@ -4474,10 +4822,11 @@
     }
 
     function updateDynamicIslandSmartState(total, done, pct) {
-      const focusedTask = state.tasks.find((t) => t.id === state.focusedTaskId);
-      const activeTasks = state.tasks.filter((t) => !t.completed);
+      const todayTasks = getTasksForDayView('today');
+      const focusedTask = todayTasks.find((t) => t.id === state.focusedTaskId);
+      const activeTasks = todayTasks.filter((t) => !t.completed);
       const urgentTask = activeTasks.find((t) => t.urgent);
-      const allCompleted = total > 0 && done === total;
+      const allCompleted = todayTasks.length > 0 && activeTasks.length === 0;
 
       const statusDot = document.getElementById('island-status-dot');
       const expandedDot = document.getElementById('island-expanded-dot');
@@ -4525,7 +4874,7 @@
             }
           }
         } else if (allCompleted) {
-          idleLabel.textContent = '🏆 همه کارها تمام شد!';
+          idleLabel.textContent = '🏆 همه کارهای امروز تمام شد!';
           idleMetric.textContent = '100%';
           if (idleSubbadge) idleSubbadge.classList.add('hidden');
         } else if (focusedTask && !focusedTask.completed) {
@@ -4592,9 +4941,45 @@
       }
     }
 
-    function updateHeaderAndProgress() {
-      const total = state.tasks.length;
-      const done = state.tasks.filter((t) => t.completed).length;
+    function syncDaySwitcherUI(fromScrub = false) {
+      const yTasks = getTasksForDayView('yesterday');
+      const tTasks = getTasksForDayView('today');
+      const mTasks = getTasksForDayView('tomorrow');
+      const dayOrder = ['yesterday', 'today', 'tomorrow'];
+      const dayIdx = Math.max(0, dayOrder.indexOf(state.selectedDayView));
+
+      document.querySelectorAll('.day-tab-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.dayView === state.selectedDayView);
+      });
+
+      const dayIndicator = document.getElementById('day-nav-indicator');
+      if (dayIndicator && !fromScrub) {
+        dayIndicator.style.transform = `translate3d(${-dayIdx * 100}%, 0, 0)`;
+      }
+
+      const yBadge = document.getElementById('day-badge-yesterday');
+      const tBadge = document.getElementById('day-badge-today');
+      const mBadge = document.getElementById('day-badge-tomorrow');
+
+      if (yBadge) {
+        yBadge.textContent = toPersianDigits(yTasks.length);
+        yBadge.classList.toggle('hidden', yTasks.length === 0);
+      }
+      if (tBadge) {
+        tBadge.textContent = toPersianDigits(tTasks.length);
+      }
+      if (mBadge) {
+        mBadge.textContent = toPersianDigits(mTasks.length);
+        mBadge.classList.toggle('hidden', mTasks.length === 0);
+      }
+    }
+
+    function updateHeaderAndProgress(fromScrub = false) {
+      syncDaySwitcherUI(fromScrub);
+
+      const viewTasks = getTasksForDayView(state.selectedDayView);
+      const total = viewTasks.length;
+      const done = viewTasks.filter((t) => t.completed).length;
       const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
       const greetingEl = document.getElementById('greeting-title');
@@ -4607,10 +4992,28 @@
       const clearDesktopBtn = document.getElementById('clear-completed-desktop-btn');
 
       if (greetingEl) greetingEl.textContent = `سلام ${state.profile.name || 'دوست من'}!`;
-      if (dateEl) dateEl.textContent = `${formatJalaliToday()} • ${state.profile.bio || 'تمرکز عمیق'}`;
-      if (ratioEl) {
-        ratioEl.textContent = `${toPersianDigits(done)} از ${toPersianDigits(total)} کار تکمیل شده • هدف ${toPersianDigits(state.dailyGoal)}`;
+
+      const viewDateStr = formatJalaliForDayView(state.selectedDayView);
+      if (dateEl) {
+        if (state.selectedDayView === 'yesterday') {
+          dateEl.textContent = `برنامه دیروز (${viewDateStr})`;
+        } else if (state.selectedDayView === 'tomorrow') {
+          dateEl.textContent = `برنامه‌ریزی فردا (${viewDateStr})`;
+        } else {
+          dateEl.textContent = `${viewDateStr} • ${state.profile.bio || 'تمرکز عمیق'}`;
+        }
       }
+
+      if (ratioEl) {
+        if (state.selectedDayView === 'yesterday') {
+          ratioEl.textContent = `عملکرد دیروز: ${toPersianDigits(done)} از ${toPersianDigits(total)} کار انجام شد`;
+        } else if (state.selectedDayView === 'tomorrow') {
+          ratioEl.textContent = `برنامه فردا: ${toPersianDigits(total)} کار ثبت شده`;
+        } else {
+          ratioEl.textContent = `${toPersianDigits(done)} از ${toPersianDigits(total)} کار تکمیل شده • هدف ${toPersianDigits(state.dailyGoal)}`;
+        }
+      }
+
       if (pctEl) pctEl.textContent = `${pct}%`;
       if (barEl) barEl.style.transform = `scaleX(${(pct / 100).toFixed(4)})`;
       if (streakEl) streakEl.textContent = `🔥 ${toPersianDigits(state.streak.count || 1)} روز`;
@@ -4646,7 +5049,7 @@
         soundLabel.textContent = state.soundEnabled ? 'صدا فعال' : 'بی‌صدا';
       }
 
-      const focusedTask = state.tasks.find((t) => t.id === state.focusedTaskId);
+      const focusedTask = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
       const pageTaskTitleEl = document.getElementById('focus-page-task-title');
       if (pageTaskTitleEl) {
         pageTaskTitleEl.textContent = focusedTask ? focusedTask.title : 'یک تسک را برای تمرکز انتخاب کن';
@@ -4654,6 +5057,44 @@
 
       updateDynamicIslandSmartState(total, done, pct);
       updateDesktopLiveWidgets();
+    }
+
+    /* جابه‌جایی آنی ۰ میلی‌ثانیه و ۱۰۰٪ شارپ بین کانال‌های زنده دیروز، امروز و فردا */
+    function setSelectedDayView(dayView, options = {}) {
+      if (!['yesterday', 'today', 'tomorrow'].includes(dayView)) return;
+      const fromScrub = Boolean(options.fromScrub);
+      const dayOrder = ['yesterday', 'today', 'tomorrow'];
+      const oldIdx = Math.max(0, dayOrder.indexOf(state.selectedDayView));
+      const newIdx = Math.max(0, dayOrder.indexOf(dayView));
+      const stepDelta = newIdx - oldIdx;
+
+      /* رفتار هوشمند با لمس مجدد دکمه روز فعال (Smart Re-Tap) */
+      if (stepDelta === 0) {
+        if (!fromScrub) {
+          if (window.scrollY > 24) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          triggerBlobStretch(document.getElementById('day-nav-indicator-blob'), 1);
+          playTactileSound('pop');
+        }
+        return;
+      }
+
+      state.selectedDayView = dayView;
+
+      dayOrder.forEach((key) => {
+        const pane = document.getElementById(`day-channel-${key}`);
+        if (!pane) return;
+        pane.classList.toggle('is-channel-hidden', key !== dayView);
+      });
+
+      if (!fromScrub) {
+        triggerBlobStretch(document.getElementById('day-nav-indicator-blob'), Math.abs(stepDelta));
+        playTactileSound('nav-step', stepDelta);
+        triggerHaptic(8);
+      }
+
+      updateHeaderAndProgress(fromScrub);
     }
 
     /* ==================== منطق دفترچه یادداشت (Notebook Engine) ==================== */
@@ -4719,6 +5160,7 @@
 
       addTask(taskTitle.slice(0, 140), {
         description: taskDesc.slice(0, 180),
+        dayView: 'today',
       });
     }
 
@@ -5169,6 +5611,9 @@
       const clean = String(title || '').trim();
       if (!clean) return;
 
+      const targetDayView = options.dayView || state.selectedDayView || 'today';
+      const targetDayKey = options.scheduledDate || getDayKeyForView(targetDayView);
+
       const cleanDesc = String(options.description || '').trim();
       const rawSubtasks = Array.isArray(options.subtasks) ? options.subtasks : [];
       const subtasks = rawSubtasks
@@ -5183,47 +5628,149 @@
         })
         .filter(Boolean);
 
+      const isHabit = Boolean(options.isHabit);
       const newTask = {
         id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         title: clean,
         description: cleanDesc,
         category: options.category || state.selectedCategory || 'شخصی',
         urgent: Boolean(options.urgent),
-        isHabit: Boolean(options.isHabit),
+        isHabit,
         autoCompleteSubtasks: options.autoCompleteSubtasks !== false,
         completed: false,
+        scheduledDate: targetDayKey,
+        habitHistory: isHabit ? {} : undefined,
         subtasks,
         createdAt: Date.now(),
       };
 
       state.tasks.unshift(newTask);
-      const currentFocused = state.tasks.find((t) => t.id === state.focusedTaskId);
-      if (!currentFocused || currentFocused.completed || newTask.urgent) {
-        state.focusedTaskId = newTask.id;
+
+      if (targetDayView === 'today' || isHabit) {
+        const currentFocused = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
+        if (!currentFocused || currentFocused.completed || newTask.urgent) {
+          state.focusedTaskId = newTask.id;
+        }
+      }
+
+      saveState();
+      renderTasks();
+      if (state.selectedDayView !== targetDayView && !isHabit) {
+        setSelectedDayView(targetDayView);
+      } else {
+        updateHeaderAndProgress();
+      }
+      if (state.activeTab === 'stats') renderSecondaryTabViews();
+      playTactileSound('pop');
+      triggerHaptic(10);
+
+      const dayPrefix =
+        targetDayView === 'tomorrow'
+          ? 'برای فردا '
+          : targetDayView === 'yesterday'
+          ? 'برای دیروز '
+          : '';
+      const subHint = subtasks.length > 0 ? ` (${toPersianDigits(subtasks.length)} زیرکار)` : '';
+      triggerIslandToast('✨', `کار ${dayPrefix}اضافه شد${subHint}: ${clean}`);
+    }
+
+    /* انتقال اختیاری تسک انجام‌نشده از دیروز به برنامه امروز */
+    function moveYesterdayTaskToToday(taskId) {
+      const task = state.tasks.find((t) => t.id === taskId);
+      if (!task || task.isHabit) return;
+
+      const prevScheduledDate = task.scheduledDate || getOffsetDayKey(-1);
+      const prevCreatedAt = task.createdAt;
+      const todayKey = getTodayKey();
+
+      state.moveUndoSnapshot = {
+        taskId: task.id,
+        prevScheduledDate,
+        prevCreatedAt,
+      };
+
+      task.scheduledDate = todayKey;
+      task.completed = false;
+      task.createdAt = Date.now();
+
+      const currentFocused = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
+      if (!currentFocused || currentFocused.completed) {
+        state.focusedTaskId = task.id;
       }
 
       saveState();
       renderTasks();
       updateHeaderAndProgress();
+      if (state.inspectedTaskId === taskId) renderDesktopInspector();
       if (state.activeTab === 'stats') renderSecondaryTabViews();
-      playTactileSound('pop');
-      triggerHaptic(10);
+      playTactileSound('complete');
+      triggerHaptic(12);
 
-      const subHint = subtasks.length > 0 ? ` (${toPersianDigits(subtasks.length)} زیرکار)` : '';
-      triggerIslandToast('✨', `کار اضافه شد${subHint}: ${clean}`);
+      triggerIslandToast('↪️', `به برنامه امروز منتقل شد: ${task.title}`, {
+        label: 'بازگردانی',
+        duration: 4200,
+        onAction: () => {
+          if (!state.moveUndoSnapshot) return;
+          const snap = state.moveUndoSnapshot;
+          state.moveUndoSnapshot = null;
+          const target = state.tasks.find((t) => t.id === snap.taskId);
+          if (target) {
+            target.scheduledDate = snap.prevScheduledDate;
+            target.createdAt = snap.prevCreatedAt;
+            saveState();
+            renderTasks();
+            updateHeaderAndProgress();
+            playTactileSound('pop');
+            triggerIslandToast('↩️', 'کار به فهرست دیروز بازگشت');
+          }
+        },
+      });
     }
 
-    function toggleTask(taskId, keepIslandExpanded = false) {
+    function toggleTask(taskId, keepIslandExpanded = false, dayViewOverride = null) {
       const task = state.tasks.find((t) => t.id === taskId);
       if (!task) return;
 
-      const wasAllDone = state.tasks.length > 0 && state.tasks.every((t) => t.completed);
+      const activeDayView = dayViewOverride || state.selectedDayView || 'today';
+      const activeDayKey = getDayKeyForView(activeDayView);
+      const todayKey = getTodayKey();
+
+      const viewTasksBefore = getTasksForDayView(activeDayView);
+      const wasAllDone = viewTasksBefore.length > 0 && viewTasksBefore.every((t) => t.completed);
+
+      if (task.isHabit && activeDayKey !== todayKey) {
+        if (!task.habitHistory || typeof task.habitHistory !== 'object') {
+          task.habitHistory = {};
+        }
+        const prevRec = task.habitHistory[activeDayKey] || { completed: false, doneSubIds: [] };
+        const nextCompleted = !prevRec.completed;
+        const allSubIds = Array.isArray(task.subtasks) ? task.subtasks.map((s) => s.id) : [];
+        task.habitHistory[activeDayKey] = {
+          completed: nextCompleted,
+          doneSubIds: nextCompleted ? allSubIds : [],
+        };
+
+        saveState();
+        renderTasks();
+        updateHeaderAndProgress();
+        if (state.activeTab === 'stats') renderSecondaryTabViews();
+        playTactileSound(nextCompleted ? 'complete' : 'pop');
+        if (nextCompleted && !keepIslandExpanded) {
+          triggerIslandToast('✅', `تکمیل شد: ${task.title}`);
+        }
+        return;
+      }
+
       task.completed = !task.completed;
 
       if (task.completed && Array.isArray(task.subtasks) && task.subtasks.length > 0) {
         task.subtasks.forEach((s) => {
           s.completed = true;
         });
+      }
+
+      if (task.isHabit) {
+        syncHabitDaySnapshot(task, todayKey);
       }
 
       if (task.completed && state.focusedTaskId === taskId) {
@@ -5239,11 +5786,12 @@
       if (task.completed) {
         playTactileSound('complete');
         triggerHaptic(12);
-        const nowAllDone = state.tasks.length > 0 && state.tasks.every((t) => t.completed);
+        const viewTasksAfter = getTasksForDayView(activeDayView);
+        const nowAllDone = viewTasksAfter.length > 0 && viewTasksAfter.every((t) => t.completed);
         if (nowAllDone && !wasAllDone) {
           spawnCelebrationSparkles();
           if (!keepIslandExpanded) {
-            triggerIslandToast('🏆', 'فوق‌العاده! تمام کارهای امروز تکمیل شد');
+            triggerIslandToast('🏆', `فوق‌العاده! تمام کارهای ${getDayViewMeta(activeDayView).label} تکمیل شد`);
           }
         } else if (!keepIslandExpanded) {
           triggerIslandToast('✅', `تکمیل شد: ${task.title}`);
@@ -5253,13 +5801,49 @@
       }
     }
 
-    function toggleSubtask(taskId, subtaskId, keepIslandExpanded = false) {
+    function toggleSubtask(taskId, subtaskId, keepIslandExpanded = false, dayViewOverride = null) {
       const task = state.tasks.find((t) => t.id === taskId);
       if (!task || !Array.isArray(task.subtasks)) return;
       const sub = task.subtasks.find((s) => s.id === subtaskId);
       if (!sub) return;
 
-      const wasAllDone = state.tasks.length > 0 && state.tasks.every((t) => t.completed);
+      const activeDayView = dayViewOverride || state.selectedDayView || 'today';
+      const activeDayKey = getDayKeyForView(activeDayView);
+      const todayKey = getTodayKey();
+
+      if (task.isHabit && activeDayKey !== todayKey) {
+        if (!task.habitHistory || typeof task.habitHistory !== 'object') {
+          task.habitHistory = {};
+        }
+        const prevRec = task.habitHistory[activeDayKey] || { completed: false, doneSubIds: [] };
+        const doneSet = new Set(Array.isArray(prevRec.doneSubIds) ? prevRec.doneSubIds : []);
+        const willBeDone = !doneSet.has(subtaskId);
+        if (willBeDone) doneSet.add(subtaskId);
+        else doneSet.delete(subtaskId);
+
+        let allDone = Boolean(prevRec.completed);
+        if (task.subtasks.length > 0 && task.autoCompleteSubtasks !== false) {
+          allDone = task.subtasks.every((s) => doneSet.has(s.id));
+        }
+
+        task.habitHistory[activeDayKey] = {
+          completed: allDone,
+          doneSubIds: Array.from(doneSet),
+        };
+
+        saveState();
+        renderTasks();
+        updateHeaderAndProgress();
+        if (state.activeTab === 'stats') renderSecondaryTabViews();
+        playTactileSound(willBeDone ? 'complete' : 'pop');
+        if (willBeDone && !keepIslandExpanded) {
+          triggerIslandToast('☑️', `انجام شد: ${sub.title}`);
+        }
+        return;
+      }
+
+      const viewTasksBefore = getTasksForDayView(activeDayView);
+      const wasAllDone = viewTasksBefore.length > 0 && viewTasksBefore.every((t) => t.completed);
       sub.completed = !sub.completed;
 
       if (task.subtasks.length > 0 && task.autoCompleteSubtasks !== false) {
@@ -5274,6 +5858,10 @@
         }
       }
 
+      if (task.isHabit) {
+        syncHabitDaySnapshot(task, todayKey);
+      }
+
       saveState();
       renderTasks();
       updateHeaderAndProgress();
@@ -5283,11 +5871,12 @@
       if (sub.completed) {
         playTactileSound('complete');
         triggerHaptic(8);
-        const nowAllDone = state.tasks.length > 0 && state.tasks.every((t) => t.completed);
+        const viewTasksAfter = getTasksForDayView(activeDayView);
+        const nowAllDone = viewTasksAfter.length > 0 && viewTasksAfter.every((t) => t.completed);
         if (nowAllDone && !wasAllDone) {
           spawnCelebrationSparkles();
           if (!keepIslandExpanded) {
-            triggerIslandToast('🏆', 'فوق‌العاده! تمام کارهای امروز تکمیل شد');
+            triggerIslandToast('🏆', `فوق‌العاده! تمام کارهای ${getDayViewMeta(activeDayView).label} تکمیل شد`);
           }
         } else if (!keepIslandExpanded) {
           triggerIslandToast('☑️', `انجام شد: ${sub.title}`);
@@ -5339,10 +5928,18 @@
     }
 
     function setFocusedTask(taskId) {
+      const task = state.tasks.find((t) => t.id === taskId);
+      if (task && !task.isHabit && task.scheduledDate !== getTodayKey()) {
+        task.scheduledDate = getTodayKey();
+      }
       state.focusedTaskId = taskId;
       saveState();
       renderTasks();
-      updateHeaderAndProgress();
+      if (state.selectedDayView !== 'today') {
+        setSelectedDayView('today');
+      } else {
+        updateHeaderAndProgress();
+      }
       setIslandMode('expanded');
       playTactileSound('pop');
     }
@@ -5363,9 +5960,11 @@
       playTactileSound('pop');
     }
 
-    function getFilteredTasks() {
+    function getFilteredTasks(dayView = state.selectedDayView) {
       const query = state.searchQuery.trim().toLowerCase();
-      let list = state.tasks.filter((t) => {
+      const dayTasks = getTasksForDayView(dayView);
+
+      let list = dayTasks.filter((t) => {
         if (state.filter === 'active' && t.completed) return false;
         if (state.filter === 'completed' && !t.completed) return false;
         if (state.filter === 'urgent' && !t.urgent) return false;
@@ -5389,31 +5988,50 @@
       return list;
     }
 
-    function renderTasks() {
-      const container = document.getElementById('task-list');
-      if (!container) return;
+    /* رندر یک کانال روز در ظرف اختصاصی خودش برای حفظ آمادگی کامل در حافظه صفحه */
+    function renderDayChannelHTML(dayView) {
+      const filtered = getFilteredTasks(dayView);
+      const isYesterdayView = dayView === 'yesterday';
+      const isTomorrowView = dayView === 'tomorrow';
 
-      const filtered = getFilteredTasks();
       if (filtered.length === 0) {
-        const emptyMsg = state.searchQuery.trim()
-          ? 'نتیجه‌ای برای جستجوی شما پیدا نشد'
-          : 'هیچ کاری در این بخش ثبت نشده است';
-        container.innerHTML = `
+        let emptyIcon = '🌿';
+        let emptyTitle = 'هیچ کاری در این بخش ثبت نشده است';
+        let emptySub = 'برای ثبت کار جدید و زیرکارها، دکمه <strong class="text-[#7fd5d8]">+</strong> را بزن';
+
+        if (state.searchQuery.trim()) {
+          emptyIcon = '🔍';
+          emptyTitle = 'نتیجه‌ای برای جستجوی شما پیدا نشد';
+        } else if (isYesterdayView) {
+          emptyIcon = '⏪';
+          emptyTitle = 'برنامه‌ای برای دیروز ثبت نشده است';
+          emptySub = 'تمام کارهایی که دیروز ایجاد کرده باشی در این بخش نمایش داده می‌شوند';
+        } else if (isTomorrowView) {
+          emptyIcon = '🌅';
+          emptyTitle = 'هنوز برنامه‌ای برای فردا ثبت نکرده‌ای';
+          emptySub = 'همین الان دکمه <strong class="text-[#7fd5d8]">+</strong> را بزن تا کارهای فردا را از پیش بچینی';
+        } else if (state.filter === 'all' && state.folderFilter === 'all') {
+          emptyIcon = '✨';
+          emptyTitle = 'لیست امروزت کاملاً پاک و آماده برنامه‌ریزی است';
+          emptySub = 'هر روز با یک صفحه تازه شروع می‌شود — دکمه <strong class="text-[#7fd5d8]">+</strong> را بزن';
+        }
+
+        return `
           <div class="liquid-surface-fast rounded-3xl p-8 text-center flex flex-col items-center gap-2">
-            <span class="text-2xl">🌿</span>
-            <p class="text-sm font-bold text-white">${emptyMsg}</p>
-            <p class="text-xs text-[#93a3a5]">برای ثبت کار جدید و زیرکارها، دکمه <strong class="text-[#7fd5d8]">+</strong> را بزن</p>
+            <span class="text-2xl">${emptyIcon}</span>
+            <p class="text-sm font-bold text-white">${emptyTitle}</p>
+            <p class="text-xs text-[#93a3a5]">${emptySub}</p>
           </div>
         `;
-        return;
       }
 
-      container.innerHTML = filtered
+      return filtered
         .map((task) => {
-          const isFocused = task.id === state.focusedTaskId;
+          const isFocused = !isYesterdayView && !isTomorrowView && task.id === state.focusedTaskId;
           const isInspected = task.id === state.inspectedTaskId;
           const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
           const subsDone = subs.filter((s) => s.completed).length;
+          const canMoveFromYesterday = isYesterdayView && !task.completed && !task.isHabit;
 
           const subtasksHtml =
             subs.length > 0
@@ -5520,23 +6138,39 @@
                             ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-400/25">🔁 روزانه</span>'
                             : ''
                         }
+                        ${
+                          isTomorrowView && !task.isHabit
+                            ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-400/25">🌅 فردا</span>'
+                            : ''
+                        }
                       </div>
                     </div>
                   </div>
 
                   <div class="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      data-action="focus"
-                      title="انتخاب برای تایمر تمرکز"
-                      class="spring-btn w-8 h-8 rounded-full flex items-center justify-center text-xs cursor-pointer ${
-                        isFocused
-                          ? 'bg-[#7fd5d8] text-[#0b1617] font-bold'
-                          : 'bg-white/[0.06] text-[#93a3a5] hover:text-white'
-                      }"
-                    >
-                      ⏱️
-                    </button>
+                    ${
+                      canMoveFromYesterday
+                        ? `<button
+                            type="button"
+                            data-action="move-to-today"
+                            title="انتقال اختیاری این کار به برنامه امروز"
+                            class="spring-btn text-[10px] font-extrabold px-2.5 py-1.5 rounded-full bg-[#7fd5d8]/20 hover:bg-[#7fd5d8]/30 border border-[#7fd5d8]/45 text-[#7fd5d8] whitespace-nowrap cursor-pointer"
+                          >
+                            ↪️ انتقال به امروز
+                          </button>`
+                        : `<button
+                            type="button"
+                            data-action="focus"
+                            title="انتخاب برای تایمر تمرکز"
+                            class="spring-btn w-8 h-8 rounded-full flex items-center justify-center text-xs cursor-pointer ${
+                              isFocused
+                                ? 'bg-[#7fd5d8] text-[#0b1617] font-bold'
+                                : 'bg-white/[0.06] text-[#93a3a5] hover:text-white'
+                            }"
+                          >
+                            ⏱️
+                          </button>`
+                    }
 
                     <button
                       type="button"
@@ -5564,201 +6198,247 @@
           `;
         })
         .join('');
+    }
 
-      container.querySelectorAll('.task-card').forEach((card) => {
-        const taskId = card.dataset.taskId;
-        const slot = card.closest('.task-swipe-slot');
-        let startX = 0;
-        let startY = 0;
-        let currentDeltaX = 0;
-        let swiping = false;
-        let swipeRafPending = false;
-        let lastSwipeState = 0;
+    function renderTasks() {
+      ['yesterday', 'today', 'tomorrow'].forEach((dayKey) => {
+        const pane = document.getElementById(`day-channel-${dayKey}`);
+        if (!pane) return;
+        pane.innerHTML = renderDayChannelHTML(dayKey);
+        pane.classList.toggle('is-channel-hidden', dayKey !== state.selectedDayView);
+      });
+    }
 
-        const applySwipeFrame = () => {
-          swipeRafPending = false;
-          if (!swiping) return;
-          card.style.transform = `translate3d(${currentDeltaX}px, 0, 0)`;
-          const nextState = currentDeltaX > 36 ? 1 : currentDeltaX < -36 ? -1 : 0;
-          if (slot && nextState !== lastSwipeState) {
-            lastSwipeState = nextState;
-            slot.classList.toggle('is-swiping-complete', nextState === 1);
-            slot.classList.toggle('is-swiping-delete', nextState === -1);
-          }
-        };
+    /* مدیریت رویدادهای لیست کارها با Event Delegation یکپارچه بدون نشت حافظه */
+    function setupTaskListDelegation() {
+      const container = document.getElementById('task-list');
+      if (!container) return;
 
-        card.addEventListener(
-          'touchstart',
-          (e) => {
-            if (e.target.closest('button') || e.target.closest('.subtask-row')) return;
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-            currentDeltaX = 0;
-            swiping = false;
-            lastSwipeState = 0;
-            card.classList.add('is-card-pressing');
-          },
-          { passive: true }
-        );
+      let activeSwipeCard = null;
+      let activeSwipeSlot = null;
+      let activeSwipeTaskId = null;
+      let activeSwipeDayView = 'today';
+      let startX = 0;
+      let startY = 0;
+      let currentDeltaX = 0;
+      let swiping = false;
+      let swipeRafPending = false;
+      let lastSwipeState = 0;
 
-        card.addEventListener(
-          'touchmove',
-          (e) => {
-            if (!startX) return;
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-              card.classList.remove('is-card-pressing');
-            }
-            if (!swiping && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-              swiping = true;
-              if (slot) slot.classList.add('is-actively-swiping');
-            }
-            if (swiping) {
-              currentDeltaX = Math.max(-130, Math.min(130, dx));
-              if (!swipeRafPending) {
-                swipeRafPending = true;
-                requestAnimationFrame(applySwipeFrame);
-              }
-            }
-          },
-          { passive: true }
-        );
+      const applySwipeFrame = () => {
+        swipeRafPending = false;
+        if (!swiping || !activeSwipeCard) return;
+        activeSwipeCard.style.transform = `translate3d(${currentDeltaX}px, 0, 0)`;
+        const nextState = currentDeltaX > 36 ? 1 : currentDeltaX < -36 ? -1 : 0;
+        if (activeSwipeSlot && nextState !== lastSwipeState) {
+          lastSwipeState = nextState;
+          activeSwipeSlot.classList.toggle('is-swiping-complete', nextState === 1);
+          activeSwipeSlot.classList.toggle('is-swiping-delete', nextState === -1);
+        }
+      };
 
-        const clearCardTouch = () => {
-          card.classList.remove('is-card-pressing');
-          if (swiping) {
-            suppressNextCardClick = true;
-            setTimeout(() => {
-              suppressNextCardClick = false;
-            }, 250);
-            if (slot) {
-              slot.classList.remove('is-actively-swiping', 'is-swiping-complete', 'is-swiping-delete');
-            }
-            card.style.transform = '';
-            if (currentDeltaX > 85) {
-              toggleTask(taskId);
-            } else if (currentDeltaX < -85) {
-              deleteTask(taskId);
-            }
-          }
-          startX = 0;
+      container.addEventListener(
+        'touchstart',
+        (e) => {
+          if (e.target.closest('button') || e.target.closest('.subtask-row')) return;
+          const card = e.target.closest('.task-card');
+          if (!card) return;
+          const touch = e.touches[0];
+          activeSwipeCard = card;
+          activeSwipeSlot = card.closest('.task-swipe-slot');
+          activeSwipeTaskId = card.dataset.taskId;
+          activeSwipeDayView = card.closest('[data-day-channel]')?.dataset.dayChannel || state.selectedDayView;
+          startX = touch.clientX;
+          startY = touch.clientY;
+          currentDeltaX = 0;
           swiping = false;
-          swipeRafPending = false;
-        };
+          lastSwipeState = 0;
+          card.classList.add('is-card-pressing');
+        },
+        { passive: true }
+      );
 
-        card.addEventListener('touchend', clearCardTouch);
-        card.addEventListener('touchcancel', clearCardTouch);
-
-        card.addEventListener('dragstart', (e) => {
-          draggedTaskId = taskId;
-          card.classList.add('is-dragging');
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', taskId);
+      container.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!activeSwipeCard || !startX) return;
+          const touch = e.touches[0];
+          const dx = touch.clientX - startX;
+          const dy = touch.clientY - startY;
+          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+            activeSwipeCard.classList.remove('is-card-pressing');
           }
-        });
-
-        card.addEventListener('dragend', () => {
-          draggedTaskId = null;
-          card.classList.remove('is-dragging');
-          container.querySelectorAll('.task-swipe-slot').forEach((el) => {
-            el.classList.remove('drag-over-top', 'drag-over-bottom');
-          });
-        });
-
-        card.addEventListener('dragover', (e) => {
-          if (!draggedTaskId || draggedTaskId === taskId) return;
-          e.preventDefault();
-          const rect = card.getBoundingClientRect();
-          const isAfter = e.clientY > rect.top + rect.height / 2;
-          if (slot) {
-            slot.classList.toggle('drag-over-bottom', isAfter);
-            slot.classList.toggle('drag-over-top', !isAfter);
+          if (!swiping && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+            swiping = true;
+            if (activeSwipeSlot) activeSwipeSlot.classList.add('is-actively-swiping');
           }
-        });
-
-        card.addEventListener('dragleave', () => {
-          if (slot) {
-            slot.classList.remove('drag-over-top', 'drag-over-bottom');
-          }
-        });
-
-        card.addEventListener('drop', (e) => {
-          e.preventDefault();
-          if (slot) {
-            slot.classList.remove('drag-over-top', 'drag-over-bottom');
-          }
-          if (!draggedTaskId || draggedTaskId === taskId) return;
-          const rect = card.getBoundingClientRect();
-          const isAfter = e.clientY > rect.top + rect.height / 2;
-          reorderTasksByDrag(draggedTaskId, taskId, isAfter);
-        });
-
-        card.addEventListener('click', (e) => {
-          if (suppressNextCardClick) return;
-
-          const subToggleBtn = e.target.closest('[data-subtask-toggle]');
-          if (subToggleBtn) {
-            e.stopPropagation();
-            toggleSubtask(taskId, subToggleBtn.dataset.subtaskToggle);
-            return;
-          }
-
-          const subRow = e.target.closest('.subtask-row');
-          if (subRow) {
-            e.stopPropagation();
-            const subId = subRow.dataset.subtaskId;
-            const subLabel = subRow.querySelector('[data-subtask-label]');
-            if (state.privacyBlur && subLabel && subLabel.classList.contains('privacy-blur-text')) {
-              subLabel.classList.remove('privacy-blur-text');
-              setTimeout(() => {
-                if (state.privacyBlur) subLabel.classList.add('privacy-blur-text');
-              }, 3000);
-              return;
+          if (swiping) {
+            currentDeltaX = Math.max(-130, Math.min(130, dx));
+            if (!swipeRafPending) {
+              swipeRafPending = true;
+              requestAnimationFrame(applySwipeFrame);
             }
-            toggleSubtask(taskId, subId);
-            return;
           }
+        },
+        { passive: true }
+      );
 
-          const actionBtn = e.target.closest('[data-action]');
-          if (actionBtn) {
-            const action = actionBtn.dataset.action;
-            if (action === 'toggle') toggleTask(taskId);
-            if (action === 'focus') setFocusedTask(taskId);
-            if (action === 'edit') {
-              if (window.innerWidth >= 1024) {
-                openDesktopInspector(taskId);
-              } else {
-                openTaskEditModal(taskId);
-              }
-            }
-            if (action === 'delete') deleteTask(taskId);
-            return;
+      const clearCardTouch = () => {
+        if (!activeSwipeCard) return;
+        const card = activeSwipeCard;
+        const slot = activeSwipeSlot;
+        const tId = activeSwipeTaskId;
+        const dView = activeSwipeDayView;
+
+        card.classList.remove('is-card-pressing');
+        if (swiping) {
+          suppressNextCardClick = true;
+          setTimeout(() => {
+            suppressNextCardClick = false;
+          }, 250);
+          if (slot) {
+            slot.classList.remove('is-actively-swiping', 'is-swiping-complete', 'is-swiping-delete');
           }
+          card.style.transform = '';
+          if (currentDeltaX > 85 && tId) {
+            toggleTask(tId, false, dView);
+          } else if (currentDeltaX < -85 && tId) {
+            deleteTask(tId);
+          }
+        }
+        activeSwipeCard = null;
+        activeSwipeSlot = null;
+        activeSwipeTaskId = null;
+        startX = 0;
+        swiping = false;
+        swipeRafPending = false;
+      };
 
-          const titleEl = card.querySelector('[data-task-title]');
-          const descEl = card.querySelector('[data-task-desc]');
-          if (state.privacyBlur && titleEl && titleEl.classList.contains('privacy-blur-text')) {
-            titleEl.classList.remove('privacy-blur-text');
-            if (descEl) descEl.classList.remove('privacy-blur-text');
+      container.addEventListener('touchend', clearCardTouch);
+      container.addEventListener('touchcancel', clearCardTouch);
+
+      container.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+        draggedTaskId = card.dataset.taskId;
+        card.classList.add('is-dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', draggedTaskId);
+        }
+      });
+
+      container.addEventListener('dragend', () => {
+        draggedTaskId = null;
+        container.querySelectorAll('.task-card.is-dragging').forEach((el) => el.classList.remove('is-dragging'));
+        container.querySelectorAll('.task-swipe-slot').forEach((el) => {
+          el.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+      });
+
+      container.addEventListener('dragover', (e) => {
+        if (!draggedTaskId) return;
+        const card = e.target.closest('.task-card');
+        if (!card || card.dataset.taskId === draggedTaskId) return;
+        e.preventDefault();
+        const slot = card.closest('.task-swipe-slot');
+        const rect = card.getBoundingClientRect();
+        const isAfter = e.clientY > rect.top + rect.height / 2;
+        if (slot) {
+          slot.classList.toggle('drag-over-bottom', isAfter);
+          slot.classList.toggle('drag-over-top', !isAfter);
+        }
+      });
+
+      container.addEventListener('dragleave', (e) => {
+        const slot = e.target.closest('.task-swipe-slot');
+        if (slot && !slot.contains(e.relatedTarget)) {
+          slot.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+      });
+
+      container.addEventListener('drop', (e) => {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+        e.preventDefault();
+        const slot = card.closest('.task-swipe-slot');
+        if (slot) {
+          slot.classList.remove('drag-over-top', 'drag-over-bottom');
+        }
+        const targetId = card.dataset.taskId;
+        if (!draggedTaskId || draggedTaskId === targetId) return;
+        const rect = card.getBoundingClientRect();
+        const isAfter = e.clientY > rect.top + rect.height / 2;
+        reorderTasksByDrag(draggedTaskId, targetId, isAfter);
+      });
+
+      container.addEventListener('click', (e) => {
+        if (suppressNextCardClick) return;
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+
+        const taskId = card.dataset.taskId;
+        const cardDayView = card.closest('[data-day-channel]')?.dataset.dayChannel || state.selectedDayView;
+
+        const subToggleBtn = e.target.closest('[data-subtask-toggle]');
+        if (subToggleBtn) {
+          e.stopPropagation();
+          toggleSubtask(taskId, subToggleBtn.dataset.subtaskToggle, false, cardDayView);
+          return;
+        }
+
+        const subRow = e.target.closest('.subtask-row');
+        if (subRow) {
+          e.stopPropagation();
+          const subId = subRow.dataset.subtaskId;
+          const subLabel = subRow.querySelector('[data-subtask-label]');
+          if (state.privacyBlur && subLabel && subLabel.classList.contains('privacy-blur-text')) {
+            subLabel.classList.remove('privacy-blur-text');
             setTimeout(() => {
-              if (state.privacyBlur) {
-                titleEl.classList.add('privacy-blur-text');
-                if (descEl) descEl.classList.add('privacy-blur-text');
-              }
+              if (state.privacyBlur) subLabel.classList.add('privacy-blur-text');
             }, 3000);
             return;
           }
+          toggleSubtask(taskId, subId, false, cardDayView);
+          return;
+        }
 
-          if (window.innerWidth >= 1024) {
-            openDesktopInspector(taskId);
-          } else {
-            toggleTask(taskId);
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+          const action = actionBtn.dataset.action;
+          if (action === 'toggle') toggleTask(taskId, false, cardDayView);
+          if (action === 'move-to-today') moveYesterdayTaskToToday(taskId);
+          if (action === 'focus') setFocusedTask(taskId);
+          if (action === 'edit') {
+            if (window.innerWidth >= 1024) {
+              openDesktopInspector(taskId);
+            } else {
+              openTaskEditModal(taskId);
+            }
           }
-        });
+          if (action === 'delete') deleteTask(taskId);
+          return;
+        }
+
+        const titleEl = card.querySelector('[data-task-title]');
+        const descEl = card.querySelector('[data-task-desc]');
+        if (state.privacyBlur && titleEl && titleEl.classList.contains('privacy-blur-text')) {
+          titleEl.classList.remove('privacy-blur-text');
+          if (descEl) descEl.classList.remove('privacy-blur-text');
+          setTimeout(() => {
+            if (state.privacyBlur) {
+              titleEl.classList.add('privacy-blur-text');
+              if (descEl) descEl.classList.add('privacy-blur-text');
+            }
+          }, 3000);
+          return;
+        }
+
+        if (window.innerWidth >= 1024) {
+          openDesktopInspector(taskId);
+        } else {
+          toggleTask(taskId, false, cardDayView);
+        }
       });
     }
 
@@ -5809,6 +6489,21 @@
       const descInput = document.getElementById('inspector-desc-input');
       if (titleInput && document.activeElement !== titleInput) titleInput.value = task.title;
       if (descInput && document.activeElement !== descInput) descInput.value = task.description || '';
+
+      const dayRow = document.getElementById('inspector-day-row');
+      if (dayRow) {
+        dayRow.classList.toggle('hidden', Boolean(task.isHabit));
+        const currentDayView = getDayViewFromKey(task.scheduledDate || getTodayKey());
+        dayRow.querySelectorAll('.inspector-day-btn').forEach((btn) => {
+          const active = btn.dataset.inspectorDay === currentDayView;
+          btn.classList.toggle('bg-[#7fd5d8]', active);
+          btn.classList.toggle('text-[#0b1617]', active);
+          btn.classList.toggle('border-[#7fd5d8]', active);
+          btn.classList.toggle('bg-white/[0.06]', !active);
+          btn.classList.toggle('border-white/10', !active);
+          btn.classList.toggle('text-slate-300', !active);
+        });
+      }
 
       const catContainer = document.getElementById('inspector-categories');
       if (catContainer) {
@@ -5889,7 +6584,7 @@
             .join('');
 
           listEl.querySelectorAll('[data-inspector-sub-toggle]').forEach((btn) => {
-            btn.addEventListener('click', () => toggleSubtask(task.id, btn.dataset.inspectorSubToggle));
+            btn.addEventListener('click', () => toggleSubtask(task.id, btn.dataset.inspectorSubToggle, false, 'today'));
           });
 
           listEl.querySelectorAll('[data-inspector-sub-del]').forEach((btn) => {
@@ -5969,7 +6664,8 @@
       const totals = { mind: 0, efficiency: 0, discipline: 0, body: 0 };
       const matchedByAxis = { mind: [], efficiency: [], discipline: [], body: [] };
 
-      state.tasks.forEach((task) => {
+      const todayTasks = getTasksForDayView('today');
+      todayTasks.forEach((task) => {
         const w = analyzeTaskSmartDimensions(task);
         const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
         const subRatio = subs.length > 0 ? subs.filter((s) => s.completed).length / subs.length : 0;
@@ -6004,7 +6700,7 @@
       const topAxisKey = orderedAxes[0][0];
       const spread = orderedAxes[0][1] - orderedAxes[3][1];
 
-      return { scores, matchedByAxis, topAxisKey, spread };
+      return { scores, matchedByAxis, topAxisKey, spread, todayCount: todayTasks.length };
     }
 
     function animateRadarPolygon(targetScores) {
@@ -6072,7 +6768,7 @@
     }
 
     function renderSmartRadarChart() {
-      const { scores, matchedByAxis, topAxisKey, spread } = computeSmartRadarProfile();
+      const { scores, matchedByAxis, topAxisKey, spread, todayCount } = computeSmartRadarProfile();
 
       ['mind', 'efficiency', 'discipline', 'body'].forEach((axisKey) => {
         const pctEl = document.getElementById(`radar-pct-${axisKey}`);
@@ -6085,7 +6781,7 @@
 
       const badgeEl = document.getElementById('radar-dominant-badge');
       if (badgeEl) {
-        if (state.tasks.length === 0) {
+        if (todayCount === 0) {
           badgeEl.textContent = '✨ آماده تحلیل';
         } else if (spread <= 14) {
           badgeEl.textContent = '⚖️ رشد متعادل';
@@ -6110,7 +6806,7 @@
           descEl.textContent =
             list.length > 0
               ? `${axis.tip} — ${toPersianDigits(list.length)} کار در این محور شناسایی شد:`
-              : `${axis.tip}. هنوز کاری مرتبط با این بُعد ثبت نکرده‌ای.`;
+              : `${axis.tip}. هنوز کاری مرتبط با این بُعد برای امروز ثبت نکرده‌ای.`;
         }
         if (resetBtn) resetBtn.classList.remove('hidden');
         if (tasksEl) {
@@ -6133,7 +6829,7 @@
         if (titleEl) titleEl.textContent = 'تحلیل هوشمند الگوریتم';
         if (descEl) {
           descEl.textContent =
-            state.tasks.length === 0
+            todayCount === 0
               ? 'با ثبت و انجام کارها، الگوریتم هوشمند به‌طور خودکار سهم هر کار را در رشد ذهن، کارایی، انضباط و جسم محاسبه می‌کند.'
               : `بیشترین رشد فعلی شما در بُعد «${topInfo.label} ${topInfo.emoji}» ثبت شده است. روی هر محور نمودار بزن تا کارهای مرتبط با آن را ببینی.`;
         }
@@ -6164,8 +6860,9 @@
     }
 
     function renderSecondaryTabViews() {
-      const done = state.tasks.filter((t) => t.completed).length;
-      const active = state.tasks.length - done;
+      const todayTasks = getTasksForDayView('today');
+      const done = todayTasks.filter((t) => t.completed).length;
+      const active = todayTasks.length - done;
 
       const doneEl = document.getElementById('stat-done-count');
       const activeEl = document.getElementById('stat-active-count');
@@ -6206,7 +6903,7 @@
       if (catList) {
         catList.innerHTML = getAllFolders()
           .map((folder) => {
-            const catTasks = state.tasks.filter((t) => t.category === folder.name);
+            const catTasks = todayTasks.filter((t) => t.category === folder.name);
             const catDone = catTasks.filter((t) => t.completed).length;
             const pct = catTasks.length === 0 ? 0 : Math.round((catDone / catTasks.length) * 100);
             return `
@@ -6254,51 +6951,122 @@
       }
     }
 
-    function triggerBlobStretch(blobEl) {
+    function triggerBlobStretch(blobEl, stepDistance = 1) {
       if (!blobEl) return;
+      const dist = Math.max(1, Math.min(3, Number(stepDistance) || 1));
+      const stretchPrimary = dist === 1 ? '1.16' : dist === 2 ? '1.30' : '1.42';
+      const squashSecondary = dist === 1 ? '0.92' : dist === 2 ? '0.86' : '0.83';
+      blobEl.style.setProperty('--stretch-x', stretchPrimary);
+      blobEl.style.setProperty('--squash-y', squashSecondary);
+      blobEl.style.setProperty('--stretch-y', stretchPrimary);
+      blobEl.style.setProperty('--squash-x', squashSecondary);
       blobEl.classList.remove('is-stretching');
       void blobEl.offsetWidth;
       blobEl.classList.add('is-stretching');
     }
 
-    function switchTab(tabName) {
+    function handleSmartTabReTap(tabName) {
+      if (tabName === 'tasks') {
+        if (window.scrollY > 24) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          playTactileSound('pop');
+          return;
+        }
+        if (state.selectedDayView !== 'today') {
+          setSelectedDayView('today');
+          return;
+        }
+        if (state.filter !== 'all' || state.folderFilter !== 'all' || state.searchQuery.trim()) {
+          state.filter = 'all';
+          state.folderFilter = 'all';
+          state.searchQuery = '';
+          const searchInp = document.getElementById('search-tasks-input');
+          const clearSearchBtn = document.getElementById('clear-search-btn');
+          if (searchInp) searchInp.value = '';
+          clearSearchBtn?.classList.add('hidden');
+          clearSearchBtn?.classList.remove('flex');
+          document.querySelectorAll('.filter-chip').forEach((c) => {
+            const active = c.dataset.filter === 'all';
+            c.classList.toggle('bg-[#7fd5d8]', active);
+            c.classList.toggle('text-[#0b1617]', active);
+            c.classList.toggle('font-bold', active);
+            c.classList.toggle('bg-[#1a2224]', !active);
+            c.classList.toggle('text-[#93a3a5]', !active);
+            c.classList.toggle('border', !active);
+            c.classList.toggle('border-white/10', !active);
+          });
+          renderFolderFilterChips();
+          renderTasks();
+          updateHeaderAndProgress();
+          playTactileSound('pop');
+          triggerIslandToast('✨', 'نمایش همه کارهای امروز');
+          return;
+        }
+      } else if (tabName === 'settings') {
+        const sub = document.getElementById('tg-appearance-subpage');
+        if (sub && !sub.classList.contains('hidden')) {
+          sub.classList.add('hidden');
+          sub.classList.remove('flex');
+          document.getElementById('tg-settings-main')?.classList.remove('hidden');
+          if (typeof syncBackLayerCallback === 'function') syncBackLayerCallback();
+          playTactileSound('pop');
+          return;
+        }
+      }
+
+      if (window.scrollY > 24) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        playTactileSound('pop');
+      }
+    }
+
+    function switchTab(tabName, options = {}) {
+      const fromScrub = Boolean(options.fromScrub);
       const tabOrder = ['tasks', 'focus', 'stats', 'settings'];
       const oldIdx = Math.max(0, tabOrder.indexOf(state.activeTab));
       const newIdx = Math.max(0, tabOrder.indexOf(tabName));
-      const isSameTab = state.activeTab === tabName;
+      const stepDelta = newIdx - oldIdx;
+      const isSameTab = stepDelta === 0;
+
+      if (isSameTab) {
+        if (!fromScrub) {
+          triggerBlobStretch(document.getElementById('tg-nav-indicator-blob'), 1);
+          triggerBlobStretch(document.getElementById('rail-nav-indicator-blob'), 1);
+          handleSmartTabReTap(tabName);
+        }
+        return;
+      }
 
       state.activeTab = tabName;
 
+      /* نمایش آنی و کاملاً شارپ محتوای تب جدید در ۰ میلی‌ثانیه بدون محو شدن یا چشمک */
       document.querySelectorAll('.tab-view').forEach((view) => {
         const isTarget = view.id === `tab-view-${tabName}`;
-        view.classList.remove('tab-enter-from-left', 'tab-enter-from-right');
         view.classList.toggle('hidden', !isTarget);
         view.classList.toggle('is-tab-hidden', !isTarget);
-
-        if (isTarget && !isSameTab) {
-          void view.offsetWidth;
-          view.classList.add(newIdx > oldIdx ? 'tab-enter-from-left' : 'tab-enter-from-right');
-        }
       });
 
       document.querySelectorAll('.tg-nav-btn, .rail-nav-btn').forEach((btn) => {
         const isActive = btn.dataset.tab === tabName;
         btn.classList.toggle('is-active', isActive);
         btn.classList.remove('is-bouncing');
-        if (isActive) {
+        if (isActive && !fromScrub) {
           void btn.offsetWidth;
           btn.classList.add('is-bouncing');
         }
       });
 
       const indicator = document.getElementById('tg-nav-indicator');
-      if (indicator) {
+      if (indicator && !fromScrub) {
         indicator.style.transform = `translate3d(${-newIdx * 100}%, 0, 0)`;
       }
 
-      if (!isSameTab) {
-        triggerBlobStretch(document.getElementById('tg-nav-indicator-blob'));
-        triggerBlobStretch(document.getElementById('rail-nav-indicator-blob'));
+      if (!fromScrub) {
+        const dist = Math.abs(stepDelta);
+        triggerBlobStretch(document.getElementById('tg-nav-indicator-blob'), dist);
+        triggerBlobStretch(document.getElementById('rail-nav-indicator-blob'), dist);
+        playTactileSound('nav-step', stepDelta);
+        triggerHaptic(8);
       }
 
       if (tabName === 'settings') {
@@ -6315,7 +7083,136 @@
       if (tabName === 'stats' || tabName === 'settings') {
         renderSecondaryTabViews();
       }
-      playTactileSound('pop');
+    }
+
+    /* ==================== سر خوردن کپسول شیشه‌ای زیر انگشت (Interactive Finger Scrubbing) ==================== */
+    function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrentIndex, onSelectIndex }) {
+      if (!barEl || !Array.isArray(items) || items.length < 2) return;
+
+      let startX = 0;
+      let startY = 0;
+      let isScrubbing = false;
+      let lastIdx = 0;
+      let suppressBarClick = false;
+      let scrubRafPending = false;
+      let pendingTranslatePct = 0;
+
+      const indicatorEl = () => document.getElementById(indicatorId);
+      const blobEl = () => document.getElementById(blobId);
+
+      const applyScrubFrame = () => {
+        scrubRafPending = false;
+        if (!isScrubbing) return;
+        const ind = indicatorEl();
+        if (ind) {
+          ind.style.transform = `translate3d(${-pendingTranslatePct.toFixed(2)}%, 0, 0)`;
+        }
+      };
+
+      barEl.addEventListener(
+        'click',
+        (e) => {
+          if (suppressBarClick) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            suppressBarClick = false;
+          }
+        },
+        true
+      );
+
+      barEl.addEventListener(
+        'touchstart',
+        (e) => {
+          if (e.touches.length !== 1) return;
+          const t = e.touches[0];
+          startX = t.clientX;
+          startY = t.clientY;
+          isScrubbing = false;
+          lastIdx = Math.max(0, getCurrentIndex());
+        },
+        { passive: true }
+      );
+
+      barEl.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!startX || e.touches.length !== 1) return;
+          const t = e.touches[0];
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+
+          if (!isScrubbing) {
+            if (Math.abs(dy) > Math.abs(dx) * 1.25 && Math.abs(dy) > 8) {
+              startX = 0;
+              return;
+            }
+            if (Math.abs(dx) < 8) return;
+            isScrubbing = true;
+            suppressBarClick = true;
+            indicatorEl()?.classList.add('is-scrubbing');
+            blobEl()?.classList.add('is-scrubbing-blob');
+          }
+
+          if (e.cancelable) e.preventDefault();
+
+          const rect = barEl.getBoundingClientRect();
+          const usableWidth = Math.max(1, rect.width - 8);
+          const relFromRight = rect.right - 4 - t.clientX;
+          const rawSlotPos = (relFromRight / usableWidth) * items.length - 0.5;
+
+          const minSlot = 0;
+          const maxSlot = items.length - 1;
+          let dampedSlot = rawSlotPos;
+          if (rawSlotPos < minSlot) {
+            dampedSlot = minSlot + computeIosRubberBand(rawSlotPos - minSlot, 0.35);
+          } else if (rawSlotPos > maxSlot) {
+            dampedSlot = maxSlot + computeIosRubberBand(rawSlotPos - maxSlot, 0.35);
+          }
+
+          pendingTranslatePct = dampedSlot * 100;
+          if (!scrubRafPending) {
+            scrubRafPending = true;
+            requestAnimationFrame(applyScrubFrame);
+          }
+
+          const clampedRatio = Math.max(0, Math.min(0.9999, relFromRight / usableWidth));
+          const hoveredIdx = Math.floor(clampedRatio * items.length);
+
+          if (hoveredIdx !== lastIdx) {
+            const stepDir = hoveredIdx - lastIdx;
+            lastIdx = hoveredIdx;
+            onSelectIndex(hoveredIdx, true);
+            playTactileSound('scrub-tick', stepDir);
+            triggerHaptic(6);
+          }
+        },
+        { passive: false }
+      );
+
+      const finishScrub = () => {
+        startX = 0;
+        if (!isScrubbing) return;
+        isScrubbing = false;
+        scrubRafPending = false;
+
+        const ind = indicatorEl();
+        const blb = blobEl();
+        ind?.classList.remove('is-scrubbing');
+        blb?.classList.remove('is-scrubbing-blob');
+
+        if (ind) {
+          ind.style.transform = `translate3d(${-lastIdx * 100}%, 0, 0)`;
+        }
+        triggerBlobStretch(blb, 1);
+
+        setTimeout(() => {
+          suppressBarClick = false;
+        }, 90);
+      };
+
+      barEl.addEventListener('touchend', finishScrub);
+      barEl.addEventListener('touchcancel', finishScrub);
     }
 
     const modalCloseTimers = new Map();
@@ -6562,7 +7459,7 @@
 
         sheet.style.opacity = '1';
         sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
-        sheet.style.transform = `translate3d(0, 0, 0)`;
+        sheet.style.transform = 'translate3d(0, 0, 0)';
         currentY = 0;
 
         settleTimer = setTimeout(() => {
@@ -7047,6 +7944,7 @@
             accentTheme: state.accentTheme,
             colorMode: state.colorMode,
             cardRadius: state.cardRadius,
+            lastHabitResetDay: state.lastHabitResetDay,
             profile: {
               name: state.profile.name,
               bio: state.profile.bio,
@@ -7093,6 +7991,20 @@
     function renderTaskEditModalControls() {
       const task = state.tasks.find((t) => t.id === state.editingTaskId);
       if (!task) return;
+
+      const daySection = document.getElementById('edit-task-day-section');
+      if (daySection) {
+        daySection.classList.toggle('hidden', Boolean(state.draftEditHabit));
+        daySection.querySelectorAll('.edit-day-choice-btn').forEach((btn) => {
+          const active = btn.dataset.editDay === state.draftEditDay;
+          btn.classList.toggle('bg-[#7fd5d8]', active);
+          btn.classList.toggle('text-[#0b1617]', active);
+          btn.classList.toggle('border-[#7fd5d8]', active);
+          btn.classList.toggle('bg-white/[0.06]', !active);
+          btn.classList.toggle('border-white/10', !active);
+          btn.classList.toggle('text-slate-300', !active);
+        });
+      }
 
       const catContainer = document.getElementById('edit-task-categories');
       if (catContainer) {
@@ -7167,7 +8079,7 @@
 
         listEl.querySelectorAll('[data-edit-sub-toggle]').forEach((btn) => {
           btn.addEventListener('click', () => {
-            toggleSubtask(task.id, btn.dataset.editSubToggle, true);
+            toggleSubtask(task.id, btn.dataset.editSubToggle, true, 'today');
             renderTaskEditModalControls();
           });
         });
@@ -7189,6 +8101,7 @@
       if (!task) return;
       state.editingTaskId = taskId;
       state.draftEditCategory = task.category || 'شخصی';
+      state.draftEditDay = getDayViewFromKey(task.scheduledDate || getTodayKey());
       state.draftEditUrgent = Boolean(task.urgent);
       state.draftEditHabit = Boolean(task.isHabit);
 
@@ -7391,16 +8304,43 @@
     function updateComposerTogglesUI() {
       const catVal = document.getElementById('composer-val-category');
       const fsFolderTag = document.getElementById('composer-fs-folder-tag');
+      const fsDayTag = document.getElementById('composer-fs-day-tag');
+      const daySubtext = document.getElementById('composer-day-subtext');
       const folderLabel = getFolderDisplay(state.composerCategory);
+      const dayMeta = getDayViewMeta(state.composerDay);
+
       if (catVal) catVal.textContent = folderLabel;
       if (fsFolderTag) fsFolderTag.textContent = folderLabel;
+      if (fsDayTag) fsDayTag.textContent = dayMeta.badge;
+
+      if (daySubtext) {
+        if (state.composerHabit) {
+          daySubtext.textContent = 'به عنوان عادت، هر روز تکرار می‌شود 🔁';
+        } else if (state.composerDay === 'tomorrow') {
+          daySubtext.textContent = `فردا (${formatJalaliForDayView('tomorrow')}) در لیست امروز می‌آید`;
+        } else if (state.composerDay === 'yesterday') {
+          daySubtext.textContent = `در سابقه دیروز (${formatJalaliForDayView('yesterday')}) ثبت می‌شود`;
+        } else {
+          daySubtext.textContent = 'فقط در برنامه امروز نمایش داده می‌شود';
+        }
+      }
+
+      document.querySelectorAll('.composer-day-chip').forEach((chip) => {
+        const active = chip.dataset.composerDay === state.composerDay;
+        chip.classList.toggle('bg-[#7fd5d8]', active);
+        chip.classList.toggle('text-[#0b1617]', active);
+        chip.classList.toggle('font-extrabold', active);
+        chip.classList.toggle('text-slate-300', !active);
+      });
+
       document.getElementById('composer-switch-autocomplete')?.classList.toggle('is-on', state.composerAutoComplete);
       document.getElementById('composer-switch-urgent')?.classList.toggle('is-on', state.composerUrgent);
       document.getElementById('composer-switch-habit')?.classList.toggle('is-on', state.composerHabit);
     }
 
-    function openTaskComposer() {
+    function openTaskComposer(defaultDayOverride = null) {
       state.composerSubtasks = [];
+      state.composerDay = defaultDayOverride || state.selectedDayView || 'today';
       state.composerCategory = state.folderFilter !== 'all' ? state.folderFilter : state.selectedCategory || 'شخصی';
       state.composerAutoComplete = true;
       state.composerUrgent = state.filter === 'urgent';
@@ -7441,15 +8381,38 @@
       const items = [
         {
           icon: '➕',
-          title: q ? `ایجاد کار جدید: «${queryText.trim()}»` : 'ایجاد کار جدید',
-          sub: 'ثبت سریع تسک در لیست امروز',
+          title: q ? `ایجاد کار برای امروز: «${queryText.trim()}»` : 'ایجاد کار برای امروز',
+          sub: 'ثبت تسک در برنامه امروز',
           action: () => {
             closeModal('command-palette-modal');
             if (q) {
-              addTask(queryText.trim());
+              addTask(queryText.trim(), { dayView: 'today' });
             } else {
-              openTaskComposer();
+              openTaskComposer('today');
             }
+          },
+        },
+        {
+          icon: '🌅',
+          title: q ? `برنامه‌ریزی برای فردا: «${queryText.trim()}»` : 'ثبت تسک فردایی',
+          sub: 'آماده‌سازی کار برای فردا',
+          action: () => {
+            closeModal('command-palette-modal');
+            if (q) {
+              addTask(queryText.trim(), { dayView: 'tomorrow' });
+            } else {
+              openTaskComposer('tomorrow');
+            }
+          },
+        },
+        {
+          icon: '⏪',
+          title: 'مشاهده کارهای دیروز (و انتقال به امروز)',
+          sub: 'بررسی عملکرد دیروز یا انتقال کارهای ناتمام',
+          action: () => {
+            closeModal('command-palette-modal');
+            switchTab('tasks');
+            setSelectedDayView('yesterday');
           },
         },
         {
@@ -7515,7 +8478,7 @@
         },
       ];
 
-      state.tasks.slice(0, 6).forEach((task) => {
+      getTasksForDayView('today').slice(0, 6).forEach((task) => {
         items.push({
           icon: task.completed ? '✅' : '🎯',
           title: `تمرکز روی: ${task.title}`,
@@ -7528,7 +8491,7 @@
       });
 
       currentCmdItems = q
-        ? items.filter((it, idx) => idx === 0 || idx === 2 || it.title.toLowerCase().includes(q) || it.sub.toLowerCase().includes(q))
+        ? items.filter((it, idx) => idx <= 1 || idx === 4 || it.title.toLowerCase().includes(q) || it.sub.toLowerCase().includes(q))
         : items;
 
       cmdSelectedIndex = Math.min(cmdSelectedIndex, Math.max(0, currentCmdItems.length - 1));
@@ -7751,6 +8714,7 @@
       applyAdaptiveRenderCalibration();
       initAdaptiveRenderEngine();
       applyThemePreferences();
+      setupTaskListDelegation();
       renderFolderFilterChips();
       renderTasks();
       renderQuickNotes();
@@ -7766,6 +8730,39 @@
       }, { once: true, passive: true });
 
       composerShutterController = initComposerShutterGesture();
+
+      /* رویدادها و اسکرول انگشتی نوار سه‌روزه: دیروز | امروز | فردا */
+      const dayOrderList = ['yesterday', 'today', 'tomorrow'];
+      document.querySelectorAll('.day-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setSelectedDayView(btn.dataset.dayView || 'today');
+        });
+      });
+
+      setupLiquidBarScrubbing({
+        barEl: document.getElementById('day-switcher-bar'),
+        indicatorId: 'day-nav-indicator',
+        blobId: 'day-nav-indicator-blob',
+        items: dayOrderList,
+        getCurrentIndex: () => dayOrderList.indexOf(state.selectedDayView),
+        onSelectIndex: (idx, fromScrub) => {
+          const targetDay = dayOrderList[idx];
+          if (targetDay) setSelectedDayView(targetDay, { fromScrub });
+        },
+      });
+
+      const bottomTabOrderList = ['tasks', 'focus', 'stats', 'settings'];
+      setupLiquidBarScrubbing({
+        barEl: document.querySelector('.tg-nav-pill'),
+        indicatorId: 'tg-nav-indicator',
+        blobId: 'tg-nav-indicator-blob',
+        items: bottomTabOrderList,
+        getCurrentIndex: () => bottomTabOrderList.indexOf(state.activeTab),
+        onSelectIndex: (idx, fromScrub) => {
+          const targetTab = bottomTabOrderList[idx];
+          if (targetTab) switchTab(targetTab, { fromScrub });
+        },
+      });
 
       const islandEl = document.getElementById('dynamic-island');
       if (islandEl) {
@@ -7855,15 +8852,15 @@
 
       document.getElementById('island-quick-complete-btn')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        const focusedTask = state.tasks.find((t) => t.id === state.focusedTaskId);
+        const focusedTask = getTasksForDayView('today').find((t) => t.id === state.focusedTaskId);
         if (!focusedTask || focusedTask.completed) return;
         const nextSub = Array.isArray(focusedTask.subtasks)
           ? focusedTask.subtasks.find((s) => !s.completed)
           : null;
         if (nextSub) {
-          toggleSubtask(focusedTask.id, nextSub.id, true);
+          toggleSubtask(focusedTask.id, nextSub.id, true, 'today');
         } else {
-          toggleTask(focusedTask.id, true);
+          toggleTask(focusedTask.id, true, 'today');
         }
       });
 
@@ -7933,8 +8930,8 @@
         });
       });
 
-      document.getElementById('fab-quick-add-btn')?.addEventListener('click', openTaskComposer);
-      document.getElementById('rail-new-task-btn')?.addEventListener('click', openTaskComposer);
+      document.getElementById('fab-quick-add-btn')?.addEventListener('click', () => openTaskComposer());
+      document.getElementById('rail-new-task-btn')?.addEventListener('click', () => openTaskComposer());
       document.getElementById('rail-avatar-btn')?.addEventListener('click', openProfileModal);
       document.getElementById('header-avatar-btn')?.addEventListener('click', openProfileModal);
       document.getElementById('rail-cmd-btn')?.addEventListener('click', openCommandPalette);
@@ -7999,8 +8996,14 @@
       });
 
       const handleClearCompleted = () => {
+        const activeDayKey = getDayKeyForView(state.selectedDayView);
         const before = state.tasks.length;
-        state.tasks = state.tasks.filter((t) => !t.completed);
+        state.tasks = state.tasks.filter((t) => {
+          if (t.isHabit) return true;
+          const taskDay = t.scheduledDate || getTodayKey();
+          if (taskDay === activeDayKey && t.completed) return false;
+          return true;
+        });
         if (state.tasks.length === before) return;
         const next = getSmartFocusCandidate();
         state.focusedTaskId = next ? next.id : null;
@@ -8020,6 +9023,20 @@
       });
       document.getElementById('inspector-delete-btn')?.addEventListener('click', () => {
         if (state.inspectedTaskId) deleteTask(state.inspectedTaskId);
+      });
+
+      document.querySelectorAll('.inspector-day-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
+          if (!task || task.isHabit) return;
+          const targetDayView = btn.dataset.inspectorDay || 'today';
+          task.scheduledDate = getDayKeyForView(targetDayView);
+          saveState();
+          renderDesktopInspector();
+          renderTasks();
+          setSelectedDayView(targetDayView);
+          playTactileSound('pop');
+        });
       });
 
       document.getElementById('inspector-title-input')?.addEventListener('input', (e) => {
@@ -8058,9 +9075,14 @@
         const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
         if (!task) return;
         task.isHabit = !task.isHabit;
+        if (task.isHabit) {
+          task.scheduledDate = getTodayKey();
+          syncHabitDaySnapshot(task, getTodayKey());
+        }
         saveState();
         renderDesktopInspector();
         renderTasks();
+        updateHeaderAndProgress();
         playTactileSound('pop');
       });
 
@@ -8168,7 +9190,7 @@
         const lines = bodyVal.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const taskTitle = titleVal || lines[0] || bodyVal;
         const taskDesc = titleVal ? bodyVal : lines.slice(1).join(' • ');
-        addTask(taskTitle.slice(0, 140), { description: taskDesc.slice(0, 180) });
+        addTask(taskTitle.slice(0, 140), { description: taskDesc.slice(0, 180), dayView: 'today' });
       });
 
       document.getElementById('note-editor-delete-btn')?.addEventListener('click', () => {
@@ -8455,7 +9477,13 @@
           throw new Error('UNRECOGNIZED_BACKUP_SCHEMA');
         }
 
-        if (Array.isArray(imported.tasks)) state.tasks = imported.tasks;
+        const today = getTodayKey();
+        if (Array.isArray(imported.tasks)) {
+          state.tasks = imported.tasks.map((t) => ({
+            ...t,
+            scheduledDate: t.scheduledDate || today,
+          }));
+        }
         if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
         if (Array.isArray(imported.quickNotes)) {
           state.quickNotes = imported.quickNotes
@@ -8471,6 +9499,7 @@
         if (typeof imported.privacyBlur === 'boolean') state.privacyBlur = imported.privacyBlur;
         if (typeof imported.soundEnabled === 'boolean') state.soundEnabled = imported.soundEnabled;
         if (imported.dailyHistory && typeof imported.dailyHistory === 'object') state.dailyHistory = imported.dailyHistory;
+        if (typeof imported.lastHabitResetDay === 'string') state.lastHabitResetDay = imported.lastHabitResetDay;
         if (imported.profile && typeof imported.profile === 'object') {
           state.profile = { ...state.profile, ...imported.profile };
         }
@@ -8552,6 +9581,7 @@
         state.focusedTaskId = state.tasks[0]?.id || null;
         saveState();
         renderTasks();
+        setSelectedDayView('today');
         updateHeaderAndProgress();
         if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
         closeModal('cleanup-modal');
@@ -8560,6 +9590,13 @@
       });
 
       document.getElementById('close-task-edit-modal')?.addEventListener('click', () => closeModal('task-edit-modal'));
+      document.querySelectorAll('.edit-day-choice-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.draftEditDay = btn.dataset.editDay || 'today';
+          renderTaskEditModalControls();
+          playTactileSound('pop');
+        });
+      });
       document.getElementById('edit-task-urgent-btn')?.addEventListener('click', () => {
         state.draftEditUrgent = !state.draftEditUrgent;
         renderTaskEditModalControls();
@@ -8593,9 +9630,21 @@
         task.category = state.draftEditCategory || 'شخصی';
         task.urgent = state.draftEditUrgent;
         task.isHabit = state.draftEditHabit;
+        let nextView = state.selectedDayView;
+        if (task.isHabit) {
+          task.scheduledDate = getTodayKey();
+          syncHabitDaySnapshot(task, getTodayKey());
+        } else {
+          task.scheduledDate = getDayKeyForView(state.draftEditDay || 'today');
+          nextView = state.draftEditDay || 'today';
+        }
         saveState();
         renderTasks();
-        updateHeaderAndProgress();
+        if (state.selectedDayView !== nextView) {
+          setSelectedDayView(nextView);
+        } else {
+          updateHeaderAndProgress();
+        }
         if (state.activeTab === 'stats') renderSecondaryTabViews();
         closeModal('task-edit-modal');
         playTactileSound('complete');
@@ -8632,6 +9681,14 @@
 
       document.getElementById('composer-title-input')?.addEventListener('input', updateComposerSmartBadges);
       document.getElementById('composer-desc-input')?.addEventListener('input', updateComposerSmartBadges);
+
+      document.querySelectorAll('.composer-day-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          state.composerDay = chip.dataset.composerDay || 'today';
+          updateComposerTogglesUI();
+          playTactileSound('pop');
+        });
+      });
 
       document.getElementById('composer-add-option-btn')?.addEventListener('click', () => {
         if (state.composerSubtasks.length >= 12) return;
@@ -8680,6 +9737,7 @@
         const cleanSubs = state.composerSubtasks.map((s) => s.trim()).filter(Boolean);
         const taskOptions = {
           description,
+          dayView: state.composerDay,
           category: state.composerCategory,
           urgent: state.composerUrgent,
           isHabit: state.composerHabit,

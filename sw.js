@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'daily-flow-offline-v35';
+const CACHE_NAME = 'daily-flow-offline-v40';
 const CORE_ASSETS = [
   './',
   './index.html',
