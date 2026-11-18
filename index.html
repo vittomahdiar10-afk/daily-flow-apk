@@ -501,6 +501,38 @@
       transition: transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
 
+    .notebook-entry-card {
+      background: rgba(18, 25, 27, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 0 var(--specular-edge);
+      border-radius: calc(var(--card-radius) - 4px);
+      transition:
+        transform calc(0.3s * var(--motion-scale)) var(--spring-curve),
+        border-color 0.18s ease,
+        background-color 0.18s ease;
+    }
+
+    .notebook-entry-card.is-pinned {
+      border-color: rgba(var(--mint-accent-rgb), 0.38);
+      background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.09) 0%, rgba(18, 25, 27, 0.94) 100%);
+    }
+
+    body.theme-light .notebook-entry-card {
+      background: #ffffff;
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    body.theme-light .notebook-entry-card.is-pinned {
+      border-color: rgba(var(--mint-accent-rgb), 0.45);
+      background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.11) 0%, #ffffff 100%);
+    }
+
+    @media (hover: hover) {
+      .notebook-entry-card:hover {
+        border-color: rgba(var(--mint-accent-rgb), 0.36);
+      }
+    }
+
     body.theme-light [id$="-modal"] > .liquid-glass {
       background: var(--glass-modal-surface) !important;
       border-color: rgba(15, 23, 42, 0.1) !important;
@@ -619,7 +651,7 @@
       left: 0;
       right: 0;
       width: 100%;
-      z-index: 45;
+      z-index: 60;
       display: flex;
       justify-content: center;
       pointer-events: none;
@@ -1278,7 +1310,7 @@
       height: 7px;
       border-radius: 999px;
       pointer-events: none;
-      z-index: 60;
+      z-index: 65;
       animation: sparkleFly 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
@@ -1990,13 +2022,36 @@
             </div>
           </section>
 
+          <!-- ==================== کارت دفترچه یادداشت در صفحه اصلی ==================== -->
           <section id="quick-notes-card" class="liquid-surface-fast rounded-3xl p-3.5 flex flex-col gap-2.5">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <span class="text-xs">🔖</span>
-                <span class="text-xs font-bold text-white">یادداشت سریع</span>
+            <div class="flex items-center justify-between gap-2">
+              <button
+                id="open-notebook-header-btn"
+                type="button"
+                class="spring-btn flex items-center gap-1.5 text-right min-w-0 cursor-pointer"
+              >
+                <span class="text-sm shrink-0">📓</span>
+                <span class="text-xs font-extrabold text-white truncate">دفترچه یادداشت</span>
+                <span id="quick-notes-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/[0.07] text-[#93a3a5] shrink-0">۰</span>
+              </button>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button
+                  id="new-notebook-entry-card-btn"
+                  type="button"
+                  title="نوشتن یادداشت کامل با عنوان و متن چندخطی"
+                  class="spring-btn text-[11px] font-extrabold px-2.5 py-1.5 rounded-full bg-[#7fd5d8]/20 hover:bg-[#7fd5d8]/30 border border-[#7fd5d8]/40 text-[#7fd5d8] cursor-pointer"
+                >
+                  + یادداشت
+                </button>
+                <button
+                  id="open-notebook-btn"
+                  type="button"
+                  class="spring-btn text-[11px] font-bold px-2.5 py-1.5 rounded-full bg-white/[0.07] hover:bg-white/15 text-slate-200 cursor-pointer"
+                >
+                  دفترچه ‹
+                </button>
               </div>
-              <span id="quick-notes-count" class="text-[10px] text-[#93a3a5]">۰ یادداشت</span>
             </div>
 
             <form id="quick-note-form" action="javascript:void(0)" class="flex items-center gap-2">
@@ -2004,8 +2059,8 @@
                 id="quick-note-input"
                 type="text"
                 dir="auto"
-                maxlength="140"
-                placeholder="ایده یا یادداشت فوری بنویس..."
+                maxlength="240"
+                placeholder="یادداشت سریع یا ایده فوری بنویس..."
                 class="flex-1 bg-[#12191b] border border-white/10 focus:border-[#7fd5d8]/50 rounded-2xl px-3 py-2 text-xs text-white placeholder-[#7d8e90] outline-none transition-colors"
               />
               <button
@@ -2017,6 +2072,14 @@
             </form>
 
             <div id="quick-notes-list" class="flex flex-col gap-1.5"></div>
+
+            <button
+              id="view-all-notes-footer-btn"
+              type="button"
+              class="hidden spring-btn w-full py-2 rounded-2xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.07] text-[11px] font-bold text-[#7fd5d8] text-center cursor-pointer"
+            >
+              باز کردن دفترچه یادداشت ‹
+            </button>
           </section>
         </div>
       </div>
@@ -2439,7 +2502,7 @@
                 </span>
                 <div class="min-w-0">
                   <div class="text-sm font-semibold text-white">حالت حریم خصوصی (Privacy Blur)</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">تار کردن متن کارها در مکان‌های عمومی</div>
+                  <div class="text-[11px] text-[#93a3a5] truncate">تار کردن متن کارها و یادداشت‌ها در مکان‌های عمومی</div>
                 </div>
               </div>
               <span id="tg-switch-privacy" class="tg-switch"><span class="tg-switch-knob block"></span></span>
@@ -2644,6 +2707,185 @@
   </nav>
 
   <!-- ==================== MODALS ==================== -->
+  <!-- ==================== پنجره کامل دفترچه یادداشت ==================== -->
+  <div id="notebook-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4">
+    <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-2xl p-4 sm:p-5 flex flex-col gap-3.5 h-[88vh] sm:h-[84vh]">
+      <div data-sheet-handle class="sm:hidden pt-0.5 pb-1 -mt-1.5 cursor-grab active:cursor-grabbing touch-none flex justify-center shrink-0">
+        <div class="w-10 h-1 rounded-full bg-white/25"></div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-lg">📓</span>
+          <div class="min-w-0">
+            <h3 class="text-base font-extrabold text-white truncate">دفترچه یادداشت</h3>
+            <p id="notebook-modal-subtitle" class="text-[11px] text-[#93a3a5] truncate">ثبت ایده‌ها، گفته‌ها و نکات برای مراجعه بعدی</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            id="notebook-new-note-btn"
+            type="button"
+            class="spring-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#7fd5d8] text-[#0b1617] text-xs font-extrabold cursor-pointer"
+          >
+            <svg width="14" height="14" class="w-3.5 h-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>یادداشت جدید</span>
+          </button>
+
+          <button id="close-notebook-modal" type="button" aria-label="بستن دفترچه" class="spring-btn icon-circle-btn w-8 h-8 rounded-full bg-white/10 text-slate-300 cursor-pointer">
+            <svg width="16" height="16" class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- جستجو و فیلتر برچسب‌ها -->
+      <div class="flex flex-col gap-2 shrink-0">
+        <div class="relative">
+          <input
+            id="notebook-search-input"
+            type="text"
+            dir="auto"
+            placeholder="جستجو در عنوان، متن یادداشت یا نام افراد..."
+            class="w-full bg-[#12191b] border border-white/10 focus:border-[#7fd5d8]/50 rounded-2xl py-2.5 pr-9 pl-9 text-xs text-white placeholder-[#7d8e90] outline-none"
+          />
+          <svg class="w-4 h-4 text-[#93a3a5] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+          </svg>
+          <button
+            id="clear-notebook-search-btn"
+            type="button"
+            aria-label="پاک کردن جستجو"
+            class="hidden spring-btn icon-circle-btn w-6 h-6 rounded-full bg-white/10 text-slate-300 absolute left-2 top-1/2 -translate-y-1/2 cursor-pointer"
+          >
+            <svg width="12" height="12" class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button type="button" data-note-filter="all" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">همه</button>
+          <button type="button" data-note-filter="pinned" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">📌 سنجاق‌شده</button>
+          <button type="button" data-note-filter="idea" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">💡 ایده</button>
+          <button type="button" data-note-filter="quote" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">💬 نقل‌قول / گفته مهم</button>
+          <button type="button" data-note-filter="later" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">🔖 مراجعه بعدی</button>
+          <button type="button" data-note-filter="general" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">📝 عمومی</button>
+        </div>
+      </div>
+
+      <!-- فهرست یادداشت‌های دفترچه -->
+      <div id="notebook-entries-list" class="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-0.5"></div>
+    </div>
+  </div>
+
+  <!-- ==================== پنجره نوشتن / خواندن و ویرایش یادداشت ==================== -->
+  <div id="note-editor-modal" class="fixed inset-0 z-[55] hidden items-end sm:items-center justify-center p-2.5 sm:p-4">
+    <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-lg p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto">
+      <div data-sheet-handle class="sm:hidden pt-0.5 pb-1 -mt-2 cursor-grab active:cursor-grabbing touch-none flex justify-center shrink-0">
+        <div class="w-10 h-1 rounded-full bg-white/25"></div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <h3 id="note-editor-heading" class="text-base font-extrabold text-white truncate">یادداشت جدید</h3>
+          <p id="note-editor-date-badge" class="text-[11px] text-[#93a3a5] mt-0.5">امروز</p>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            id="note-editor-pin-btn"
+            type="button"
+            title="سنجاق کردن در بالای دفترچه"
+            class="spring-btn px-2.5 py-1.5 rounded-full bg-white/10 border border-white/10 text-xs font-bold text-slate-300 cursor-pointer"
+          >
+            📌 سنجاق
+          </button>
+          <button id="close-note-editor-modal" type="button" aria-label="بستن" class="spring-btn icon-circle-btn w-8 h-8 rounded-full bg-white/10 text-slate-300 cursor-pointer">
+            <svg width="16" height="16" class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <form id="note-editor-form" action="javascript:void(0)" class="flex flex-col gap-3">
+        <!-- انتخاب دسته‌بندی / برچسب یادداشت -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button type="button" data-editor-tag="general" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">📝 عمومی</button>
+          <button type="button" data-editor-tag="idea" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 cursor-pointer">💡 ایده</button>
+          <button type="button" data-editor-tag="quote" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 cursor-pointer">💬 نقل‌قول / گفته مهم</button>
+          <button type="button" data-editor-tag="later" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 cursor-pointer">🔖 مراجعه بعدی</button>
+        </div>
+
+        <div class="rounded-3xl bg-[#12191b] border border-white/10 overflow-hidden">
+          <div class="px-4 pt-3 pb-2">
+            <input
+              id="note-editor-title-input"
+              type="text"
+              dir="auto"
+              maxlength="120"
+              placeholder="عنوان یادداشت (مثلاً: پیشنهاد علی درباره پروژه)..."
+              class="w-full bg-transparent text-sm font-extrabold text-white placeholder-[#7d8e90] outline-none"
+            />
+          </div>
+
+          <div class="border-t border-white/[0.08] mx-4"></div>
+
+          <div class="px-4 py-3">
+            <textarea
+              id="note-editor-body-input"
+              rows="7"
+              dir="auto"
+              placeholder="متن کامل یادداشت، ایده یا حرفی که می‌خواهی بعداً یادت بماند را اینجا بنویس..."
+              class="w-full bg-transparent text-xs sm:text-sm leading-relaxed text-slate-200 placeholder-[#7d8e90] outline-none resize-y min-h-[150px]"
+            ></textarea>
+          </div>
+
+          <div class="px-4 py-2 border-t border-white/[0.07] bg-white/[0.02] flex items-center justify-between text-[10px] text-[#93a3a5]">
+            <span id="note-editor-char-count">۰ کاراکتر</span>
+            <span>ذخیره خودکار تاریخ و ساعت شمسی</span>
+          </div>
+        </div>
+
+        <div id="note-editor-extra-actions" class="hidden grid-cols-3 gap-2">
+          <button
+            id="note-editor-copy-btn"
+            type="button"
+            class="spring-btn py-2 px-2.5 rounded-2xl bg-white/[0.07] hover:bg-white/15 text-slate-200 text-xs font-bold cursor-pointer"
+          >
+            📋 کپی متن
+          </button>
+          <button
+            id="note-editor-promote-btn"
+            type="button"
+            class="spring-btn py-2 px-2.5 rounded-2xl bg-[#7fd5d8]/15 hover:bg-[#7fd5d8]/25 border border-[#7fd5d8]/35 text-[#7fd5d8] text-xs font-bold cursor-pointer"
+          >
+            ✅ تبدیل به کار
+          </button>
+          <button
+            id="note-editor-delete-btn"
+            type="button"
+            class="spring-btn py-2 px-2.5 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 text-rose-300 text-xs font-bold cursor-pointer"
+          >
+            🗑️ حذف
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          class="spring-btn w-full py-3 rounded-2xl bg-[#7fd5d8] text-[#0b1617] text-xs font-extrabold cursor-pointer"
+        >
+          💾 ذخیره در دفترچه
+        </button>
+      </form>
+    </div>
+  </div>
+
   <div id="profile-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-md p-5 flex flex-col gap-4 max-h-[88vh] overflow-y-auto">
       <div class="flex items-center justify-between">
@@ -2708,7 +2950,7 @@
       </div>
 
       <p class="text-xs text-[#93a3a5]">
-        تمام کارها، پوشه‌ها و یادداشت‌ها بدون نیاز به سرور روی دستگاه ذخیره می‌شوند. برای انتقال بین گوشی و لپ‌تاپ از کد زیر یا فایل JSON استفاده کن:
+        تمام کارها، پوشه‌ها و دفترچه یادداشت‌ها بدون نیاز به سرور روی دستگاه ذخیره می‌شوند. برای انتقال بین گوشی و لپ‌تاپ از کد زیر یا فایل JSON استفاده کن:
       </p>
 
       <textarea id="sync-code-box" rows="3" readonly class="ltr font-mono w-full bg-[#12191b] border border-white/10 rounded-2xl p-2.5 text-[11px] text-[#7fd5d8] outline-none"></textarea>
@@ -3139,6 +3381,33 @@
       { name: 'سلامتی', emoji: '🌿', builtIn: true },
     ];
 
+    const NOTE_TAGS = {
+      general: {
+        key: 'general',
+        label: 'عمومی',
+        emoji: '📝',
+        badgeClass: 'bg-white/10 text-slate-300 border-white/15',
+      },
+      idea: {
+        key: 'idea',
+        label: 'ایده',
+        emoji: '💡',
+        badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-400/30',
+      },
+      quote: {
+        key: 'quote',
+        label: 'نقل‌قول / گفته مهم',
+        emoji: '💬',
+        badgeClass: 'bg-sky-500/15 text-sky-300 border-sky-400/30',
+      },
+      later: {
+        key: 'later',
+        label: 'مراجعه بعدی',
+        emoji: '🔖',
+        badgeClass: 'bg-violet-500/15 text-violet-300 border-violet-400/30',
+      },
+    };
+
     const ACCENT_PALETTES = {
       mint: {
         label: 'نعنایی',
@@ -3222,6 +3491,7 @@
       toastTimeout: null,
       toastActionCallback: null,
       undoSnapshot: null,
+      noteUndoSnapshot: null,
       soundEnabled: true,
       gpuQualityMode: 'auto',
       detectedHz: 120,
@@ -3234,6 +3504,11 @@
       cardRadius: 24,
       customFolders: [],
       quickNotes: [],
+      notebookFilter: 'all',
+      notebookSearchQuery: '',
+      editingNoteId: null,
+      draftNoteTag: 'general',
+      draftNotePinned: false,
       dailyHistory: {},
       lastHabitResetDay: '',
       selectedRadarAxis: 'all',
@@ -3452,6 +3727,69 @@
       return `${weekday}، ${toPersianDigits(jd)} ${months[jm - 1]}`;
     }
 
+    function formatJalaliDateTime(timestamp) {
+      const ts = Number(timestamp) || Date.now();
+      const d = new Date(ts);
+      const now = new Date();
+      const months = [
+        'فروردین',
+        'اردیبهشت',
+        'خرداد',
+        'تیر',
+        'مرداد',
+        'شهریور',
+        'مهر',
+        'آبان',
+        'آذر',
+        'دی',
+        'بهمن',
+        'اسفند',
+      ];
+      const timeStr = `${toPersianDigits(String(d.getHours()).padStart(2, '0'))}:${toPersianDigits(
+        String(d.getMinutes()).padStart(2, '0')
+      )}`;
+
+      const isSameDay =
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate();
+
+      if (isSameDay) {
+        return `امروز • ${timeStr}`;
+      }
+
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const isYesterday =
+        d.getFullYear() === yesterday.getFullYear() &&
+        d.getMonth() === yesterday.getMonth() &&
+        d.getDate() === yesterday.getDate();
+
+      if (isYesterday) {
+        return `دیروز • ${timeStr}`;
+      }
+
+      const [, jm, jd] = gregorianToJalali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      return `${toPersianDigits(jd)} ${months[jm - 1]} • ${timeStr}`;
+    }
+
+    function normalizeNoteEntry(rawNote, fallbackIndex = 0) {
+      if (!rawNote || typeof rawNote !== 'object') return null;
+      const text = String(rawNote.text || '').trim();
+      const title = String(rawNote.title || '').trim();
+      if (!text && !title) return null;
+      const createdAt = Number(rawNote.createdAt) || Date.now() - fallbackIndex * 1000;
+      return {
+        id: String(rawNote.id || `note_${createdAt}_${Math.random().toString(36).slice(2, 6)}`),
+        title,
+        text,
+        tag: NOTE_TAGS[rawNote.tag] ? rawNote.tag : 'general',
+        pinned: Boolean(rawNote.pinned),
+        createdAt,
+        updatedAt: Number(rawNote.updatedAt) || createdAt,
+      };
+    }
+
     function getRecent7DaysMeta() {
       const shortDays = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
       const result = [];
@@ -3577,7 +3915,11 @@
           if (parsed.colorMode === 'light' || parsed.colorMode === 'dark') state.colorMode = parsed.colorMode;
           if (typeof parsed.cardRadius === 'number') state.cardRadius = parsed.cardRadius;
           if (Array.isArray(parsed.customFolders)) state.customFolders = parsed.customFolders;
-          if (Array.isArray(parsed.quickNotes)) state.quickNotes = parsed.quickNotes;
+          if (Array.isArray(parsed.quickNotes)) {
+            state.quickNotes = parsed.quickNotes
+              .map((n, idx) => normalizeNoteEntry(n, idx))
+              .filter(Boolean);
+          }
           if (parsed.dailyHistory && typeof parsed.dailyHistory === 'object') state.dailyHistory = parsed.dailyHistory;
           if (typeof parsed.lastHabitResetDay === 'string') state.lastHabitResetDay = parsed.lastHabitResetDay;
           if (parsed.profile && typeof parsed.profile === 'object') {
@@ -4303,72 +4645,451 @@
       updateDesktopLiveWidgets();
     }
 
-    function renderQuickNotes() {
-      const listEl = document.getElementById('quick-notes-list');
-      const countEl = document.getElementById('quick-notes-count');
-      if (!listEl) return;
-
-      if (countEl) {
-        countEl.textContent = `${toPersianDigits(state.quickNotes.length)} یادداشت`;
-      }
-
-      if (state.quickNotes.length === 0) {
-        listEl.innerHTML = '';
-        return;
-      }
-
-      listEl.innerHTML = state.quickNotes
-        .map(
-          (note) => `
-          <div class="flex items-center justify-between gap-2 rounded-2xl bg-[#12191b]/90 border border-white/[0.08] px-3 py-2">
-            <span dir="auto" class="text-xs text-slate-200 truncate ${state.privacyBlur ? 'privacy-blur-text' : ''}">${escapeHtml(note.text)}</span>
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button" data-note-promote="${note.id}" title="تبدیل به تسک" class="spring-btn text-[10px] font-bold px-2 py-1 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8] cursor-pointer">+ تسک</button>
-              <button type="button" data-note-delete="${note.id}" title="حذف یادداشت" class="spring-btn icon-circle-btn w-6 h-6 rounded-full bg-white/10 text-slate-300 cursor-pointer">
-                <svg width="12" height="12" class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        `
-        )
-        .join('');
-
-      listEl.querySelectorAll('[data-note-promote]').forEach((btn) => {
-        btn.addEventListener('click', () => promoteQuickNoteToTask(btn.dataset.notePromote));
-      });
-      listEl.querySelectorAll('[data-note-delete]').forEach((btn) => {
-        btn.addEventListener('click', () => deleteQuickNote(btn.dataset.noteDelete));
+    /* ==================== منطق دفترچه یادداشت (Notebook Engine) ==================== */
+    function getSortedNotebookEntries() {
+      return [...state.quickNotes].sort((a, b) => {
+        if (Boolean(a.pinned) !== Boolean(b.pinned)) {
+          return a.pinned ? -1 : 1;
+        }
+        return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
       });
     }
 
-    function addQuickNote(text) {
-      const clean = String(text || '').trim();
-      if (!clean) return;
-      state.quickNotes.unshift({
-        id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        text: clean,
-      });
+    function copyNotebookEntryText(noteId) {
+      const note = state.quickNotes.find((n) => n.id === noteId);
+      if (!note) return;
+      const fullText = note.title ? `${note.title}\n${note.text}`.trim() : note.text;
+      const onSuccess = () => {
+        playTactileSound('complete');
+        triggerIslandToast('📋', 'متن یادداشت کپی شد');
+      };
+
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(fullText).then(onSuccess).catch(() => {
+          triggerIslandToast('📋', 'متن آماده استفاده است');
+        });
+      } else {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = fullText;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          onSuccess();
+        } catch (e) {}
+      }
+    }
+
+    function togglePinNotebookEntry(noteId) {
+      const note = state.quickNotes.find((n) => n.id === noteId);
+      if (!note) return;
+      note.pinned = !note.pinned;
       saveState();
       renderQuickNotes();
+      renderNotebookModalList();
       playTactileSound('pop');
-      triggerIslandToast('🔖', 'یادداشت سریع ذخیره شد');
+      triggerIslandToast(note.pinned ? '📌' : '📍', note.pinned ? 'یادداشت در بالای دفترچه سنجاق شد' : 'سنجاق یادداشت برداشته شد');
     }
 
     function promoteQuickNoteToTask(noteId) {
-      const idx = state.quickNotes.findIndex((n) => n.id === noteId);
-      if (idx === -1) return;
-      const [note] = state.quickNotes.splice(idx, 1);
-      addTask(note.text);
+      const note = state.quickNotes.find((n) => n.id === noteId);
+      if (!note) return;
+
+      let taskTitle = note.title;
+      let taskDesc = note.text;
+      if (!taskTitle) {
+        const lines = note.text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        taskTitle = lines[0] || note.text;
+        taskDesc = lines.length > 1 ? lines.slice(1).join(' • ') : '';
+      }
+
+      addTask(taskTitle.slice(0, 140), {
+        description: taskDesc.slice(0, 180),
+      });
+    }
+
+    function undoDeleteNotebookEntry() {
+      if (!state.noteUndoSnapshot) return;
+      const { note, index } = state.noteUndoSnapshot;
+      const safeIdx = Math.min(index, state.quickNotes.length);
+      state.quickNotes.splice(safeIdx, 0, note);
+      state.noteUndoSnapshot = null;
+      saveState();
       renderQuickNotes();
+      renderNotebookModalList();
+      playTactileSound('pop');
+      triggerIslandToast('↩️', 'یادداشت به دفترچه بازگشت');
     }
 
     function deleteQuickNote(noteId) {
-      state.quickNotes = state.quickNotes.filter((n) => n.id !== noteId);
+      const idx = state.quickNotes.findIndex((n) => n.id === noteId);
+      if (idx === -1) return;
+      const [removed] = state.quickNotes.splice(idx, 1);
+      state.noteUndoSnapshot = { note: removed, index: idx };
       saveState();
       renderQuickNotes();
+      renderNotebookModalList();
       playTactileSound('delete');
+      triggerHaptic(12);
+      triggerIslandToast('🗑️', 'یادداشت حذف شد', {
+        label: 'بازگردانی',
+        duration: 4200,
+        onAction: undoDeleteNotebookEntry,
+      });
+    }
+
+    function addQuickNote(text, extraOptions = {}) {
+      const cleanText = String(text || '').trim();
+      const cleanTitle = String(extraOptions.title || '').trim();
+      if (!cleanText && !cleanTitle) return;
+      const now = Date.now();
+      state.quickNotes.unshift({
+        id: `note_${now}_${Math.random().toString(36).slice(2, 6)}`,
+        title: cleanTitle,
+        text: cleanText,
+        tag: NOTE_TAGS[extraOptions.tag] ? extraOptions.tag : 'general',
+        pinned: Boolean(extraOptions.pinned),
+        createdAt: now,
+        updatedAt: now,
+      });
+      saveState();
+      renderQuickNotes();
+      renderNotebookModalList();
+      playTactileSound('pop');
+      triggerIslandToast('📓', 'در دفترچه یادداشت ذخیره شد');
+    }
+
+    function renderQuickNotes() {
+      const listEl = document.getElementById('quick-notes-list');
+      const countEl = document.getElementById('quick-notes-count');
+      const footerBtn = document.getElementById('view-all-notes-footer-btn');
+      if (!listEl) return;
+
+      const totalCount = state.quickNotes.length;
+      if (countEl) {
+        countEl.textContent = `${toPersianDigits(totalCount)} یادداشت`;
+      }
+
+      if (totalCount === 0) {
+        listEl.innerHTML = `
+          <div class="rounded-2xl bg-[#12191b]/70 border border-dashed border-white/10 px-3 py-3 text-center">
+            <p class="text-[11px] text-[#93a3a5]">هر ایده، نکته یا حرف مهمی که می‌خواهی بعداً یادت بماند اینجا ثبت کن ✍️</p>
+          </div>
+        `;
+        if (footerBtn) footerBtn.classList.add('hidden');
+        return;
+      }
+
+      const sorted = getSortedNotebookEntries();
+      const previewItems = sorted.slice(0, 3);
+
+      listEl.innerHTML = previewItems
+        .map((note) => {
+          const tagInfo = NOTE_TAGS[note.tag] || NOTE_TAGS.general;
+          const displayTitle = note.title || note.text.split(/\r?\n/)[0] || 'یادداشت بدون عنوان';
+          const displaySub = note.title ? note.text : note.text.split(/\r?\n/).slice(1).join(' ');
+          return `
+            <div
+              data-open-note-id="${note.id}"
+              class="notebook-entry-card ${note.pinned ? 'is-pinned' : ''} px-3 py-2.5 flex items-start justify-between gap-2 cursor-pointer"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs shrink-0">${note.pinned ? '📌' : tagInfo.emoji}</span>
+                  <p dir="auto" class="text-xs font-bold text-white truncate ${state.privacyBlur ? 'privacy-blur-text' : ''}">
+                    ${escapeHtml(displayTitle)}
+                  </p>
+                </div>
+                ${
+                  displaySub
+                    ? `<p dir="auto" class="text-[11px] text-[#93a3a5] truncate mt-0.5 ${state.privacyBlur ? 'privacy-blur-text' : ''}">${escapeHtml(displaySub)}</p>`
+                    : ''
+                }
+                <div class="flex items-center gap-1.5 mt-1">
+                  <span class="text-[10px] text-[#7d8e90]">${formatJalaliDateTime(note.updatedAt || note.createdAt)}</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${tagInfo.badgeClass}">${tagInfo.label}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0 pt-0.5">
+                <button
+                  type="button"
+                  data-note-promote="${note.id}"
+                  title="تبدیل به کار امروز"
+                  class="spring-btn text-[10px] font-bold px-2 py-1 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8] cursor-pointer"
+                >
+                  + تسک
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      listEl.querySelectorAll('[data-open-note-id]').forEach((card) => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('[data-note-promote]')) return;
+          openNoteEditorModal(card.dataset.openNoteId);
+        });
+      });
+
+      listEl.querySelectorAll('[data-note-promote]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          promoteQuickNoteToTask(btn.dataset.notePromote);
+        });
+      });
+
+      if (footerBtn) {
+        if (totalCount > 3) {
+          footerBtn.textContent = `مشاهده همه ${toPersianDigits(totalCount)} یادداشت در دفترچه ‹`;
+          footerBtn.classList.remove('hidden');
+        } else {
+          footerBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    function renderNotebookModalList() {
+      const listEl = document.getElementById('notebook-entries-list');
+      const subtitleEl = document.getElementById('notebook-modal-subtitle');
+      if (!listEl) return;
+
+      if (subtitleEl) {
+        subtitleEl.textContent = `${toPersianDigits(state.quickNotes.length)} یادداشت ذخیره‌شده روی دستگاه`;
+      }
+
+      document.querySelectorAll('.notebook-filter-chip').forEach((chip) => {
+        const active = chip.dataset.noteFilter === state.notebookFilter;
+        chip.classList.toggle('bg-[#7fd5d8]', active);
+        chip.classList.toggle('text-[#0b1617]', active);
+        chip.classList.toggle('font-bold', active);
+        chip.classList.toggle('bg-white/[0.06]', !active);
+        chip.classList.toggle('text-[#93a3a5]', !active);
+        chip.classList.toggle('border', !active);
+        chip.classList.toggle('border-white/10', !active);
+      });
+
+      const q = state.notebookSearchQuery.trim().toLowerCase();
+      const filtered = getSortedNotebookEntries().filter((note) => {
+        if (state.notebookFilter === 'pinned' && !note.pinned) return false;
+        if (
+          state.notebookFilter !== 'all' &&
+          state.notebookFilter !== 'pinned' &&
+          note.tag !== state.notebookFilter
+        ) {
+          return false;
+        }
+        if (q) {
+          const inTitle = (note.title || '').toLowerCase().includes(q);
+          const inText = (note.text || '').toLowerCase().includes(q);
+          if (!inTitle && !inText) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="rounded-3xl bg-[#12191b]/80 border border-white/[0.08] p-8 text-center flex flex-col items-center gap-2 my-auto">
+            <span class="text-3xl">📓</span>
+            <p class="text-sm font-bold text-white">
+              ${q ? 'یادداشتی با این عبارت پیدا نشد' : 'هنوز یادداشتی در این بخش ننوشته‌ای'}
+            </p>
+            <p class="text-xs text-[#93a3a5] max-w-xs leading-relaxed">
+              هر ایده، جمله مهم از دیگران یا نکته‌ای که می‌خواهی بعداً به آن سر بزنی را با دکمه «+ یادداشت جدید» ثبت کن.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered
+        .map((note) => {
+          const tagInfo = NOTE_TAGS[note.tag] || NOTE_TAGS.general;
+          const bodyHtml = escapeHtml(note.text).replace(/\n/g, '<br />');
+          return `
+            <article
+              data-notebook-card-id="${note.id}"
+              class="notebook-entry-card ${note.pinned ? 'is-pinned' : ''} p-3.5 flex flex-col gap-2 cursor-pointer"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagInfo.badgeClass}">
+                    ${tagInfo.emoji} ${tagInfo.label}
+                  </span>
+                  <span class="text-[10px] text-[#93a3a5]">${formatJalaliDateTime(note.updatedAt || note.createdAt)}</span>
+                </div>
+
+                <button
+                  type="button"
+                  data-nb-pin="${note.id}"
+                  title="${note.pinned ? 'برداشتن سنجاق' : 'سنجاق کردن در بالا'}"
+                  class="spring-btn w-7 h-7 rounded-full flex items-center justify-center text-xs cursor-pointer ${
+                    note.pinned ? 'bg-[#7fd5d8]/20 text-[#7fd5d8]' : 'bg-white/[0.06] text-[#93a3a5] hover:text-white'
+                  }"
+                >
+                  📌
+                </button>
+              </div>
+
+              ${
+                note.title
+                  ? `<h4 dir="auto" class="text-sm font-extrabold text-white leading-snug break-words ${
+                      state.privacyBlur ? 'privacy-blur-text' : ''
+                    }">${escapeHtml(note.title)}</h4>`
+                  : ''
+              }
+
+              ${
+                note.text
+                  ? `<p dir="auto" class="text-xs text-slate-200 leading-relaxed break-words line-clamp-4 ${
+                      state.privacyBlur ? 'privacy-blur-text' : ''
+                    }">${bodyHtml}</p>`
+                  : ''
+              }
+
+              <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-white/[0.07]">
+                <span class="text-[10px] font-bold text-[#7fd5d8]">لمس برای خواندن و ویرایش کامل ✏️</span>
+
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    data-nb-copy="${note.id}"
+                    title="کپی متن"
+                    class="spring-btn text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/[0.07] hover:bg-white/15 text-slate-200 cursor-pointer"
+                  >
+                    📋 کپی
+                  </button>
+                  <button
+                    type="button"
+                    data-nb-promote="${note.id}"
+                    title="تبدیل به کار"
+                    class="spring-btn text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8] cursor-pointer"
+                  >
+                    + تسک
+                  </button>
+                  <button
+                    type="button"
+                    data-nb-delete="${note.id}"
+                    title="حذف یادداشت"
+                    class="spring-btn text-[10px] font-bold px-2 py-1 rounded-full bg-rose-500/15 text-rose-300 cursor-pointer"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        })
+        .join('');
+
+      listEl.querySelectorAll('[data-notebook-card-id]').forEach((card) => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          openNoteEditorModal(card.dataset.notebookCardId);
+        });
+      });
+
+      listEl.querySelectorAll('[data-nb-pin]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePinNotebookEntry(btn.dataset.nbPin);
+        });
+      });
+
+      listEl.querySelectorAll('[data-nb-copy]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          copyNotebookEntryText(btn.dataset.nbCopy);
+        });
+      });
+
+      listEl.querySelectorAll('[data-nb-promote]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          promoteQuickNoteToTask(btn.dataset.nbPromote);
+        });
+      });
+
+      listEl.querySelectorAll('[data-nb-delete]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteQuickNote(btn.dataset.nbDelete);
+        });
+      });
+    }
+
+    function openNotebookModal() {
+      renderNotebookModalList();
+      openModal('notebook-modal');
+      playTactileSound('pop');
+    }
+
+    function updateNoteEditorControlsUI() {
+      document.querySelectorAll('.note-tag-choice-btn').forEach((btn) => {
+        const active = btn.dataset.editorTag === state.draftNoteTag;
+        btn.classList.toggle('bg-[#7fd5d8]', active);
+        btn.classList.toggle('text-[#0b1617]', active);
+        btn.classList.toggle('font-bold', active);
+        btn.classList.toggle('bg-white/[0.06]', !active);
+        btn.classList.toggle('border', !active);
+        btn.classList.toggle('border-white/10', !active);
+        btn.classList.toggle('text-slate-300', !active);
+      });
+
+      const pinBtn = document.getElementById('note-editor-pin-btn');
+      if (pinBtn) {
+        pinBtn.classList.toggle('bg-[#7fd5d8]/20', state.draftNotePinned);
+        pinBtn.classList.toggle('border-[#7fd5d8]/45', state.draftNotePinned);
+        pinBtn.classList.toggle('text-[#7fd5d8]', state.draftNotePinned);
+        pinBtn.textContent = state.draftNotePinned ? '📌 سنجاق‌شده' : '📌 سنجاق';
+      }
+
+      const titleVal = document.getElementById('note-editor-title-input')?.value || '';
+      const bodyVal = document.getElementById('note-editor-body-input')?.value || '';
+      const totalChars = titleVal.length + bodyVal.length;
+      const counterEl = document.getElementById('note-editor-char-count');
+      if (counterEl) {
+        counterEl.textContent = `${toPersianDigits(totalChars)} کاراکتر`;
+      }
+    }
+
+    function openNoteEditorModal(noteId = null) {
+      const existing = noteId ? state.quickNotes.find((n) => n.id === noteId) : null;
+      state.editingNoteId = existing ? existing.id : null;
+      state.draftNoteTag = existing ? existing.tag || 'general' : 'general';
+      state.draftNotePinned = existing ? Boolean(existing.pinned) : false;
+
+      const headingEl = document.getElementById('note-editor-heading');
+      const dateBadgeEl = document.getElementById('note-editor-date-badge');
+      const titleInput = document.getElementById('note-editor-title-input');
+      const bodyInput = document.getElementById('note-editor-body-input');
+      const extraActions = document.getElementById('note-editor-extra-actions');
+
+      if (headingEl) {
+        headingEl.textContent = existing ? 'خواندن و ویرایش یادداشت' : 'یادداشت جدید در دفترچه';
+      }
+      if (dateBadgeEl) {
+        dateBadgeEl.textContent = existing
+          ? `ثبت‌شده: ${formatJalaliDateTime(existing.createdAt)}`
+          : `${formatJalaliToday()} • ثبت خودکار ساعت`;
+      }
+      if (titleInput) titleInput.value = existing ? existing.title || '' : '';
+      if (bodyInput) bodyInput.value = existing ? existing.text || '' : '';
+      if (extraActions) {
+        extraActions.classList.toggle('hidden', !existing);
+        extraActions.classList.toggle('grid', Boolean(existing));
+      }
+
+      updateNoteEditorControlsUI();
+      openModal('note-editor-modal');
+
+      if (!existing && window.innerWidth >= 768) {
+        setTimeout(() => titleInput?.focus(), 80);
+      }
     }
 
     function renderFolderFilterChips() {
@@ -5667,7 +6388,12 @@
       }
 
       el.classList.add('is-closing');
-      if (!isMobileComposer) {
+
+      const notebookOpen =
+        id === 'note-editor-modal' &&
+        !document.getElementById('notebook-modal')?.classList.contains('hidden');
+
+      if (!isMobileComposer && !notebookOpen) {
         updateMainStageDepth(0, true);
       }
 
@@ -5689,10 +6415,7 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» ====================
-       - شیت یک لایه واحد تمام‌قد است که در حالت عادی به اندازه ارتفاع واقعی فرم در پایین صفحه قرار می‌گیرد
-       - گوشه‌های بالای شیت در طول کل مسیر گرد و پیوسته باقی می‌مانند تا تغییر ناگهانی رخ ندهد
-       - بدون پرش مگنتی و با حرکت آرام، کشسان و یکدست روی GPU */
+    /* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» ==================== */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -5749,7 +6472,6 @@
         sheet.classList.toggle('is-fullscreen', isFullscreen);
       };
 
-      /* محاسبه دقیق موقعیت استراحت حالت نیمه‌باز */
       const computeHalfMetrics = () => {
         const vh = getViewportH();
         const grabH = grabberZone ? grabberZone.offsetHeight : 22;
@@ -5816,7 +6538,7 @@
 
         sheet.style.opacity = '1';
         sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
-        sheet.style.transform = 'translate3d(0, 0, 0)';
+        sheet.style.transform = `translate3d(0, 0, 0)`;
         currentY = 0;
 
         settleTimer = setTimeout(() => {
@@ -5919,7 +6641,6 @@
         sheet.style.transform = '';
       };
 
-      /* جلوگیری از کلیک ناخواسته روی دکمه‌ها و سوئیچ‌ها بعد از پایان کشیدن انگشت */
       sheet.addEventListener(
         'click',
         (e) => {
@@ -5932,7 +6653,6 @@
         true
       );
 
-      /* وقتی در حالت نیمه‌باز روی فیلد متنی زده می‌شود، نرم تمام‌صفحه شود تا کیبورد روی فرم نیفتد */
       scrollBody.addEventListener('focusin', (e) => {
         if (!isMobileShutter() || dragging) return;
         const tag = e.target?.tagName;
@@ -5959,7 +6679,6 @@
         }
       });
 
-      /* حین درگ فقط یک transform ساده روی GPU اجرا می‌شود (بدون لگ و بدون تغییر شفافیت) */
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
@@ -6029,7 +6748,6 @@
             if (startedOnDragZone) {
               dragging = true;
             } else if (!isFullscreen && dy < 0) {
-              /* در حالت نیمه‌باز، اسکرول رو به بالا مستقیماً شیت را با انگشت بالا می‌آورد */
               dragging = true;
             } else if (!isFullscreen && dy > 0 && scrollBody.scrollTop <= 2) {
               dragging = true;
@@ -6100,7 +6818,6 @@
             snapToFullscreen(velocityY);
           }
         } else {
-          /* بدون پرش مگنتی وسط حرکت: تا لحظه رها کردن انگشت تابع دست است و سپس نرم سر جای خود می‌نشیند */
           if (currentY <= ninetyPercentOpenY || (velocityY < -720 && currentY < restY * 0.65)) {
             snapToFullscreen(velocityY);
           } else if (currentY >= restY + 85 || (velocityY > 680 && currentY > restY + 30)) {
@@ -6711,6 +7428,28 @@
           },
         },
         {
+          icon: '📓',
+          title: 'باز کردن دفترچه یادداشت',
+          sub: 'مشاهده و جستجو در یادداشت‌ها و ایده‌ها',
+          action: () => {
+            closeModal('command-palette-modal');
+            openNotebookModal();
+          },
+        },
+        {
+          icon: '✍️',
+          title: q ? `ثبت در دفترچه: «${queryText.trim()}»` : 'نوشتن یادداشت جدید در دفترچه',
+          sub: 'ثبت عنوان و متن چندخطی با تاریخ شمسی',
+          action: () => {
+            closeModal('command-palette-modal');
+            if (q) {
+              addQuickNote(queryText.trim());
+            } else {
+              openNoteEditorModal(null);
+            }
+          },
+        },
+        {
           icon: state.focusRunning ? '⏸️' : '⏱️',
           title: state.focusRunning ? 'توقف تایمر تمرکز' : 'شروع تایمر تمرکز عمیق',
           sub: 'همگام با داینامیک آیلند',
@@ -6764,7 +7503,7 @@
       });
 
       currentCmdItems = q
-        ? items.filter((it, idx) => idx === 0 || it.title.toLowerCase().includes(q) || it.sub.toLowerCase().includes(q))
+        ? items.filter((it, idx) => idx === 0 || idx === 2 || it.title.toLowerCase().includes(q) || it.sub.toLowerCase().includes(q))
         : items;
 
       cmdSelectedIndex = Math.min(cmdSelectedIndex, Math.max(0, currentCmdItems.length - 1));
@@ -6816,6 +7555,8 @@
 
       const orderedModals = [
         'command-palette-modal',
+        'note-editor-modal',
+        'notebook-modal',
         'task-composer-modal',
         'task-edit-modal',
         'folders-modal',
@@ -6829,98 +7570,98 @@
         return Boolean(el && !el.classList.contains('hidden') && !el.classList.contains('is-closing'));
       };
 
-      const applyImportedBackupPayload = (imported) => {
-        if (!imported || typeof imported !== 'object') {
-          throw new Error('INVALID_BACKUP_OBJECT');
+      const isAnyLayerOpen = () => {
+        for (let i = 0; i < orderedModals.length; i++) {
+          if (isModalVisible(orderedModals[i])) return true;
         }
-        const hasKnownField =
-          Array.isArray(imported.tasks) ||
-          Array.isArray(imported.customFolders) ||
-          Array.isArray(imported.quickNotes) ||
-          (imported.profile && typeof imported.profile === 'object');
-        if (!hasKnownField) {
-          throw new Error('UNRECOGNIZED_BACKUP_SCHEMA');
-        }
-
-        if (Array.isArray(imported.tasks)) state.tasks = imported.tasks;
-        if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
-        if (Array.isArray(imported.quickNotes)) state.quickNotes = imported.quickNotes;
-        if (typeof imported.selectedCategory === 'string') state.selectedCategory = imported.selectedCategory;
-        if (typeof imported.dailyGoal === 'number') state.dailyGoal = imported.dailyGoal;
-        if (ACCENT_PALETTES[imported.accentTheme]) state.accentTheme = imported.accentTheme;
-        if (imported.colorMode === 'light' || imported.colorMode === 'dark') state.colorMode = imported.colorMode;
-        if (typeof imported.cardRadius === 'number') state.cardRadius = imported.cardRadius;
-        if (typeof imported.autoSortCompleted === 'boolean') state.autoSortCompleted = imported.autoSortCompleted;
-        if (typeof imported.privacyBlur === 'boolean') state.privacyBlur = imported.privacyBlur;
-        if (typeof imported.soundEnabled === 'boolean') state.soundEnabled = imported.soundEnabled;
-        if (imported.dailyHistory && typeof imported.dailyHistory === 'object') state.dailyHistory = imported.dailyHistory;
-        if (imported.profile && typeof imported.profile === 'object') {
-          state.profile = { ...state.profile, ...imported.profile };
-        }
-        if (imported.streak && typeof imported.streak === 'object') {
-          state.streak = { ...state.streak, ...imported.streak };
-        }
-
-        const next = getSmartFocusCandidate();
-        state.focusedTaskId = next ? next.id : null;
-        saveState();
-        applyThemePreferences();
-        renderFolderFilterChips();
-        renderTasks();
-        renderQuickNotes();
-        updateHeaderAndProgress();
-        if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
-        closeModal('sync-modal');
-        playTactileSound('complete');
-        triggerIslandToast('✅', 'داده‌ها با موفقیت بازیابی شدند');
+        if (state.islandMode === 'expanded') return true;
+        const appearanceSubpage = document.getElementById('tg-appearance-subpage');
+        if (appearanceSubpage && !appearanceSubpage.classList.contains('hidden')) return true;
+        if (state.inspectedTaskId) return true;
+        if (state.activeTab !== 'tasks') return true;
+        return false;
       };
 
-      document.getElementById('import-json-file-input')?.addEventListener('change', (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
+      const syncBackLayerState = () => {
+        if (isNativeWrapper) return;
+        const shouldHaveLayer = isAnyLayerOpen();
+        if (shouldHaveLayer && !hasBackLayer) {
+          hasBackLayer = true;
           try {
-            const parsed = decodeSyncCode(reader.result);
-            applyImportedBackupPayload(parsed);
-          } catch (err) {
-            triggerIslandToast('⚠️', 'فایل پشتیبان JSON نامعتبر است');
-          } finally {
-            e.target.value = '';
+            window.history.pushState({ dfLayer: true }, '');
+          } catch (e) {}
+        } else if (!shouldHaveLayer && hasBackLayer) {
+          hasBackLayer = false;
+          ignoreNextPop = true;
+          try {
+            window.history.back();
+          } catch (e) {
+            ignoreNextPop = false;
           }
-        };
-        reader.onerror = () => {
-          e.target.value = '';
-          triggerIslandToast('⚠️', 'خطا در خواندن فایل پشتیبان');
-        };
-        reader.readAsText(file, 'UTF-8');
-      });
+        }
+      };
 
-      document.getElementById('paste-import-code-btn')?.addEventListener('click', async () => {
-        const input = document.getElementById('import-code-input');
-        if (!input) return;
-        try {
-          if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-            const clipText = await navigator.clipboard.readText();
-            if (clipText && clipText.trim()) {
-              input.value = clipText.trim();
+      syncBackLayerCallback = syncBackLayerState;
+
+      const handleHardwareBackAction = () => {
+        for (let i = 0; i < orderedModals.length; i++) {
+          if (isModalVisible(orderedModals[i])) {
+            if (
+              orderedModals[i] === 'task-composer-modal' &&
+              composerShutterController &&
+              composerShutterController.isFullscreenMode()
+            ) {
+              composerShutterController.snapToHalf();
               playTactileSound('pop');
-              return;
+              return true;
             }
+            closeModal(orderedModals[i]);
+            playTactileSound('pop');
+            return true;
           }
-        } catch (e) {}
-        input.focus();
-        triggerIslandToast('📋', 'متن را در کادر بالا Paste کن');
-      });
+        }
 
-      document.getElementById('apply-import-code-btn')?.addEventListener('click', () => {
-        const input = document.getElementById('import-code-input');
-        if (!input || !input.value.trim()) return;
-        try {
-          const imported = decodeSyncCode(input.value);
-          applyImportedBackupPayload(imported);
-        } catch (e) {
-          triggerIslandToast('⚠️', 'کد انتقال یا متن JSON نامعتبر است');
+        if (state.islandMode === 'expanded') {
+          setIslandMode('idle');
+          playTactileSound('pop');
+          return true;
+        }
+
+        const appearanceSubpage = document.getElementById('tg-appearance-subpage');
+        if (appearanceSubpage && !appearanceSubpage.classList.contains('hidden')) {
+          appearanceSubpage.classList.add('hidden');
+          appearanceSubpage.classList.remove('flex');
+          document.getElementById('tg-settings-main')?.classList.remove('hidden');
+          syncBackLayerState();
+          playTactileSound('pop');
+          return true;
+        }
+
+        if (state.inspectedTaskId) {
+          closeDesktopInspector();
+          playTactileSound('pop');
+          return true;
+        }
+
+        if (state.activeTab !== 'tasks') {
+          switchTab('tasks');
+          return true;
+        }
+
+        return false;
+      };
+
+      window.__handleNativeBack = () => handleHardwareBackAction();
+
+      window.addEventListener('popstate', () => {
+        if (ignoreNextPop) {
+          ignoreNextPop = false;
+          return;
+        }
+        hasBackLayer = false;
+        const consumed = handleHardwareBackAction();
+        if (consumed) {
+          syncBackLayerState();
         }
       });
 
@@ -7181,6 +7922,7 @@
         saveState();
         renderTasks();
         renderQuickNotes();
+        renderNotebookModalList();
         updateHeaderAndProgress();
         playTactileSound('pop');
       });
@@ -7322,12 +8064,133 @@
         }
       });
 
+      /* ==================== رویدادهای دفترچه یادداشت ==================== */
       document.getElementById('quick-note-form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         const inp = document.getElementById('quick-note-input');
         if (!inp) return;
         addQuickNote(inp.value);
         inp.value = '';
+      });
+
+      document.getElementById('open-notebook-header-btn')?.addEventListener('click', openNotebookModal);
+      document.getElementById('open-notebook-btn')?.addEventListener('click', openNotebookModal);
+      document.getElementById('view-all-notes-footer-btn')?.addEventListener('click', openNotebookModal);
+      document.getElementById('new-notebook-entry-card-btn')?.addEventListener('click', () => {
+        openNoteEditorModal(null);
+      });
+
+      document.getElementById('close-notebook-modal')?.addEventListener('click', () => closeModal('notebook-modal'));
+      document.getElementById('notebook-new-note-btn')?.addEventListener('click', () => {
+        openNoteEditorModal(null);
+      });
+
+      const nbSearchInput = document.getElementById('notebook-search-input');
+      const clearNbSearchBtn = document.getElementById('clear-notebook-search-btn');
+      nbSearchInput?.addEventListener('input', () => {
+        state.notebookSearchQuery = nbSearchInput.value;
+        const hasText = state.notebookSearchQuery.trim().length > 0;
+        clearNbSearchBtn?.classList.toggle('hidden', !hasText);
+        clearNbSearchBtn?.classList.toggle('flex', hasText);
+        renderNotebookModalList();
+      });
+
+      clearNbSearchBtn?.addEventListener('click', () => {
+        if (nbSearchInput) nbSearchInput.value = '';
+        state.notebookSearchQuery = '';
+        clearNbSearchBtn.classList.add('hidden');
+        clearNbSearchBtn.classList.remove('flex');
+        renderNotebookModalList();
+      });
+
+      document.querySelectorAll('.notebook-filter-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          state.notebookFilter = chip.dataset.noteFilter || 'all';
+          renderNotebookModalList();
+          playTactileSound('pop');
+        });
+      });
+
+      document.getElementById('close-note-editor-modal')?.addEventListener('click', () => closeModal('note-editor-modal'));
+      document.querySelectorAll('.note-tag-choice-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.draftNoteTag = btn.dataset.editorTag || 'general';
+          updateNoteEditorControlsUI();
+          playTactileSound('pop');
+        });
+      });
+
+      document.getElementById('note-editor-pin-btn')?.addEventListener('click', () => {
+        state.draftNotePinned = !state.draftNotePinned;
+        updateNoteEditorControlsUI();
+        playTactileSound('pop');
+      });
+
+      document.getElementById('note-editor-title-input')?.addEventListener('input', updateNoteEditorControlsUI);
+      document.getElementById('note-editor-body-input')?.addEventListener('input', updateNoteEditorControlsUI);
+
+      document.getElementById('note-editor-copy-btn')?.addEventListener('click', () => {
+        if (state.editingNoteId) copyNotebookEntryText(state.editingNoteId);
+      });
+
+      document.getElementById('note-editor-promote-btn')?.addEventListener('click', () => {
+        const titleVal = document.getElementById('note-editor-title-input')?.value.trim() || '';
+        const bodyVal = document.getElementById('note-editor-body-input')?.value.trim() || '';
+        if (!titleVal && !bodyVal) return;
+        const lines = bodyVal.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const taskTitle = titleVal || lines[0] || bodyVal;
+        const taskDesc = titleVal ? bodyVal : lines.slice(1).join(' • ');
+        addTask(taskTitle.slice(0, 140), { description: taskDesc.slice(0, 180) });
+      });
+
+      document.getElementById('note-editor-delete-btn')?.addEventListener('click', () => {
+        const idToDel = state.editingNoteId;
+        closeModal('note-editor-modal');
+        if (idToDel) deleteQuickNote(idToDel);
+      });
+
+      document.getElementById('note-editor-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const titleVal = document.getElementById('note-editor-title-input')?.value.trim() || '';
+        const bodyVal = document.getElementById('note-editor-body-input')?.value.trim() || '';
+        if (!titleVal && !bodyVal) {
+          triggerIslandToast('⚠️', 'لطفاً عنوان یا متن یادداشت را بنویس');
+          return;
+        }
+
+        const now = Date.now();
+        if (state.editingNoteId) {
+          const existing = state.quickNotes.find((n) => n.id === state.editingNoteId);
+          if (existing) {
+            existing.title = titleVal;
+            existing.text = bodyVal;
+            existing.tag = NOTE_TAGS[state.draftNoteTag] ? state.draftNoteTag : 'general';
+            existing.pinned = Boolean(state.draftNotePinned);
+            existing.updatedAt = now;
+          }
+          saveState();
+          renderQuickNotes();
+          renderNotebookModalList();
+          closeModal('note-editor-modal');
+          playTactileSound('complete');
+          triggerIslandToast('✅', 'تغییرات یادداشت ذخیره شد');
+        } else {
+          state.quickNotes.unshift({
+            id: `note_${now}_${Math.random().toString(36).slice(2, 6)}`,
+            title: titleVal,
+            text: bodyVal,
+            tag: NOTE_TAGS[state.draftNoteTag] ? state.draftNoteTag : 'general',
+            pinned: Boolean(state.draftNotePinned),
+            createdAt: now,
+            updatedAt: now,
+          });
+          saveState();
+          renderQuickNotes();
+          renderNotebookModalList();
+          closeModal('note-editor-modal');
+          playTactileSound('complete');
+          triggerIslandToast('📓', 'یادداشت جدید در دفترچه ثبت شد');
+        }
       });
 
       document.querySelectorAll('.radar-axis-pill').forEach((btn) => {
@@ -7453,6 +8316,7 @@
         saveState();
         renderTasks();
         renderQuickNotes();
+        renderNotebookModalList();
         updateHeaderAndProgress();
         renderSecondaryTabViews();
         playTactileSound('pop');
@@ -7550,35 +8414,103 @@
         }
       });
 
+      const applyImportedBackupPayload = (imported) => {
+        if (!imported || typeof imported !== 'object') {
+          throw new Error('INVALID_BACKUP_OBJECT');
+        }
+        const hasKnownField =
+          Array.isArray(imported.tasks) ||
+          Array.isArray(imported.customFolders) ||
+          Array.isArray(imported.quickNotes) ||
+          (imported.profile && typeof imported.profile === 'object');
+        if (!hasKnownField) {
+          throw new Error('UNRECOGNIZED_BACKUP_SCHEMA');
+        }
+
+        if (Array.isArray(imported.tasks)) state.tasks = imported.tasks;
+        if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
+        if (Array.isArray(imported.quickNotes)) {
+          state.quickNotes = imported.quickNotes
+            .map((n, idx) => normalizeNoteEntry(n, idx))
+            .filter(Boolean);
+        }
+        if (typeof imported.selectedCategory === 'string') state.selectedCategory = imported.selectedCategory;
+        if (typeof imported.dailyGoal === 'number') state.dailyGoal = imported.dailyGoal;
+        if (ACCENT_PALETTES[imported.accentTheme]) state.accentTheme = imported.accentTheme;
+        if (imported.colorMode === 'light' || imported.colorMode === 'dark') state.colorMode = imported.colorMode;
+        if (typeof imported.cardRadius === 'number') state.cardRadius = imported.cardRadius;
+        if (typeof imported.autoSortCompleted === 'boolean') state.autoSortCompleted = imported.autoSortCompleted;
+        if (typeof imported.privacyBlur === 'boolean') state.privacyBlur = imported.privacyBlur;
+        if (typeof imported.soundEnabled === 'boolean') state.soundEnabled = imported.soundEnabled;
+        if (imported.dailyHistory && typeof imported.dailyHistory === 'object') state.dailyHistory = imported.dailyHistory;
+        if (imported.profile && typeof imported.profile === 'object') {
+          state.profile = { ...state.profile, ...imported.profile };
+        }
+        if (imported.streak && typeof imported.streak === 'object') {
+          state.streak = { ...state.streak, ...imported.streak };
+        }
+
+        const next = getSmartFocusCandidate();
+        state.focusedTaskId = next ? next.id : null;
+        saveState();
+        applyThemePreferences();
+        renderFolderFilterChips();
+        renderTasks();
+        renderQuickNotes();
+        renderNotebookModalList();
+        updateHeaderAndProgress();
+        if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
+        closeModal('sync-modal');
+        playTactileSound('complete');
+        triggerIslandToast('✅', 'داده‌ها با موفقیت بازیابی شدند');
+      };
+
+      document.getElementById('import-json-file-input')?.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = decodeSyncCode(reader.result);
+            applyImportedBackupPayload(parsed);
+          } catch (err) {
+            triggerIslandToast('⚠️', 'فایل پشتیبان JSON نامعتبر است');
+          } finally {
+            e.target.value = '';
+          }
+        };
+        reader.onerror = () => {
+          e.target.value = '';
+          triggerIslandToast('⚠️', 'خطا در خواندن فایل پشتیبان');
+        };
+        reader.readAsText(file, 'UTF-8');
+      });
+
+      document.getElementById('paste-import-code-btn')?.addEventListener('click', async () => {
+        const input = document.getElementById('import-code-input');
+        if (!input) return;
+        try {
+          if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText && clipText.trim()) {
+              input.value = clipText.trim();
+              playTactileSound('pop');
+              return;
+            }
+          }
+        } catch (e) {}
+        input.focus();
+        triggerIslandToast('📋', 'متن را در کادر بالا Paste کن');
+      });
+
       document.getElementById('apply-import-code-btn')?.addEventListener('click', () => {
         const input = document.getElementById('import-code-input');
         if (!input || !input.value.trim()) return;
         try {
           const imported = decodeSyncCode(input.value);
-          if (Array.isArray(imported.tasks)) state.tasks = imported.tasks;
-          if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
-          if (Array.isArray(imported.quickNotes)) state.quickNotes = imported.quickNotes;
-          if (typeof imported.dailyGoal === 'number') state.dailyGoal = imported.dailyGoal;
-          if (ACCENT_PALETTES[imported.accentTheme]) state.accentTheme = imported.accentTheme;
-          if (imported.colorMode === 'light' || imported.colorMode === 'dark') state.colorMode = imported.colorMode;
-          if (typeof imported.cardRadius === 'number') state.cardRadius = imported.cardRadius;
-          if (imported.profile) state.profile = { ...state.profile, ...imported.profile };
-          if (imported.streak) state.streak = { ...state.streak, ...imported.streak };
-
-          const next = getSmartFocusCandidate();
-          state.focusedTaskId = next ? next.id : null;
-          saveState();
-          applyThemePreferences();
-          renderFolderFilterChips();
-          renderTasks();
-          renderQuickNotes();
-          updateHeaderAndProgress();
-          if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
-          closeModal('sync-modal');
-          playTactileSound('complete');
-          triggerIslandToast('✅', 'داده‌ها با موفقیت بازیابی شدند');
+          applyImportedBackupPayload(imported);
         } catch (e) {
-          triggerIslandToast('⚠️', 'کد انتقال نامعتبر است');
+          triggerIslandToast('⚠️', 'کد انتقال یا متن JSON نامعتبر است');
         }
       });
 
@@ -7727,7 +8659,6 @@
           subtasks: cleanSubs,
         };
 
-        /* شروع فوری انیمیشن بسته شدن شیت روی GPU و ثبت کار در فریم بعدی برای جلوگیری از افت فریم */
         closeModal('task-composer-modal');
         requestAnimationFrame(() => {
           addTask(title, taskOptions);
@@ -7773,6 +8704,8 @@
         'folders-modal',
         'task-composer-modal',
         'command-palette-modal',
+        'notebook-modal',
+        'note-editor-modal',
       ].forEach((modalId) => {
         const el = document.getElementById(modalId);
         el?.addEventListener('click', (e) => {
@@ -7781,6 +8714,8 @@
       });
 
       setupSheetSwipeToClose('task-edit-modal');
+      setupSheetSwipeToClose('notebook-modal');
+      setupSheetSwipeToClose('note-editor-modal');
 
       document.addEventListener('keydown', (e) => {
         const tag = (e.target?.tagName || '').toLowerCase();
@@ -7796,6 +8731,10 @@
           if (state.islandMode === 'expanded') {
             setIslandMode('idle');
           }
+          if (!document.getElementById('note-editor-modal')?.classList.contains('hidden')) {
+            closeModal('note-editor-modal');
+            return;
+          }
           [
             'profile-modal',
             'sync-modal',
@@ -7804,6 +8743,7 @@
             'folders-modal',
             'task-composer-modal',
             'command-palette-modal',
+            'notebook-modal',
           ].forEach(closeModal);
           return;
         }
