@@ -2722,11 +2722,21 @@
         </button>
       </div>
 
-      <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
-        <label for="import-code-input" class="text-xs font-bold text-white">بازیابی از کد انتقال:</label>
+      <div class="border-t border-white/10 pt-3 flex flex-col gap-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-white">بازیابی از فایل یا کد پشتیبان:</span>
+          <label for="import-json-file-input" class="spring-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7fd5d8]/20 border border-[#7fd5d8]/45 text-[#7fd5d8] text-[11px] font-bold cursor-pointer">
+            <span>📂 انتخاب فایل JSON</span>
+          </label>
+          <input id="import-json-file-input" type="file" accept=".json,application/json,text/plain" class="hidden" />
+        </div>
+
         <div class="flex items-center gap-2">
-          <input id="import-code-input" type="text" placeholder="کد انتقال را اینجا بچسبان..." class="ltr font-mono flex-1 bg-[#12191b] border border-white/10 rounded-2xl px-3 py-2 text-xs text-white outline-none" />
-          <button id="apply-import-code-btn" type="button" class="spring-btn px-3.5 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-bold cursor-pointer">
+          <input id="import-code-input" type="text" placeholder="کد انتقال یا متن JSON را اینجا بچسبان..." class="ltr font-mono flex-1 bg-[#12191b] border border-white/10 rounded-2xl px-3 py-2 text-xs text-white outline-none" />
+          <button id="paste-import-code-btn" type="button" title="چسباندن از حافظه" class="spring-btn px-2.5 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-bold shrink-0 cursor-pointer">
+            چسباندن
+          </button>
+          <button id="apply-import-code-btn" type="button" class="spring-btn px-3.5 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-bold shrink-0 cursor-pointer">
             بازیابی
           </button>
         </div>
@@ -6267,6 +6277,10 @@
 
     function decodeSyncCode(codeStr) {
       const clean = String(codeStr || '').trim();
+      if (!clean) throw new Error('EMPTY_BACKUP');
+      if (clean.startsWith('{')) {
+        return JSON.parse(clean);
+      }
       const rawB64 = clean.startsWith('DF2:') ? clean.slice(4) : clean;
       const binary = atob(rawB64);
       const bytes = new Uint8Array(binary.length);
@@ -6307,6 +6321,7 @@
     }
 
     function exportBackupJsonFile() {
+      saveState();
       const dataStr = memoryFallbackStorage || JSON.stringify({ tasks: state.tasks }, null, 2);
       const fileName = `daily-flow-backup-${getTodayKey()}.json`;
 
@@ -6814,98 +6829,98 @@
         return Boolean(el && !el.classList.contains('hidden') && !el.classList.contains('is-closing'));
       };
 
-      const isAnyLayerOpen = () => {
-        for (let i = 0; i < orderedModals.length; i++) {
-          if (isModalVisible(orderedModals[i])) return true;
+      const applyImportedBackupPayload = (imported) => {
+        if (!imported || typeof imported !== 'object') {
+          throw new Error('INVALID_BACKUP_OBJECT');
         }
-        if (state.islandMode === 'expanded') return true;
-        const appearanceSubpage = document.getElementById('tg-appearance-subpage');
-        if (appearanceSubpage && !appearanceSubpage.classList.contains('hidden')) return true;
-        if (state.inspectedTaskId) return true;
-        if (state.activeTab !== 'tasks') return true;
-        return false;
+        const hasKnownField =
+          Array.isArray(imported.tasks) ||
+          Array.isArray(imported.customFolders) ||
+          Array.isArray(imported.quickNotes) ||
+          (imported.profile && typeof imported.profile === 'object');
+        if (!hasKnownField) {
+          throw new Error('UNRECOGNIZED_BACKUP_SCHEMA');
+        }
+
+        if (Array.isArray(imported.tasks)) state.tasks = imported.tasks;
+        if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
+        if (Array.isArray(imported.quickNotes)) state.quickNotes = imported.quickNotes;
+        if (typeof imported.selectedCategory === 'string') state.selectedCategory = imported.selectedCategory;
+        if (typeof imported.dailyGoal === 'number') state.dailyGoal = imported.dailyGoal;
+        if (ACCENT_PALETTES[imported.accentTheme]) state.accentTheme = imported.accentTheme;
+        if (imported.colorMode === 'light' || imported.colorMode === 'dark') state.colorMode = imported.colorMode;
+        if (typeof imported.cardRadius === 'number') state.cardRadius = imported.cardRadius;
+        if (typeof imported.autoSortCompleted === 'boolean') state.autoSortCompleted = imported.autoSortCompleted;
+        if (typeof imported.privacyBlur === 'boolean') state.privacyBlur = imported.privacyBlur;
+        if (typeof imported.soundEnabled === 'boolean') state.soundEnabled = imported.soundEnabled;
+        if (imported.dailyHistory && typeof imported.dailyHistory === 'object') state.dailyHistory = imported.dailyHistory;
+        if (imported.profile && typeof imported.profile === 'object') {
+          state.profile = { ...state.profile, ...imported.profile };
+        }
+        if (imported.streak && typeof imported.streak === 'object') {
+          state.streak = { ...state.streak, ...imported.streak };
+        }
+
+        const next = getSmartFocusCandidate();
+        state.focusedTaskId = next ? next.id : null;
+        saveState();
+        applyThemePreferences();
+        renderFolderFilterChips();
+        renderTasks();
+        renderQuickNotes();
+        updateHeaderAndProgress();
+        if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
+        closeModal('sync-modal');
+        playTactileSound('complete');
+        triggerIslandToast('✅', 'داده‌ها با موفقیت بازیابی شدند');
       };
 
-      const syncBackLayerState = () => {
-        if (isNativeWrapper) return;
-        const shouldHaveLayer = isAnyLayerOpen();
-        if (shouldHaveLayer && !hasBackLayer) {
-          hasBackLayer = true;
+      document.getElementById('import-json-file-input')?.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
           try {
-            window.history.pushState({ dfLayer: true }, '');
-          } catch (e) {}
-        } else if (!shouldHaveLayer && hasBackLayer) {
-          hasBackLayer = false;
-          ignoreNextPop = true;
-          try {
-            window.history.back();
-          } catch (e) {
-            ignoreNextPop = false;
+            const parsed = decodeSyncCode(reader.result);
+            applyImportedBackupPayload(parsed);
+          } catch (err) {
+            triggerIslandToast('⚠️', 'فایل پشتیبان JSON نامعتبر است');
+          } finally {
+            e.target.value = '';
           }
-        }
-      };
+        };
+        reader.onerror = () => {
+          e.target.value = '';
+          triggerIslandToast('⚠️', 'خطا در خواندن فایل پشتیبان');
+        };
+        reader.readAsText(file, 'UTF-8');
+      });
 
-      syncBackLayerCallback = syncBackLayerState;
-
-      const handleHardwareBackAction = () => {
-        for (let i = 0; i < orderedModals.length; i++) {
-          if (isModalVisible(orderedModals[i])) {
-            if (
-              orderedModals[i] === 'task-composer-modal' &&
-              composerShutterController &&
-              composerShutterController.isFullscreenMode()
-            ) {
-              composerShutterController.snapToHalf();
+      document.getElementById('paste-import-code-btn')?.addEventListener('click', async () => {
+        const input = document.getElementById('import-code-input');
+        if (!input) return;
+        try {
+          if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+            const clipText = await navigator.clipboard.readText();
+            if (clipText && clipText.trim()) {
+              input.value = clipText.trim();
               playTactileSound('pop');
-              return true;
+              return;
             }
-            closeModal(orderedModals[i]);
-            playTactileSound('pop');
-            return true;
           }
-        }
+        } catch (e) {}
+        input.focus();
+        triggerIslandToast('📋', 'متن را در کادر بالا Paste کن');
+      });
 
-        if (state.islandMode === 'expanded') {
-          setIslandMode('idle');
-          playTactileSound('pop');
-          return true;
-        }
-
-        const appearanceSubpage = document.getElementById('tg-appearance-subpage');
-        if (appearanceSubpage && !appearanceSubpage.classList.contains('hidden')) {
-          appearanceSubpage.classList.add('hidden');
-          appearanceSubpage.classList.remove('flex');
-          document.getElementById('tg-settings-main')?.classList.remove('hidden');
-          syncBackLayerState();
-          playTactileSound('pop');
-          return true;
-        }
-
-        if (state.inspectedTaskId) {
-          closeDesktopInspector();
-          playTactileSound('pop');
-          return true;
-        }
-
-        if (state.activeTab !== 'tasks') {
-          switchTab('tasks');
-          return true;
-        }
-
-        return false;
-      };
-
-      window.__handleNativeBack = () => handleHardwareBackAction();
-
-      window.addEventListener('popstate', () => {
-        if (ignoreNextPop) {
-          ignoreNextPop = false;
-          return;
-        }
-        hasBackLayer = false;
-        const consumed = handleHardwareBackAction();
-        if (consumed) {
-          syncBackLayerState();
+      document.getElementById('apply-import-code-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('import-code-input');
+        if (!input || !input.value.trim()) return;
+        try {
+          const imported = decodeSyncCode(input.value);
+          applyImportedBackupPayload(imported);
+        } catch (e) {
+          triggerIslandToast('⚠️', 'کد انتقال یا متن JSON نامعتبر است');
         }
       });
 
