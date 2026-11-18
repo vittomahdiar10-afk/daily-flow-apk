@@ -312,6 +312,75 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
     }
 
+    /* ==================== سیستم کپسول‌های جیوه‌ای یکپارچه (Liquid Morphing Pills) ==================== */
+    .liquid-seg-indicator {
+      position: absolute;
+      top: 3px;
+      bottom: 3px;
+      will-change: transform;
+      transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .liquid-dynamic-indicator {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      will-change: transform, width;
+      transition:
+        transform calc(0.42s * var(--motion-scale)) var(--spring-curve),
+        width calc(0.38s * var(--motion-scale)) var(--spring-curve);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .liquid-seg-indicator.is-scrubbing,
+    .liquid-dynamic-indicator.is-scrubbing,
+    .day-nav-indicator.is-scrubbing,
+    .tg-nav-indicator.is-scrubbing {
+      transition: none !important;
+    }
+
+    .liquid-seg-blob {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--mint-accent);
+      box-shadow:
+        0 3px 12px rgba(var(--mint-accent-rgb), 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+      transform-origin: center;
+      will-change: transform, filter;
+      --stretch-x: 1.18;
+      --squash-y: 0.91;
+    }
+
+    .liquid-seg-blob.is-stretching {
+      animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .liquid-seg-blob.is-scrubbing-blob {
+      transform: scale3d(1.07, 0.93, 1);
+      filter: brightness(1.07);
+      transition: transform 0.14s ease, filter 0.14s ease;
+    }
+
+    .liquid-seg-btn {
+      position: relative;
+      z-index: 1;
+      transition:
+        color 0.18s ease,
+        transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .liquid-seg-btn.is-active {
+      color: var(--mint-contrast-text) !important;
+      font-weight: 800;
+    }
+
     /* ==================== سوییچر سه‌حالته زمان (دیروز • امروز • فردا) ==================== */
     .day-switcher-bar {
       position: relative;
@@ -339,11 +408,6 @@
       transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
       pointer-events: none;
       z-index: 0;
-    }
-
-    .day-nav-indicator.is-scrubbing,
-    .tg-nav-indicator.is-scrubbing {
-      transition: none !important;
     }
 
     .day-nav-indicator-blob {
@@ -428,7 +492,7 @@
       display: none !important;
     }
 
-    /* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» ==================== */
+    /* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» با میکرو-کشسانی مایع ==================== */
     #task-composer-modal {
       padding: 0 !important;
     }
@@ -462,7 +526,8 @@
         border-bottom-right-radius: 0px;
         border-top-left-radius: 30px;
         border-top-right-radius: 30px;
-        transform: translate3d(0, 100%, 0);
+        transform-origin: center top;
+        transform: translate3d(0, 100%, 0) scale3d(1, 1, 1);
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
         will-change: transform;
@@ -728,7 +793,6 @@
     body.theme-light .tg-switch:not(.is-on) {
       background-color: rgba(15, 23, 42, 0.16);
     }
-    body.theme-light .filter-chip.bg-\[\#7fd5d8\],
     body.theme-light .focus-min-chip.bg-\[\#7fd5d8\] {
       background-color: var(--mint-accent) !important;
       color: var(--mint-contrast-text) !important;
@@ -822,7 +886,7 @@
     }
 
     .obsidian-shell:not(.is-expanded).is-island-pressing {
-      transform: translate3d(0, 1px, 0) scale3d(1.038, 1.038, 1) !important;
+      transform: translate3d(0, 1px, 0) scale3d(1.045, 0.96, 1) !important;
       transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
 
@@ -835,11 +899,41 @@
       0% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
-      35% {
-        transform: translate3d(0, -1px, 0) scale3d(1.045, 1.045, 1);
+      34% {
+        transform: translate3d(0, -1px, 0) scale3d(1.06, 0.94, 1);
+      }
+      68% {
+        transform: translate3d(0, 0.5px, 0) scale3d(0.985, 1.018, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    @keyframes islandLiquidMorphExpand {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+      32% {
+        transform: translate3d(0, 2px, 0) scale3d(1.036, 0.964, 1);
+      }
+      68% {
+        transform: translate3d(0, -0.5px, 0) scale3d(0.992, 1.01, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    @keyframes islandLiquidMorphCollapse {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+      34% {
+        transform: translate3d(0, -1px, 0) scale3d(0.962, 1.038, 1);
       }
       70% {
-        transform: translate3d(0, 0, 0) scale3d(0.99, 0.99, 1);
+        transform: translate3d(0, 0.5px, 0) scale3d(1.012, 0.99, 1);
       }
       100% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
@@ -848,6 +942,14 @@
 
     .obsidian-shell.is-popping {
       animation: islandCelebrateBounce calc(0.46s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .obsidian-shell.is-morphing-expand {
+      animation: islandLiquidMorphExpand calc(0.46s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .obsidian-shell.is-morphing-collapse {
+      animation: islandLiquidMorphCollapse calc(0.44s * var(--motion-scale)) var(--spring-curve);
     }
 
     .obsidian-shell.is-live {
@@ -1253,6 +1355,7 @@
       flex-shrink: 0;
     }
 
+    /* سوئیچ‌های شیشه‌ای با کشسانی قطره‌ای iOS & HyperOS */
     .tg-switch {
       width: 42px;
       height: 24px;
@@ -1272,11 +1375,58 @@
       border-radius: 999px;
       background-color: #ffffff;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+      transform-origin: center;
+      will-change: transform;
       transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
     }
     .tg-switch.is-on .tg-switch-knob {
-      transform: translate3d(-18px, 0, 0);
+      transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+    }
+
+    .tg-settings-row:active .tg-switch:not(.is-on) .tg-switch-knob {
+      transform: translate3d(0, 0, 0) scale3d(1.16, 0.93, 1);
+    }
+    .tg-settings-row:active .tg-switch.is-on .tg-switch-knob {
+      transform: translate3d(-18px, 0, 0) scale3d(1.16, 0.93, 1);
+    }
+
+    @keyframes tgKnobMorphOn {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+      36% {
+        transform: translate3d(-9px, 0, 0) scale3d(1.38, 0.86, 1);
+      }
+      72% {
+        transform: translate3d(-19.5px, 0, 0) scale3d(0.94, 1.04, 1);
+      }
+      100% {
+        transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    @keyframes tgKnobMorphOff {
+      0% {
+        transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+      }
+      36% {
+        transform: translate3d(-9px, 0, 0) scale3d(1.38, 0.86, 1);
+      }
+      72% {
+        transform: translate3d(1.5px, 0, 0) scale3d(0.94, 1.04, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    .tg-switch-knob.is-morphing-on {
+      animation: tgKnobMorphOn calc(0.36s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .tg-switch-knob.is-morphing-off {
+      animation: tgKnobMorphOff calc(0.36s * var(--motion-scale)) var(--spring-curve);
     }
 
     .tg-bottom-dock {
@@ -1399,6 +1549,7 @@
       transform: scale3d(0.91, 0.91, 1);
     }
 
+    /* دکمه شناور + با فیزیک قطره جیوه */
     .tg-fab-add {
       pointer-events: auto;
       width: 56px;
@@ -1412,6 +1563,48 @@
       justify-content: center;
       flex-shrink: 0;
       cursor: pointer;
+      will-change: transform;
+      transition: transform calc(0.36s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .tg-fab-add:active {
+      transform: scale3d(0.85, 0.85, 1) !important;
+      transition: transform 0.11s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    @keyframes fabLiquidPop {
+      0% {
+        transform: scale3d(0.86, 0.86, 1);
+      }
+      38% {
+        transform: scale3d(1.15, 0.89, 1);
+      }
+      70% {
+        transform: scale3d(0.95, 1.06, 1);
+      }
+      100% {
+        transform: scale3d(1, 1, 1);
+      }
+    }
+
+    @keyframes fabIconRotatePop {
+      0% {
+        transform: rotate(0deg) scale(1);
+      }
+      45% {
+        transform: rotate(90deg) scale(1.14);
+      }
+      100% {
+        transform: rotate(90deg) scale(1);
+      }
+    }
+
+    .tg-fab-add.is-liquid-popping {
+      animation: fabLiquidPop calc(0.44s * var(--motion-scale)) var(--spring-curve);
+    }
+
+    .tg-fab-add.is-liquid-popping svg {
+      animation: fabIconRotatePop calc(0.44s * var(--motion-scale)) var(--spring-curve);
     }
 
     .sparkle-particle {
@@ -1719,10 +1912,13 @@
             </span>
           </div>
 
-          <div dir="ltr" class="flex items-center gap-1 bg-white/[0.06] p-0.5 rounded-full shrink-0" role="group" aria-label="مدت تایمر">
-            <button type="button" data-focus-min="15" data-chip-size="island" class="focus-min-chip spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 cursor-pointer">15m</button>
-            <button type="button" data-focus-min="25" data-chip-size="island" class="focus-min-chip spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7fd5d8] text-[#0b1617] cursor-pointer">25m</button>
-            <button type="button" data-focus-min="45" data-chip-size="island" class="focus-min-chip spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 cursor-pointer">45m</button>
+          <div id="island-timer-pill-group" dir="ltr" data-liquid-scrub-bar class="relative grid grid-cols-3 bg-white/[0.06] p-0.5 rounded-full shrink-0" role="group" aria-label="مدت تایمر">
+            <div id="island-timer-indicator" class="liquid-seg-indicator" style="top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); transform: translate3d(100%, 0, 0);">
+              <span id="island-timer-indicator-blob" class="liquid-seg-blob"></span>
+            </div>
+            <button type="button" data-focus-min="15" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-slate-300 cursor-pointer">15m</button>
+            <button type="button" data-focus-min="25" data-chip-size="island" class="focus-min-chip liquid-seg-btn is-active spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0b1617] cursor-pointer">25m</button>
+            <button type="button" data-focus-min="45" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-slate-300 cursor-pointer">45m</button>
           </div>
         </div>
 
@@ -1922,7 +2118,7 @@
         </section>
 
         <!-- ==================== نوار جابه‌جایی سه‌روزه: دیروز | امروز | فردا ==================== -->
-        <div id="day-switcher-bar" class="day-switcher-bar" role="tablist" aria-label="انتخاب روز برنامه">
+        <div id="day-switcher-bar" data-liquid-scrub-bar class="day-switcher-bar" role="tablist" aria-label="انتخاب روز برنامه">
           <div id="day-nav-indicator" class="day-nav-indicator" style="transform: translate3d(-100%, 0, 0);">
             <span id="day-nav-indicator-blob" class="day-nav-indicator-blob"></span>
           </div>
@@ -1964,13 +2160,16 @@
         </div>
 
         <div class="flex flex-col lg:flex-row lg:items-center gap-2">
-          <div class="flex items-center justify-between gap-2 min-h-[34px] shrink-0">
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <button type="button" data-filter="all" class="filter-chip spring-btn whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">همه</button>
-              <button type="button" data-filter="active" class="filter-chip spring-btn whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-[#1a2224] text-[#93a3a5] border border-white/10 cursor-pointer">در جریان</button>
-              <button type="button" data-filter="completed" class="filter-chip spring-btn whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-[#1a2224] text-[#93a3a5] border border-white/10 cursor-pointer">انجام‌شده</button>
-              <button type="button" data-filter="urgent" class="filter-chip spring-btn whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-[#1a2224] text-[#93a3a5] border border-white/10 cursor-pointer">فوری 🔥</button>
-              <button type="button" data-filter="habit" class="filter-chip spring-btn whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-[#1a2224] text-[#93a3a5] border border-white/10 cursor-pointer">عادت‌ها 🔁</button>
+          <div class="flex items-center justify-between gap-2 min-h-[36px] shrink-0">
+            <div id="task-filter-pill-bar" data-liquid-scrub-bar class="relative flex items-center gap-1 overflow-x-auto no-scrollbar p-1 rounded-full bg-[#1a2224] border border-white/10">
+              <div id="task-filter-indicator" class="liquid-dynamic-indicator">
+                <span id="task-filter-indicator-blob" class="liquid-seg-blob"></span>
+              </div>
+              <button type="button" data-filter="all" class="filter-chip liquid-seg-btn is-active spring-btn whitespace-nowrap text-xs px-3 py-1 rounded-full text-[#0b1617] font-bold cursor-pointer">همه</button>
+              <button type="button" data-filter="active" class="filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-xs px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">در جریان</button>
+              <button type="button" data-filter="completed" class="filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-xs px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">انجام‌شده</button>
+              <button type="button" data-filter="urgent" class="filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-xs px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">فوری 🔥</button>
+              <button type="button" data-filter="habit" class="filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-xs px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">عادت‌ها 🔁</button>
             </div>
 
             <button
@@ -2851,7 +3050,7 @@
       </button>
     </div>
 
-    <button id="fab-quick-add-btn" type="button" aria-label="کار جدید" class="tg-fab-add spring-btn">
+    <button id="fab-quick-add-btn" type="button" aria-label="کار جدید" class="tg-fab-add">
       <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
       </svg>
@@ -2920,13 +3119,16 @@
           </button>
         </div>
 
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <button type="button" data-note-filter="all" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">همه</button>
-          <button type="button" data-note-filter="pinned" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">📌 سنجاق‌شده</button>
-          <button type="button" data-note-filter="idea" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">💡 ایده</button>
-          <button type="button" data-note-filter="quote" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">💬 نقل‌قول / گفته مهم</button>
-          <button type="button" data-note-filter="later" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">🔖 مراجعه بعدی</button>
-          <button type="button" data-note-filter="general" class="notebook-filter-chip spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] text-[#93a3a5] border border-white/10 cursor-pointer">📝 عمومی</button>
+        <div id="notebook-filter-pill-bar" data-liquid-scrub-bar class="relative flex items-center gap-1 overflow-x-auto no-scrollbar p-1 rounded-full bg-[#12191b] border border-white/10">
+          <div id="notebook-filter-indicator" class="liquid-dynamic-indicator">
+            <span id="notebook-filter-indicator-blob" class="liquid-seg-blob"></span>
+          </div>
+          <button type="button" data-note-filter="all" class="notebook-filter-chip liquid-seg-btn is-active spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#0b1617] font-bold cursor-pointer">همه</button>
+          <button type="button" data-note-filter="pinned" class="notebook-filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">📌 سنجاق‌شده</button>
+          <button type="button" data-note-filter="idea" class="notebook-filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">💡 ایده</button>
+          <button type="button" data-note-filter="quote" class="notebook-filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">💬 نقل‌قول / گفته مهم</button>
+          <button type="button" data-note-filter="later" class="notebook-filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">🔖 مراجعه بعدی</button>
+          <button type="button" data-note-filter="general" class="notebook-filter-chip liquid-seg-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1 rounded-full text-[#93a3a5] cursor-pointer">📝 عمومی</button>
         </div>
       </div>
 
@@ -3426,7 +3628,7 @@
               <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
             </div>
 
-            <!-- انتخاب‌گر سریع روز اجرا: دیروز | امروز | فردا -->
+            <!-- انتخاب‌گر جیوه‌ای روز اجرا: دیروز | امروز | فردا -->
             <div class="px-4 py-3 flex items-center justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="tg-icon-circle bg-[#14b8a6]">
@@ -3440,10 +3642,13 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-1 bg-white/[0.06] p-1 rounded-full shrink-0" role="group" aria-label="انتخاب روز کار">
-                <button type="button" data-composer-day="yesterday" class="composer-day-chip spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">دیروز</button>
-                <button type="button" data-composer-day="today" class="composer-day-chip spring-btn text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-[#7fd5d8] text-[#0b1617] cursor-pointer">امروز</button>
-                <button type="button" data-composer-day="tomorrow" class="composer-day-chip spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">فردا</button>
+              <div id="composer-day-pill-group" data-liquid-scrub-bar class="relative grid grid-cols-3 bg-white/[0.06] p-1 rounded-full shrink-0" role="group" aria-label="انتخاب روز کار">
+                <div id="composer-day-indicator" class="liquid-seg-indicator" style="top: 4px; bottom: 4px; right: 4px; width: calc((100% - 8px) / 3); transform: translate3d(-100%, 0, 0);">
+                  <span id="composer-day-indicator-blob" class="liquid-seg-blob"></span>
+                </div>
+                <button type="button" data-composer-day="yesterday" class="composer-day-chip liquid-seg-btn spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">دیروز</button>
+                <button type="button" data-composer-day="today" class="composer-day-chip liquid-seg-btn is-active spring-btn text-[11px] font-extrabold px-2.5 py-1 rounded-full text-[#0b1617] cursor-pointer">امروز</button>
+                <button type="button" data-composer-day="tomorrow" class="composer-day-chip liquid-seg-btn spring-btn text-[11px] font-bold px-2.5 py-1 rounded-full text-slate-300 cursor-pointer">فردا</button>
               </div>
             </div>
 
@@ -3725,6 +3930,77 @@
       draftAvatar: '🧑‍💻',
       draftPhotoDataUrl: '',
     };
+
+    /* ==================== ابزارهای فیزیک مایع (Liquid Squash & Stretch Helpers) ==================== */
+    function setTgSwitchState(switchEl, isOn, animate = false) {
+      if (!switchEl) return;
+      const wasOn = switchEl.classList.contains('is-on');
+      const nextOn = Boolean(isOn);
+      switchEl.classList.toggle('is-on', nextOn);
+      const knob = switchEl.querySelector('.tg-switch-knob');
+      if (!knob) return;
+
+      if (animate && wasOn !== nextOn) {
+        knob.classList.remove('is-morphing-on', 'is-morphing-off');
+        void knob.offsetWidth;
+        knob.classList.add(nextOn ? 'is-morphing-on' : 'is-morphing-off');
+      } else if (!animate) {
+        knob.classList.remove('is-morphing-on', 'is-morphing-off');
+      }
+    }
+
+    function triggerFabLiquidPop(btnEl) {
+      if (!btnEl) return;
+      btnEl.classList.remove('is-liquid-popping');
+      void btnEl.offsetWidth;
+      btnEl.classList.add('is-liquid-popping');
+    }
+
+    function syncDynamicPillIndicator({ barId, indicatorId, blobId, btnSelector, activeValue, dataAttr, stepDistance = 0, animateStretch = false, fromScrub = false }) {
+      const bar = document.getElementById(barId);
+      const indicator = document.getElementById(indicatorId);
+      const blob = document.getElementById(blobId);
+      if (!bar || !indicator) return;
+
+      const buttons = Array.from(bar.querySelectorAll(btnSelector));
+      let activeBtn = null;
+
+      buttons.forEach((btn) => {
+        const isTarget = btn.dataset[dataAttr] === activeValue;
+        if (isTarget) activeBtn = btn;
+        btn.classList.toggle('is-active', isTarget);
+        btn.classList.toggle('font-bold', isTarget);
+        btn.classList.toggle('text-[#0b1617]', isTarget);
+        btn.classList.toggle('text-[#93a3a5]', !isTarget);
+      });
+
+      if (!activeBtn) return;
+
+      const applyPosition = () => {
+        const w = activeBtn.offsetWidth;
+        const x = activeBtn.offsetLeft;
+        if (w > 0) {
+          indicator.style.width = `${w}px`;
+          indicator.style.transform = `translate3d(${x}px, 0, 0)`;
+        }
+      };
+
+      if (activeBtn.offsetWidth > 0) {
+        applyPosition();
+      } else {
+        requestAnimationFrame(applyPosition);
+      }
+
+      if (animateStretch && stepDistance > 0 && blob) {
+        triggerBlobStretch(blob, stepDistance);
+      }
+
+      if (!fromScrub && activeBtn.offsetWidth > 0) {
+        try {
+          activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        } catch (e) {}
+      }
+    }
 
     /* موتور رندر گرافیکی تطبیقی برای نرخ فریم‌های ۶۰، ۹۰، ۱۲۰ و ۱۴۴ هرتز و GPUهای مختلف موبایل */
     function snapToStandardHz(rawHz) {
@@ -4594,6 +4870,7 @@
     }
 
     function setIslandMode(mode) {
+      const prevMode = state.islandMode;
       state.islandMode = mode;
       const shell = document.getElementById('dynamic-island');
       const idleLayer = document.getElementById('island-idle-layer');
@@ -4608,6 +4885,17 @@
       idleLayer.classList.toggle('is-hidden', mode !== 'idle');
       toastLayer.classList.toggle('is-hidden', mode !== 'toast');
       expandedLayer.classList.toggle('is-hidden', mode !== 'expanded');
+
+      /* فیزیک کشسانی و فشردگی قطره جیوه هنگام تغییر ابعاد داینامیک آیلند */
+      if (prevMode !== mode && !shell.classList.contains('is-hidden-for-sheet')) {
+        shell.classList.remove('is-morphing-expand', 'is-morphing-collapse');
+        void shell.offsetWidth;
+        if (mode === 'expanded' || (prevMode === 'idle' && mode === 'toast')) {
+          shell.classList.add('is-morphing-expand');
+        } else if (mode === 'idle') {
+          shell.classList.add('is-morphing-collapse');
+        }
+      }
 
       if (typeof syncBackLayerCallback === 'function') {
         syncBackLayerCallback();
@@ -4668,7 +4956,7 @@
       return `${m}:${s}`;
     }
 
-    function updateFocusUI() {
+    function updateFocusUI(fromScrub = false) {
       const clockStr = formatClock(state.focusSeconds);
       const islandDisplay = document.getElementById('island-timer-display');
       const islandStatePill = document.getElementById('island-timer-state-pill');
@@ -4712,24 +5000,52 @@
         waveEl.classList.toggle('flex', showWave);
       }
 
+      const islandMins = [15, 25, 45];
+      const islandIdx = islandMins.indexOf(state.focusDurationMinutes);
+      const islandIndicator = document.getElementById('island-timer-indicator');
+      if (islandIndicator && !fromScrub) {
+        if (islandIdx >= 0) {
+          islandIndicator.style.opacity = '1';
+          islandIndicator.style.transform = `translate3d(${islandIdx * 100}%, 0, 0)`;
+        } else {
+          islandIndicator.style.opacity = '0';
+        }
+      }
+
       document.querySelectorAll('.focus-min-chip').forEach((chip) => {
         const min = Number(chip.dataset.focusMin);
         const active = min === state.focusDurationMinutes;
-        chip.classList.toggle('bg-[#7fd5d8]', active);
-        chip.classList.toggle('text-[#0b1617]', active);
-        chip.classList.toggle('bg-white/10', !active);
+        if (chip.dataset.chipSize === 'island') {
+          chip.classList.toggle('is-active', active);
+          chip.classList.toggle('text-[#0b1617]', active);
+          chip.classList.toggle('text-slate-300', !active);
+        } else {
+          chip.classList.toggle('bg-[#7fd5d8]', active);
+          chip.classList.toggle('text-[#0b1617]', active);
+          chip.classList.toggle('bg-white/10', !active);
+        }
       });
 
       updateHeaderAndProgress();
     }
 
-    function setFocusDuration(minutes) {
+    function setFocusDuration(minutes, options = {}) {
+      const fromScrub = Boolean(options.fromScrub);
+      const islandMins = [15, 25, 45];
+      const oldIdx = islandMins.indexOf(state.focusDurationMinutes);
+      const newIdx = islandMins.indexOf(minutes);
+
       state.focusDurationMinutes = minutes;
       if (!state.focusRunning) {
         state.focusSeconds = minutes * 60;
       }
+
+      if (!fromScrub && oldIdx >= 0 && newIdx >= 0 && oldIdx !== newIdx) {
+        triggerBlobStretch(document.getElementById('island-timer-indicator-blob'), Math.abs(newIdx - oldIdx));
+      }
+
       saveState();
-      updateFocusUI();
+      updateFocusUI(fromScrub);
       if (state.activeTab === 'settings') renderSecondaryTabViews();
     }
 
@@ -5306,6 +5622,28 @@
       }
     }
 
+    function setNotebookFilter(nextFilter, options = {}) {
+      const fromScrub = Boolean(options.fromScrub);
+      const filterOrder = ['all', 'pinned', 'idea', 'quote', 'later', 'general'];
+      const oldIdx = filterOrder.indexOf(state.notebookFilter);
+      const newIdx = filterOrder.indexOf(nextFilter);
+      state.notebookFilter = nextFilter;
+
+      syncDynamicPillIndicator({
+        barId: 'notebook-filter-pill-bar',
+        indicatorId: 'notebook-filter-indicator',
+        blobId: 'notebook-filter-indicator-blob',
+        btnSelector: '.notebook-filter-chip',
+        activeValue: nextFilter,
+        dataAttr: 'noteFilter',
+        stepDistance: oldIdx >= 0 && newIdx >= 0 ? Math.abs(newIdx - oldIdx) : 0,
+        animateStretch: !fromScrub && oldIdx !== newIdx,
+        fromScrub,
+      });
+
+      renderNotebookModalList();
+    }
+
     function renderNotebookModalList() {
       const listEl = document.getElementById('notebook-entries-list');
       const subtitleEl = document.getElementById('notebook-modal-subtitle');
@@ -5315,15 +5653,15 @@
         subtitleEl.textContent = `${toPersianDigits(state.quickNotes.length)} یادداشت ذخیره‌شده روی دستگاه`;
       }
 
-      document.querySelectorAll('.notebook-filter-chip').forEach((chip) => {
-        const active = chip.dataset.noteFilter === state.notebookFilter;
-        chip.classList.toggle('bg-[#7fd5d8]', active);
-        chip.classList.toggle('text-[#0b1617]', active);
-        chip.classList.toggle('font-bold', active);
-        chip.classList.toggle('bg-white/[0.06]', !active);
-        chip.classList.toggle('text-[#93a3a5]', !active);
-        chip.classList.toggle('border', !active);
-        chip.classList.toggle('border-white/10', !active);
+      syncDynamicPillIndicator({
+        barId: 'notebook-filter-pill-bar',
+        indicatorId: 'notebook-filter-indicator',
+        blobId: 'notebook-filter-indicator-blob',
+        btnSelector: '.notebook-filter-chip',
+        activeValue: state.notebookFilter,
+        dataAttr: 'noteFilter',
+        animateStretch: false,
+        fromScrub: true,
       });
 
       const q = state.notebookSearchQuery.trim().toLowerCase();
@@ -5478,6 +5816,18 @@
     function openNotebookModal() {
       renderNotebookModalList();
       openModal('notebook-modal');
+      requestAnimationFrame(() => {
+        syncDynamicPillIndicator({
+          barId: 'notebook-filter-pill-bar',
+          indicatorId: 'notebook-filter-indicator',
+          blobId: 'notebook-filter-indicator-blob',
+          btnSelector: '.notebook-filter-chip',
+          activeValue: state.notebookFilter,
+          dataAttr: 'noteFilter',
+          animateStretch: false,
+          fromScrub: true,
+        });
+      });
       playTactileSound('pop');
     }
 
@@ -6938,9 +7288,9 @@
       if (defCatVal) defCatVal.textContent = getFolderDisplay(state.selectedCategory);
       if (foldersCountVal) foldersCountVal.textContent = `${toPersianDigits(getAllFolders().length)} پوشه ‹`;
 
-      document.getElementById('tg-switch-autosort')?.classList.toggle('is-on', state.autoSortCompleted);
-      document.getElementById('tg-switch-privacy')?.classList.toggle('is-on', state.privacyBlur);
-      document.getElementById('tg-switch-sound')?.classList.toggle('is-on', state.soundEnabled);
+      setTgSwitchState(document.getElementById('tg-switch-autosort'), state.autoSortCompleted, false);
+      setTgSwitchState(document.getElementById('tg-switch-privacy'), state.privacyBlur, false);
+      setTgSwitchState(document.getElementById('tg-switch-sound'), state.soundEnabled, false);
 
       updateGpuSettingsLabels();
 
@@ -6965,6 +7315,28 @@
       blobEl.classList.add('is-stretching');
     }
 
+    function setTaskFilter(nextFilter, options = {}) {
+      const fromScrub = Boolean(options.fromScrub);
+      const filterOrder = ['all', 'active', 'completed', 'urgent', 'habit'];
+      const oldIdx = filterOrder.indexOf(state.filter);
+      const newIdx = filterOrder.indexOf(nextFilter);
+      state.filter = nextFilter;
+
+      syncDynamicPillIndicator({
+        barId: 'task-filter-pill-bar',
+        indicatorId: 'task-filter-indicator',
+        blobId: 'task-filter-indicator-blob',
+        btnSelector: '.filter-chip',
+        activeValue: nextFilter,
+        dataAttr: 'filter',
+        stepDistance: oldIdx >= 0 && newIdx >= 0 ? Math.abs(newIdx - oldIdx) : 0,
+        animateStretch: !fromScrub && oldIdx !== newIdx,
+        fromScrub,
+      });
+
+      renderTasks();
+    }
+
     function handleSmartTabReTap(tabName) {
       if (tabName === 'tasks') {
         if (window.scrollY > 24) {
@@ -6977,7 +7349,6 @@
           return;
         }
         if (state.filter !== 'all' || state.folderFilter !== 'all' || state.searchQuery.trim()) {
-          state.filter = 'all';
           state.folderFilter = 'all';
           state.searchQuery = '';
           const searchInp = document.getElementById('search-tasks-input');
@@ -6985,18 +7356,8 @@
           if (searchInp) searchInp.value = '';
           clearSearchBtn?.classList.add('hidden');
           clearSearchBtn?.classList.remove('flex');
-          document.querySelectorAll('.filter-chip').forEach((c) => {
-            const active = c.dataset.filter === 'all';
-            c.classList.toggle('bg-[#7fd5d8]', active);
-            c.classList.toggle('text-[#0b1617]', active);
-            c.classList.toggle('font-bold', active);
-            c.classList.toggle('bg-[#1a2224]', !active);
-            c.classList.toggle('text-[#93a3a5]', !active);
-            c.classList.toggle('border', !active);
-            c.classList.toggle('border-white/10', !active);
-          });
+          setTaskFilter('all', { fromScrub: false });
           renderFolderFilterChips();
-          renderTasks();
           updateHeaderAndProgress();
           playTactileSound('pop');
           triggerIslandToast('✨', 'نمایش همه کارهای امروز');
@@ -7069,6 +7430,21 @@
         triggerHaptic(8);
       }
 
+      if (tabName === 'tasks') {
+        requestAnimationFrame(() => {
+          syncDynamicPillIndicator({
+            barId: 'task-filter-pill-bar',
+            indicatorId: 'task-filter-indicator',
+            blobId: 'task-filter-indicator-blob',
+            btnSelector: '.filter-chip',
+            activeValue: state.filter,
+            dataAttr: 'filter',
+            animateStretch: false,
+            fromScrub: true,
+          });
+        });
+      }
+
       if (tabName === 'settings') {
         document.getElementById('tg-appearance-subpage')?.classList.add('hidden');
         document.getElementById('tg-appearance-subpage')?.classList.remove('flex');
@@ -7086,7 +7462,7 @@
     }
 
     /* ==================== سر خوردن کپسول شیشه‌ای زیر انگشت (Interactive Finger Scrubbing) ==================== */
-    function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrentIndex, onSelectIndex }) {
+    function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrentIndex, onSelectIndex, direction = 'rtl', edgeInset = 4 }) {
       if (!barEl || !Array.isArray(items) || items.length < 2) return;
 
       let startX = 0;
@@ -7096,6 +7472,7 @@
       let suppressBarClick = false;
       let scrubRafPending = false;
       let pendingTranslatePct = 0;
+      const isLtr = direction === 'ltr';
 
       const indicatorEl = () => document.getElementById(indicatorId);
       const blobEl = () => document.getElementById(blobId);
@@ -7105,7 +7482,7 @@
         if (!isScrubbing) return;
         const ind = indicatorEl();
         if (ind) {
-          ind.style.transform = `translate3d(${-pendingTranslatePct.toFixed(2)}%, 0, 0)`;
+          ind.style.transform = `translate3d(${pendingTranslatePct.toFixed(2)}%, 0, 0)`;
         }
       };
 
@@ -7157,9 +7534,9 @@
           if (e.cancelable) e.preventDefault();
 
           const rect = barEl.getBoundingClientRect();
-          const usableWidth = Math.max(1, rect.width - 8);
-          const relFromRight = rect.right - 4 - t.clientX;
-          const rawSlotPos = (relFromRight / usableWidth) * items.length - 0.5;
+          const usableWidth = Math.max(1, rect.width - edgeInset * 2);
+          const relOffset = isLtr ? t.clientX - rect.left - edgeInset : rect.right - edgeInset - t.clientX;
+          const rawSlotPos = (relOffset / usableWidth) * items.length - 0.5;
 
           const minSlot = 0;
           const maxSlot = items.length - 1;
@@ -7170,13 +7547,13 @@
             dampedSlot = maxSlot + computeIosRubberBand(rawSlotPos - maxSlot, 0.35);
           }
 
-          pendingTranslatePct = dampedSlot * 100;
+          pendingTranslatePct = isLtr ? dampedSlot * 100 : -dampedSlot * 100;
           if (!scrubRafPending) {
             scrubRafPending = true;
             requestAnimationFrame(applyScrubFrame);
           }
 
-          const clampedRatio = Math.max(0, Math.min(0.9999, relFromRight / usableWidth));
+          const clampedRatio = Math.max(0, Math.min(0.9999, relOffset / usableWidth));
           const hoveredIdx = Math.floor(clampedRatio * items.length);
 
           if (hoveredIdx !== lastIdx) {
@@ -7202,7 +7579,145 @@
         blb?.classList.remove('is-scrubbing-blob');
 
         if (ind) {
-          ind.style.transform = `translate3d(${-lastIdx * 100}%, 0, 0)`;
+          ind.style.transform = `translate3d(${(isLtr ? lastIdx : -lastIdx) * 100}%, 0, 0)`;
+        }
+        triggerBlobStretch(blb, 1);
+
+        setTimeout(() => {
+          suppressBarClick = false;
+        }, 90);
+      };
+
+      barEl.addEventListener('touchend', finishScrub);
+      barEl.addEventListener('touchcancel', finishScrub);
+    }
+
+    /* اسکرول انگشتی برای کپسول‌های با عرض متغیر (فیلتر کارها و فیلتر دفترچه یادداشت) */
+    function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, dataAttr, getCurrentValue, onSelectValue }) {
+      if (!barEl) return;
+
+      let startX = 0;
+      let startY = 0;
+      let isScrubbing = false;
+      let lastVal = '';
+      let suppressBarClick = false;
+      let scrubRafPending = false;
+      let pendingX = 0;
+      let pendingW = 0;
+
+      const indicatorEl = () => document.getElementById(indicatorId);
+      const blobEl = () => document.getElementById(blobId);
+
+      const applyFrame = () => {
+        scrubRafPending = false;
+        if (!isScrubbing) return;
+        const ind = indicatorEl();
+        if (ind && pendingW > 0) {
+          ind.style.width = `${pendingW}px`;
+          ind.style.transform = `translate3d(${pendingX}px, 0, 0)`;
+        }
+      };
+
+      barEl.addEventListener(
+        'click',
+        (e) => {
+          if (suppressBarClick) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            suppressBarClick = false;
+          }
+        },
+        true
+      );
+
+      barEl.addEventListener(
+        'touchstart',
+        (e) => {
+          if (e.touches.length !== 1) return;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          isScrubbing = false;
+          lastVal = getCurrentValue();
+        },
+        { passive: true }
+      );
+
+      barEl.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!startX || e.touches.length !== 1) return;
+          const t = e.touches[0];
+          const dx = t.clientX - startX;
+          const dy = t.clientY - startY;
+
+          if (!isScrubbing) {
+            if (Math.abs(dy) > Math.abs(dx) * 1.25 && Math.abs(dy) > 8) {
+              startX = 0;
+              return;
+            }
+            if (Math.abs(dx) < 8) return;
+            isScrubbing = true;
+            suppressBarClick = true;
+            indicatorEl()?.classList.add('is-scrubbing');
+            blobEl()?.classList.add('is-scrubbing-blob');
+          }
+
+          if (e.cancelable) e.preventDefault();
+
+          const buttons = Array.from(barEl.querySelectorAll(btnSelector));
+          if (buttons.length === 0) return;
+
+          let matchedBtn = null;
+          let minDist = Infinity;
+          buttons.forEach((btn) => {
+            const rect = btn.getBoundingClientRect();
+            const center = rect.left + rect.width / 2;
+            const dist = Math.abs(t.clientX - center);
+            if (dist < minDist) {
+              minDist = dist;
+              matchedBtn = btn;
+            }
+          });
+
+          if (!matchedBtn) return;
+
+          pendingX = matchedBtn.offsetLeft;
+          pendingW = matchedBtn.offsetWidth;
+          if (!scrubRafPending) {
+            scrubRafPending = true;
+            requestAnimationFrame(applyFrame);
+          }
+
+          const nextVal = matchedBtn.dataset[dataAttr];
+          if (nextVal && nextVal !== lastVal) {
+            const oldIdx = buttons.findIndex((b) => b.dataset[dataAttr] === lastVal);
+            const newIdx = buttons.indexOf(matchedBtn);
+            lastVal = nextVal;
+            onSelectValue(nextVal, true);
+            playTactileSound('scrub-tick', newIdx - oldIdx);
+            triggerHaptic(6);
+          }
+        },
+        { passive: false }
+      );
+
+      const finishScrub = () => {
+        startX = 0;
+        if (!isScrubbing) return;
+        isScrubbing = false;
+        scrubRafPending = false;
+
+        const ind = indicatorEl();
+        const blb = blobEl();
+        ind?.classList.remove('is-scrubbing');
+        blb?.classList.remove('is-scrubbing-blob');
+
+        const activeBtn = Array.from(barEl.querySelectorAll(btnSelector)).find(
+          (b) => b.dataset[dataAttr] === lastVal
+        );
+        if (ind && activeBtn && activeBtn.offsetWidth > 0) {
+          ind.style.width = `${activeBtn.offsetWidth}px`;
+          ind.style.transform = `translate3d(${activeBtn.offsetLeft}px, 0, 0)`;
         }
         triggerBlobStretch(blb, 1);
 
@@ -7323,7 +7838,7 @@
       modalCloseTimers.set(id, timer);
     }
 
-    /* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» ==================== */
+    /* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» با میکرو-کشسانی مایع ==================== */
     function initComposerShutterGesture() {
       const modal = document.getElementById('task-composer-modal');
       const sheet = document.getElementById('composer-shutter-sheet');
@@ -7337,6 +7852,8 @@
       let isFullscreen = false;
       let startedInFullscreen = false;
       let currentY = 0;
+      let currentScaleX = 1;
+      let currentScaleY = 1;
       let restY = 240;
       let cachedVh = 0;
       let dragging = false;
@@ -7433,8 +7950,10 @@
 
         sheet.style.opacity = '1';
         sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
-        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
         currentY = restY;
+        currentScaleX = 1;
+        currentScaleY = 1;
 
         settleTimer = setTimeout(() => {
           sheet.style.transition = 'none';
@@ -7458,13 +7977,22 @@
         updateMainStageDepth(1, true);
 
         sheet.style.opacity = '1';
-        sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
-        sheet.style.transform = 'translate3d(0, 0, 0)';
+        /* میکرو-کشسانی عمودی بسیار ظریف (۱.۸٪) هنگام قفل شدن تمام‌صفحه روی GPU بدون تار کردن متن */
+        const entryStretchY = Math.min(1.022, 1.01 + Math.min(800, Math.abs(initialVel)) * 0.000014);
+        const entrySquashX = 2 - entryStretchY;
+        sheet.style.transition = `transform ${Math.round(dur * 0.34)}ms cubic-bezier(0.2, 0.9, 0.3, 1)`;
+        sheet.style.transform = `translate3d(0, 0, 0) scale3d(${entrySquashX.toFixed(4)}, ${entryStretchY.toFixed(4)}, 1)`;
         currentY = 0;
+        currentScaleX = 1;
+        currentScaleY = 1;
 
         settleTimer = setTimeout(() => {
-          sheet.style.transition = 'none';
-        }, dur + 20);
+          sheet.style.transition = `transform ${Math.round(dur * 0.66)}ms ${IOS_SILK_CURVE}`;
+          sheet.style.transform = 'translate3d(0, 0, 0) scale3d(1, 1, 1)';
+          settleTimer = setTimeout(() => {
+            sheet.style.transition = 'none';
+          }, Math.round(dur * 0.66) + 20);
+        }, Math.round(dur * 0.32));
 
         playTactileSound('pop');
         triggerHaptic(8);
@@ -7478,8 +8006,10 @@
         restY = metrics.restY;
         scrollBody.style.maxHeight = `${metrics.maxScrollBodyH}px`;
         sheet.style.transition = `transform 340ms ${IOS_SILK_CURVE}`;
-        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+        sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
         currentY = restY;
+        currentScaleX = 1;
+        currentScaleY = 1;
       };
 
       const animateOpen = () => {
@@ -7503,8 +8033,11 @@
         modal.style.opacity = '0';
         sheet.style.transition = 'none';
         sheet.style.opacity = '1';
-        sheet.style.transform = `translate3d(0, ${metrics.vh}px, 0)`;
+        /* شروع از حالت کمی جمع‌شده افقی و کشیده عمودی برای حس جهش مایع هنگام باز شدن */
+        sheet.style.transform = `translate3d(0, ${metrics.vh}px, 0) scale3d(0.978, 1.024, 1)`;
         currentY = metrics.vh;
+        currentScaleX = 1;
+        currentScaleY = 1;
         updateMainStageDepth(0, false);
 
         requestAnimationFrame(() => {
@@ -7513,13 +8046,13 @@
             modal.style.opacity = '1';
             updateMainStageDepth(0.65, true);
 
-            sheet.style.transition = `transform 500ms ${IOS_SILK_CURVE}`;
-            sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0)`;
+            sheet.style.transition = `transform 510ms ${IOS_SILK_CURVE}`;
+            sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
             currentY = restY;
 
             settleTimer = setTimeout(() => {
               sheet.style.transition = 'none';
-            }, 520);
+            }, 530);
           });
         });
       };
@@ -7537,10 +8070,13 @@
         modal.style.opacity = '0';
         updateMainStageDepth(0, true);
 
+        /* جمع شدن ظریف عرض شیت به سمت پایین صفحه و دکمه شناور + */
         sheet.style.transition = `transform ${dur}ms ${IOS_CLOSE_CURVE}`;
         sheet.style.opacity = '1';
-        sheet.style.transform = `translate3d(0, ${vh}px, 0)`;
+        sheet.style.transform = `translate3d(0, ${vh}px, 0) scale3d(0.955, 0.985, 1)`;
         currentY = vh;
+        currentScaleX = 1;
+        currentScaleY = 1;
       };
 
       const resetState = () => {
@@ -7548,6 +8084,8 @@
         isFullscreen = false;
         startedInFullscreen = false;
         currentY = 0;
+        currentScaleX = 1;
+        currentScaleY = 1;
         dragging = false;
         suppressComposerTap = false;
         dragLocked = false;
@@ -7601,10 +8139,11 @@
         }
       });
 
+      /* حین درگ، موقعیت Y به همراه میکرو-کشسانی GPU (حداکثر ۲٪) اعمال می‌شود تا متن کاملاً شارپ بماند */
       const renderDragFrame = () => {
         rafPending = false;
         if (!dragging) return;
-        sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+        sheet.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0) scale3d(${currentScaleX.toFixed(4)}, ${currentScaleY.toFixed(4)}, 1)`;
       };
 
       const computeReleaseVelocity = () => {
@@ -7625,13 +8164,16 @@
         'touchstart',
         (e) => {
           if (!isMobileShutter() || e.touches.length !== 1) return;
+          if (e.target.closest('[data-liquid-scrub-bar]')) return;
 
           clearSettleTimer();
           const liveY = readLiveTranslateY();
           sheet.style.transition = 'none';
           sheet.style.opacity = '1';
-          sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0)`;
+          sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
           currentY = liveY;
+          currentScaleX = 1;
+          currentScaleY = 1;
 
           modal.style.transition = 'none';
           modal.style.opacity = '1';
@@ -7694,12 +8236,23 @@
           if (dragging) {
             if (e.cancelable) e.preventDefault();
             const now = performance.now();
+            const prevSample = touchSamples[touchSamples.length - 1];
+            const instantVel = prevSample ? (touch.clientY - prevSample.y) / Math.max(8, now - prevSample.t) : 0;
             touchSamples.push({ y: touch.clientY, t: now });
             if (touchSamples.length > 6) touchSamples.shift();
 
             let nextY = startSheetY + dy;
             if (nextY < 0) {
-              nextY = computeIosRubberBand(nextY, 44);
+              const overscroll = computeIosRubberBand(nextY, 44);
+              nextY = overscroll;
+              const pullRatio = Math.min(1, Math.abs(overscroll) / 24);
+              currentScaleY = 1 + pullRatio * 0.022;
+              currentScaleX = 1 - pullRatio * 0.011;
+            } else {
+              /* کشسانی بسیار ظریف وابسته به سرعت حرکت عمودی دست (محدود به ۱.۶٪) */
+              const velStretch = Math.max(-0.016, Math.min(0.016, -instantVel * 0.008));
+              currentScaleY = 1 + velStretch;
+              currentScaleX = 1 - velStretch * 0.5;
             }
 
             currentY = nextY;
@@ -7796,6 +8349,7 @@
         'touchstart',
         (e) => {
           if (e.touches.length !== 1) return;
+          if (e.target.closest('[data-liquid-scrub-bar]')) return;
           const startedOnHandle = Boolean(e.target.closest('[data-sheet-handle]'));
           canDrag = startedOnHandle || sheet.scrollTop <= 2;
           if (!canDrag) return;
@@ -8301,7 +8855,9 @@
       }
     }
 
-    function updateComposerTogglesUI() {
+    function updateComposerTogglesUI(options = {}) {
+      const fromScrub = Boolean(options.fromScrub);
+      const animateSwitches = Boolean(options.animateSwitches);
       const catVal = document.getElementById('composer-val-category');
       const fsFolderTag = document.getElementById('composer-fs-folder-tag');
       const fsDayTag = document.getElementById('composer-fs-day-tag');
@@ -8325,17 +8881,24 @@
         }
       }
 
+      const dayOrder = ['yesterday', 'today', 'tomorrow'];
+      const dayIdx = Math.max(0, dayOrder.indexOf(state.composerDay));
+      const dayIndicator = document.getElementById('composer-day-indicator');
+      if (dayIndicator && !fromScrub) {
+        dayIndicator.style.transform = `translate3d(${-dayIdx * 100}%, 0, 0)`;
+      }
+
       document.querySelectorAll('.composer-day-chip').forEach((chip) => {
         const active = chip.dataset.composerDay === state.composerDay;
-        chip.classList.toggle('bg-[#7fd5d8]', active);
+        chip.classList.toggle('is-active', active);
         chip.classList.toggle('text-[#0b1617]', active);
         chip.classList.toggle('font-extrabold', active);
         chip.classList.toggle('text-slate-300', !active);
       });
 
-      document.getElementById('composer-switch-autocomplete')?.classList.toggle('is-on', state.composerAutoComplete);
-      document.getElementById('composer-switch-urgent')?.classList.toggle('is-on', state.composerUrgent);
-      document.getElementById('composer-switch-habit')?.classList.toggle('is-on', state.composerHabit);
+      setTgSwitchState(document.getElementById('composer-switch-autocomplete'), state.composerAutoComplete, animateSwitches);
+      setTgSwitchState(document.getElementById('composer-switch-urgent'), state.composerUrgent, animateSwitches);
+      setTgSwitchState(document.getElementById('composer-switch-habit'), state.composerHabit, animateSwitches);
     }
 
     function openTaskComposer(defaultDayOverride = null) {
@@ -8351,7 +8914,7 @@
       if (titleInput) titleInput.value = '';
       if (descInput) descInput.value = '';
 
-      updateComposerTogglesUI();
+      updateComposerTogglesUI({ animateSwitches: false });
       renderComposerSubtasks();
       updateComposerSmartBadges();
       openModal('task-composer-modal');
@@ -8673,6 +9236,16 @@
         if (window.innerWidth >= 640) {
           document.getElementById('dynamic-island')?.classList.remove('is-hidden-for-sheet');
         }
+        syncDynamicPillIndicator({
+          barId: 'task-filter-pill-bar',
+          indicatorId: 'task-filter-indicator',
+          blobId: 'task-filter-indicator-blob',
+          btnSelector: '.filter-chip',
+          activeValue: state.filter,
+          dataAttr: 'filter',
+          animateStretch: false,
+          fromScrub: true,
+        });
       };
 
       syncViewport();
@@ -8724,6 +9297,19 @@
       setupAndroidBackButtonHandler();
       registerOfflineServiceWorker();
 
+      requestAnimationFrame(() => {
+        syncDynamicPillIndicator({
+          barId: 'task-filter-pill-bar',
+          indicatorId: 'task-filter-indicator',
+          blobId: 'task-filter-indicator-blob',
+          btnSelector: '.filter-chip',
+          activeValue: state.filter,
+          dataAttr: 'filter',
+          animateStretch: false,
+          fromScrub: true,
+        });
+      });
+
       /* پیش‌بارگذاری موتور صوتی در اولین لمس صفحه تا کلیک دکمه‌ها هیچ تاخیر یا افت فریم نداشته باشد */
       document.addEventListener('pointerdown', () => {
         if (state.soundEnabled) ensureAudioContext();
@@ -8749,6 +9335,8 @@
           const targetDay = dayOrderList[idx];
           if (targetDay) setSelectedDayView(targetDay, { fromScrub });
         },
+        direction: 'rtl',
+        edgeInset: 4,
       });
 
       const bottomTabOrderList = ['tasks', 'focus', 'stats', 'settings'];
@@ -8762,6 +9350,63 @@
           const targetTab = bottomTabOrderList[idx];
           if (targetTab) switchTab(targetTab, { fromScrub });
         },
+        direction: 'rtl',
+        edgeInset: 4,
+      });
+
+      /* اسکرول انگشتی روی کپسول تایمر داینامیک آیلند (15m | 25m | 45m) */
+      const islandTimerMins = [15, 25, 45];
+      setupLiquidBarScrubbing({
+        barEl: document.getElementById('island-timer-pill-group'),
+        indicatorId: 'island-timer-indicator',
+        blobId: 'island-timer-indicator-blob',
+        items: islandTimerMins,
+        getCurrentIndex: () => Math.max(0, islandTimerMins.indexOf(state.focusDurationMinutes)),
+        onSelectIndex: (idx, fromScrub) => {
+          const targetMin = islandTimerMins[idx];
+          if (targetMin) setFocusDuration(targetMin, { fromScrub });
+        },
+        direction: 'ltr',
+        edgeInset: 2,
+      });
+
+      /* اسکرول انگشتی روی کپسول انتخاب روز در پنجره «کار جدید» (دیروز | امروز | فردا) */
+      setupLiquidBarScrubbing({
+        barEl: document.getElementById('composer-day-pill-group'),
+        indicatorId: 'composer-day-indicator',
+        blobId: 'composer-day-indicator-blob',
+        items: dayOrderList,
+        getCurrentIndex: () => Math.max(0, dayOrderList.indexOf(state.composerDay)),
+        onSelectIndex: (idx, fromScrub) => {
+          const targetDay = dayOrderList[idx];
+          if (targetDay) {
+            state.composerDay = targetDay;
+            updateComposerTogglesUI({ fromScrub });
+          }
+        },
+        direction: 'rtl',
+        edgeInset: 4,
+      });
+
+      /* اسکرول انگشتی روی نوار فیلترهای کارها و فیلترهای دفترچه یادداشت */
+      setupDynamicPillScrubbing({
+        barEl: document.getElementById('task-filter-pill-bar'),
+        indicatorId: 'task-filter-indicator',
+        blobId: 'task-filter-indicator-blob',
+        btnSelector: '.filter-chip',
+        dataAttr: 'filter',
+        getCurrentValue: () => state.filter,
+        onSelectValue: (val, fromScrub) => setTaskFilter(val, { fromScrub }),
+      });
+
+      setupDynamicPillScrubbing({
+        barEl: document.getElementById('notebook-filter-pill-bar'),
+        indicatorId: 'notebook-filter-indicator',
+        blobId: 'notebook-filter-indicator-blob',
+        btnSelector: '.notebook-filter-chip',
+        dataAttr: 'noteFilter',
+        getCurrentValue: () => state.notebookFilter,
+        onSelectValue: (val, fromScrub) => setNotebookFilter(val, { fromScrub }),
       });
 
       const islandEl = document.getElementById('dynamic-island');
@@ -8930,7 +9575,11 @@
         });
       });
 
-      document.getElementById('fab-quick-add-btn')?.addEventListener('click', () => openTaskComposer());
+      const fabBtn = document.getElementById('fab-quick-add-btn');
+      fabBtn?.addEventListener('click', () => {
+        triggerFabLiquidPop(fabBtn);
+        openTaskComposer();
+      });
       document.getElementById('rail-new-task-btn')?.addEventListener('click', () => openTaskComposer());
       document.getElementById('rail-avatar-btn')?.addEventListener('click', openProfileModal);
       document.getElementById('header-avatar-btn')?.addEventListener('click', openProfileModal);
@@ -8979,19 +9628,11 @@
 
       document.querySelectorAll('.filter-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
-          state.filter = chip.dataset.filter || 'all';
-          document.querySelectorAll('.filter-chip').forEach((c) => {
-            const active = c === chip;
-            c.classList.toggle('bg-[#7fd5d8]', active);
-            c.classList.toggle('text-[#0b1617]', active);
-            c.classList.toggle('font-bold', active);
-            c.classList.toggle('bg-[#1a2224]', !active);
-            c.classList.toggle('text-[#93a3a5]', !active);
-            c.classList.toggle('border', !active);
-            c.classList.toggle('border-white/10', !active);
-          });
-          renderTasks();
-          playTactileSound('pop');
+          const nextFilter = chip.dataset.filter || 'all';
+          const filterOrder = ['all', 'active', 'completed', 'urgent', 'habit'];
+          const stepDir = filterOrder.indexOf(nextFilter) - filterOrder.indexOf(state.filter);
+          setTaskFilter(nextFilter);
+          playTactileSound('nav-step', stepDir);
         });
       });
 
@@ -9155,9 +9796,11 @@
 
       document.querySelectorAll('.notebook-filter-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
-          state.notebookFilter = chip.dataset.noteFilter || 'all';
-          renderNotebookModalList();
-          playTactileSound('pop');
+          const nextFilter = chip.dataset.noteFilter || 'all';
+          const filterOrder = ['all', 'pinned', 'idea', 'quote', 'later', 'general'];
+          const stepDir = filterOrder.indexOf(nextFilter) - filterOrder.indexOf(state.notebookFilter);
+          setNotebookFilter(nextFilter);
+          playTactileSound('nav-step', stepDir);
         });
       });
 
@@ -9355,6 +9998,7 @@
 
       document.getElementById('tg-row-autosort')?.addEventListener('click', () => {
         state.autoSortCompleted = !state.autoSortCompleted;
+        setTgSwitchState(document.getElementById('tg-switch-autosort'), state.autoSortCompleted, true);
         saveState();
         renderTasks();
         renderSecondaryTabViews();
@@ -9363,6 +10007,7 @@
 
       document.getElementById('tg-row-privacy')?.addEventListener('click', () => {
         state.privacyBlur = !state.privacyBlur;
+        setTgSwitchState(document.getElementById('tg-switch-privacy'), state.privacyBlur, true);
         saveState();
         renderTasks();
         renderQuickNotes();
@@ -9374,6 +10019,7 @@
 
       document.getElementById('tg-row-sound')?.addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
+        setTgSwitchState(document.getElementById('tg-switch-sound'), state.soundEnabled, true);
         saveState();
         updateHeaderAndProgress();
         renderSecondaryTabViews();
@@ -9684,9 +10330,17 @@
 
       document.querySelectorAll('.composer-day-chip').forEach((chip) => {
         chip.addEventListener('click', () => {
-          state.composerDay = chip.dataset.composerDay || 'today';
-          updateComposerTogglesUI();
-          playTactileSound('pop');
+          const nextDay = chip.dataset.composerDay || 'today';
+          const oldIdx = dayOrderList.indexOf(state.composerDay);
+          const newIdx = dayOrderList.indexOf(nextDay);
+          state.composerDay = nextDay;
+          updateComposerTogglesUI({ animateSwitches: false });
+          if (oldIdx !== newIdx) {
+            triggerBlobStretch(document.getElementById('composer-day-indicator-blob'), Math.abs(newIdx - oldIdx));
+            playTactileSound('nav-step', newIdx - oldIdx);
+          } else {
+            playTactileSound('pop');
+          }
         });
       });
 
@@ -9705,27 +10359,27 @@
         const folders = getAllFolders();
         const idx = folders.findIndex((f) => f.name === state.composerCategory);
         state.composerCategory = folders[(idx + 1) % folders.length]?.name || 'شخصی';
-        updateComposerTogglesUI();
+        updateComposerTogglesUI({ animateSwitches: false });
         updateComposerSmartBadges();
         playTactileSound('pop');
       });
 
       document.getElementById('composer-row-autocomplete')?.addEventListener('click', () => {
         state.composerAutoComplete = !state.composerAutoComplete;
-        updateComposerTogglesUI();
+        updateComposerTogglesUI({ animateSwitches: true });
         playTactileSound('pop');
       });
 
       document.getElementById('composer-row-urgent')?.addEventListener('click', () => {
         state.composerUrgent = !state.composerUrgent;
-        updateComposerTogglesUI();
+        updateComposerTogglesUI({ animateSwitches: true });
         updateComposerSmartBadges();
         playTactileSound('pop');
       });
 
       document.getElementById('composer-row-habit')?.addEventListener('click', () => {
         state.composerHabit = !state.composerHabit;
-        updateComposerTogglesUI();
+        updateComposerTogglesUI({ animateSwitches: true });
         updateComposerSmartBadges();
         playTactileSound('pop');
       });
