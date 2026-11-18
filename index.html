@@ -671,15 +671,26 @@
       overflow: hidden;
       cursor: pointer;
       contain: layout style paint;
+      opacity: 1;
       transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       transform-origin: top center;
       transition:
         width calc(0.48s * var(--motion-scale)) var(--spring-curve),
         height calc(0.48s * var(--motion-scale)) var(--spring-curve),
         border-radius calc(0.48s * var(--motion-scale)) var(--spring-curve),
-        transform calc(0.36s * var(--motion-scale)) var(--spring-curve),
+        transform calc(0.4s * var(--motion-scale)) var(--spring-curve),
+        opacity calc(0.26s * var(--motion-scale)) ease,
         background 0.22s ease,
         border-color 0.22s ease;
+    }
+
+    .obsidian-shell.is-hidden-for-sheet {
+      opacity: 0 !important;
+      transform: translate3d(0, -32px, 0) scale3d(0.72, 0.66, 1) !important;
+      pointer-events: none !important;
+      transition:
+        opacity calc(0.24s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        transform calc(0.36s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) !important;
     }
 
     .obsidian-shell:not(.is-expanded):hover {
@@ -6466,10 +6477,23 @@
         return currentY;
       };
 
+      const syncIslandVisibilityForFullscreen = (hideIsland) => {
+        const islandEl = document.getElementById('dynamic-island');
+        if (!islandEl) return;
+        if (hideIsland && state.islandMode === 'expanded') {
+          setIslandMode('idle');
+        }
+        islandEl.classList.toggle('is-hidden-for-sheet', Boolean(hideIsland));
+      };
+
       const setFullscreenState = (nextFs) => {
-        if (isFullscreen === nextFs) return;
+        if (isFullscreen === nextFs) {
+          syncIslandVisibilityForFullscreen(nextFs);
+          return;
+        }
         isFullscreen = nextFs;
         sheet.classList.toggle('is-fullscreen', isFullscreen);
+        syncIslandVisibilityForFullscreen(isFullscreen);
       };
 
       const computeHalfMetrics = () => {
@@ -6632,6 +6656,7 @@
         dragLocked = false;
         rafPending = false;
         touchSamples = [];
+        syncIslandVisibilityForFullscreen(false);
         modal.style.transition = '';
         modal.style.opacity = '';
         scrollBody.style.maxHeight = '';
@@ -7682,6 +7707,9 @@
         const keyboardHeight = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
         root.style.setProperty('--app-viewport-height', `${height}px`);
         root.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+        if (window.innerWidth >= 640) {
+          document.getElementById('dynamic-island')?.classList.remove('is-hidden-for-sheet');
+        }
       };
 
       syncViewport();
