@@ -907,8 +907,177 @@
     }
 
     .obsidian-shell:not(.is-expanded).is-island-pressing {
-      transform: translate3d(0, 1px, 0) scale3d(1.032, 0.972, 1) !important;
-      transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+      transform: translate3d(0, 1px, 0) scale3d(0.976, 0.976, 1) !important;
+      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    .obsidian-shell.is-expanded.is-island-pressing {
+      transform: translate3d(0, 0, 0) scale3d(0.988, 0.988, 1) !important;
+      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+    }
+
+    @keyframes islandToastJellyPop {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(0.96, 0.98, 1);
+      }
+      34% {
+        transform: translate3d(0, 1.5px, 0) scale3d(1.024, 0.982, 1);
+      }
+      70% {
+        transform: translate3d(0, 0, 0) scale3d(0.996, 1.004, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    /* باز شدن یکنواخت و هم‌جهت با تغییر ابعاد برای حذف کامل لرزش و نوسان اولیه لبه‌ها */
+    @keyframes islandLiquidMorphExpand {
+      0% {
+        transform: translate3d(0, 0.5px, 0) scale3d(0.984, 0.984, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    /* جمع شدن یکنواخت و مخملی به سمت سقف صفحه بدون پرش رفت‌وبرگشتی */
+    @keyframes islandLiquidMorphCollapse {
+      0% {
+        transform: translate3d(0, 0, 0) scale3d(1.012, 1.012, 1);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      }
+    }
+
+    .obsidian-shell.is-popping {
+      animation: islandToastJellyPop calc(0.52s * var(--motion-scale)) var(--island-open-curve);
+    }
+
+    .obsidian-shell.is-morphing-expand {
+      animation: islandLiquidMorphExpand calc(0.58s * var(--motion-scale)) var(--island-open-curve);
+    }
+
+    .obsidian-shell.is-morphing-collapse {
+      animation: islandLiquidMorphCollapse calc(0.46s * var(--motion-scale)) var(--island-close-curve);
+    }
+
+    .obsidian-shell.is-live {
+      width: 252px;
+      border-color: rgba(var(--mint-accent-rgb), 0.36);
+    }
+
+    .obsidian-shell.is-toast {
+      width: min(92vw, 336px);
+      height: 48px;
+      border-radius: 24px;
+      transition:
+        width calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        height calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        border-radius calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        box-shadow calc(0.54s * var(--motion-scale)) ease,
+        transform calc(0.5s * var(--motion-scale)) var(--island-open-curve),
+        opacity calc(0.28s * var(--motion-scale)) ease,
+        background 0.26s ease,
+        border-color 0.26s ease;
+    }
+
+    /* باز شدن سنگین، آرام و باوقار (0.58s با جرم بالا و ترمز مخملی) */
+    .obsidian-shell.is-expanded {
+      width: min(92vw, 344px);
+      height: 168px;
+      border-radius: 30px;
+      cursor: default;
+      box-shadow: var(--island-shadow-expanded);
+      transition:
+        width calc(0.58s * var(--motion-scale)) var(--island-open-curve),
+        height calc(0.58s * var(--motion-scale)) var(--island-open-curve),
+        border-radius calc(0.58s * var(--motion-scale)) var(--island-open-curve),
+        box-shadow calc(0.58s * var(--motion-scale)) ease,
+        transform calc(0.58s * var(--motion-scale)) var(--island-open-curve),
+        opacity calc(0.28s * var(--motion-scale)) ease,
+        background 0.26s ease,
+        border-color 0.26s ease;
+    }
+
+    /* قفل کردن مقیاس و حرکت محتوای داخلی با بدنه (Matched Geometry Scale) */
+    .island-layer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform-origin: top center;
+      transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      opacity: 1;
+      transition:
+        opacity calc(0.28s * var(--motion-scale)) cubic-bezier(0.2, 0.9, 0.3, 1) 0.04s,
+        transform calc(0.5s * var(--motion-scale)) var(--island-open-curve);
+    }
+
+    /* عرض ثابت لایه پایه تا هنگام باز شدن آیلند هیچ بازمحاسبه متن و برش انجام نشود */
+    #island-idle-layer {
+      width: 226px;
+      height: 44px;
+    }
+
+    .obsidian-shell.is-live #island-idle-layer {
+      width: 252px;
+    }
+
+    #island-toast-layer {
+      width: min(92vw, 336px);
+      height: 48px;
+    }
+
+    #island-expanded-layer {
+      width: min(92vw, 344px);
+      height: 168px;
+      transition:
+        opacity calc(0.32s * var(--motion-scale)) cubic-bezier(0.2, 0.9, 0.3, 1) 0.04s,
+        transform calc(0.54s * var(--motion-scale)) var(--island-open-curve);
+    }
+
+    .island-timer-capsule {
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    body.theme-light .island-timer-capsule {
+      background: rgba(15, 23, 42, 0.04);
+      border-color: rgba(15, 23, 42, 0.07);
+    }
+
+    body.theme-light #island-quick-complete-btn {
+      background-color: rgba(16, 185, 129, 0.14) !important;
+      border-color: rgba(5, 150, 105, 0.32) !important;
+      color: #047857 !important;
+    }
+
+    .island-layer.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(-50%, -3px, 0) scale3d(0.92, 0.90, 1);
+      transition:
+        opacity calc(0.2s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.4s * var(--motion-scale)) var(--island-close-curve);
+    }
+
+    /* پیوستگی هندسی هماهنگ: لایه بازشده به داخل کپسول جمع می‌شود و لایه پایه بدون بزرگ‌نمایی متضاد محو می‌شود */
+    #island-expanded-layer.is-hidden {
+      transform: translate3d(-50%, -4px, 0) scale3d(0.92, 0.88, 1);
+      transition:
+        opacity calc(0.22s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.42s * var(--motion-scale)) var(--island-close-curve);
+    }
+
+    #island-idle-layer.is-hidden {
+      transform: translate3d(-50%, 2px, 0) scale3d(0.96, 0.96, 1);
+      transition:
+        opacity calc(0.18s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.36s * var(--motion-scale)) var(--island-open-curve);
     }
 
     .obsidian-shell.is-expanded.is-island-pressing {
@@ -9494,6 +9663,7 @@
         let islandDetentCrossed = false;
         let islandPullRafPending = false;
         let islandSuppressClick = false;
+        let islandPressReleaseTimer = null;
         let pendingIslandTransform = '';
 
         islandEl.addEventListener('animationend', () => {
@@ -9509,6 +9679,12 @@
         islandEl.addEventListener(
           'click',
           (e) => {
+            if (islandPressReleaseTimer) {
+              clearTimeout(islandPressReleaseTimer);
+              islandPressReleaseTimer = null;
+            }
+            islandEl.classList.remove('is-island-pressing');
+
             if (islandSuppressClick) {
               e.stopImmediatePropagation();
               e.preventDefault();
@@ -9537,6 +9713,10 @@
             if (state.islandMode === 'expanded' && (e.target.closest('button') || e.target.closest('[data-liquid-scrub-bar]'))) {
               islandTouchStartY = 0;
               return;
+            }
+            if (islandPressReleaseTimer) {
+              clearTimeout(islandPressReleaseTimer);
+              islandPressReleaseTimer = null;
             }
             const t = e.touches[0];
             islandTouchStartX = t.clientX;
@@ -9630,11 +9810,23 @@
         );
 
         const finishIslandPull = () => {
-          islandEl.classList.remove('is-island-pressing');
-          if (!islandTouchStartY) return;
+          if (!islandTouchStartY) {
+            islandEl.classList.remove('is-island-pressing');
+            return;
+          }
           islandTouchStartY = 0;
 
-          if (!islandPullActive) return;
+          if (!islandPullActive) {
+            /* حفظ حالت فشردگی تا لحظه اجرای click برای جلوگیری از پرش چندفریمی بین touchend و باز شدن آیلند */
+            if (islandPressReleaseTimer) clearTimeout(islandPressReleaseTimer);
+            islandPressReleaseTimer = setTimeout(() => {
+              islandEl.classList.remove('is-island-pressing');
+              islandPressReleaseTimer = null;
+            }, 65);
+            return;
+          }
+
+          islandEl.classList.remove('is-island-pressing');
           islandPullActive = false;
           islandPullRafPending = false;
           islandEl.classList.remove('is-island-pulling');
