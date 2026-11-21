@@ -62,11 +62,22 @@
       --glass-blur: 10px;
       --island-blur: 12px;
       --motion-scale: 1;
-      /* منحنی‌های فنری و ابریشمی منطبق با فیزیک iOS 27 & HyperOS 4 */
+      /* منحنی‌های فنری و ابریشمی منطبق با فیزیک iOS & HyperOS */
       --spring-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
       --spring-curve: linear(
         0, 0.012 2.2%, 0.048 4.5%, 0.185 9.5%, 0.56 18%, 0.84 26%,
         0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
+      );
+      /* منحنی‌های مایع سنگین و باوقار برای داینامیک آیلند (High-Mass Viscous Spring) */
+      --island-open-curve: cubic-bezier(0.18, 0.92, 0.24, 1);
+      --island-open-curve: linear(
+        0, 0.006 2.5%, 0.025 5%, 0.095 10%, 0.26 17%, 0.48 25%,
+        0.69 34%, 0.845 44%, 0.938 55%, 0.982 67%, 0.997 80%, 1
+      );
+      --island-close-curve: cubic-bezier(0.24, 0.88, 0.28, 1);
+      --island-close-curve: linear(
+        0, 0.011 2.2%, 0.045 4.8%, 0.165 10%, 0.43 18%, 0.70 28%,
+        0.875 39%, 0.958 52%, 0.99 66%, 0.999 82%, 1
       );
       --sheet-curve: cubic-bezier(0.19, 1, 0.22, 1);
       --ios-fluid-curve: cubic-bezier(0.2, 0.9, 0.25, 1);
@@ -87,14 +98,14 @@
       --text-main: #f4f7f7;
       --text-muted: #93a3a5;
       --scrim-bg: rgba(11, 16, 18, 0.86);
-      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.95) 0%, rgba(15, 21, 23, 0.98) 100%);
+      --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.96) 0%, rgba(15, 21, 23, 0.99) 100%);
       --island-border: rgba(255, 255, 255, 0.1);
       --island-shadow:
         0 4px 14px -2px rgba(0, 0, 0, 0.42),
         inset 0 1px 0 rgba(255, 255, 255, 0.11);
       --island-shadow-expanded:
-        0 14px 34px -8px rgba(0, 0, 0, 0.52),
-        inset 0 1px 0 rgba(255, 255, 255, 0.13);
+        0 18px 40px -8px rgba(0, 0, 0, 0.56),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
       --island-text: #ffffff;
       --island-subtext: #9fb0b2;
     }
@@ -113,13 +124,13 @@
       --text-main: #0f172a;
       --text-muted: #5b6b73;
       --scrim-bg: rgba(238, 243, 245, 0.88);
-      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 250, 251, 0.99) 100%);
+      --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 250, 251, 0.995) 100%);
       --island-border: rgba(15, 23, 42, 0.08);
       --island-shadow:
         0 4px 14px -4px rgba(15, 23, 42, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.95);
       --island-shadow-expanded:
-        0 14px 32px -8px rgba(15, 23, 42, 0.15),
+        0 18px 38px -8px rgba(15, 23, 42, 0.18),
         inset 0 1px 0 rgba(255, 255, 255, 0.98);
       --island-text: #0f172a;
       --island-subtext: #52636b;
@@ -845,6 +856,7 @@
       pointer-events: none;
     }
 
+    /* داینامیک آیلند با فیزیک مایع سنگین و باوقار (High-Mass Viscous Spring - iOS & HyperOS) */
     .obsidian-shell {
       pointer-events: auto;
       position: relative;
@@ -854,22 +866,31 @@
       background: var(--island-bg);
       border: 1px solid var(--island-border);
       box-shadow: var(--island-shadow);
-      backdrop-filter: blur(var(--island-blur));
-      -webkit-backdrop-filter: blur(var(--island-blur));
       overflow: hidden;
       cursor: pointer;
       contain: layout style paint;
+      will-change: transform, width, height, border-radius, box-shadow;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       opacity: 1;
       transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       transform-origin: top center;
+      touch-action: none;
+      /* زمان‌بندی نامتقارن: جمع شدن کمی جمع‌وجورتر با کشش سطحی (0.48s) */
       transition:
-        width calc(0.48s * var(--motion-scale)) var(--spring-curve),
-        height calc(0.48s * var(--motion-scale)) var(--spring-curve),
-        border-radius calc(0.48s * var(--motion-scale)) var(--spring-curve),
-        transform calc(0.4s * var(--motion-scale)) var(--spring-curve),
-        opacity calc(0.26s * var(--motion-scale)) ease,
-        background 0.22s ease,
-        border-color 0.22s ease;
+        width calc(0.48s * var(--motion-scale)) var(--island-close-curve),
+        height calc(0.48s * var(--motion-scale)) var(--island-close-curve),
+        border-radius calc(0.48s * var(--motion-scale)) var(--island-close-curve),
+        box-shadow calc(0.48s * var(--motion-scale)) ease,
+        transform calc(0.46s * var(--motion-scale)) var(--island-close-curve),
+        opacity calc(0.28s * var(--motion-scale)) ease,
+        background 0.26s ease,
+        border-color 0.26s ease;
+    }
+
+    .obsidian-shell.is-island-pulling {
+      transition: none !important;
+      animation: none !important;
     }
 
     .obsidian-shell.is-hidden-for-sheet {
@@ -877,63 +898,65 @@
       transform: translate3d(0, -32px, 0) scale3d(0.72, 0.66, 1) !important;
       pointer-events: none !important;
       transition:
-        opacity calc(0.24s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
-        transform calc(0.36s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) !important;
+        opacity calc(0.26s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1),
+        transform calc(0.38s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) !important;
     }
 
-    .obsidian-shell:not(.is-expanded):hover {
+    .obsidian-shell:not(.is-expanded):not(.is-island-pulling):hover {
       border-color: rgba(var(--mint-accent-rgb), 0.34);
     }
 
     .obsidian-shell:not(.is-expanded).is-island-pressing {
-      transform: translate3d(0, 1px, 0) scale3d(1.045, 0.96, 1) !important;
-      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+      transform: translate3d(0, 1px, 0) scale3d(1.032, 0.972, 1) !important;
+      transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
 
     .obsidian-shell.is-expanded.is-island-pressing {
-      transform: translate3d(0, 0, 0) scale3d(0.986, 0.986, 1) !important;
-      transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+      transform: translate3d(0, 0, 0) scale3d(0.988, 0.988, 1) !important;
+      transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
     }
 
-    @keyframes islandCelebrateBounce {
+    @keyframes islandToastJellyPop {
       0% {
-        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+        transform: translate3d(0, 0, 0) scale3d(0.96, 0.98, 1);
       }
       34% {
-        transform: translate3d(0, -1px, 0) scale3d(1.06, 0.94, 1);
+        transform: translate3d(0, 1.5px, 0) scale3d(1.024, 0.982, 1);
       }
-      68% {
-        transform: translate3d(0, 0.5px, 0) scale3d(0.985, 1.018, 1);
+      70% {
+        transform: translate3d(0, 0, 0) scale3d(0.996, 1.004, 1);
       }
       100% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
+    /* کشسانی عمودی هم‌جهت با گرانش هنگام باز شدن به سمت پایین (بدون پرش ژله‌ای) */
     @keyframes islandLiquidMorphExpand {
       0% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
-      32% {
-        transform: translate3d(0, 2px, 0) scale3d(1.036, 0.964, 1);
+      30% {
+        transform: translate3d(0, 2px, 0) scale3d(0.986, 1.028, 1);
       }
-      68% {
-        transform: translate3d(0, -0.5px, 0) scale3d(0.992, 1.01, 1);
+      66% {
+        transform: translate3d(0, 0.5px, 0) scale3d(1.003, 0.996, 1);
       }
       100% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
     }
 
+    /* جمع شدن آرام به سمت سقف صفحه با حفظ حجم و کشش سطحی */
     @keyframes islandLiquidMorphCollapse {
       0% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
       }
-      34% {
-        transform: translate3d(0, -1px, 0) scale3d(0.962, 1.038, 1);
+      30% {
+        transform: translate3d(0, -1px, 0) scale3d(1.016, 0.976, 1);
       }
-      70% {
-        transform: translate3d(0, 0.5px, 0) scale3d(1.012, 0.99, 1);
+      68% {
+        transform: translate3d(0, 0, 0) scale3d(0.997, 1.004, 1);
       }
       100% {
         transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
@@ -941,15 +964,15 @@
     }
 
     .obsidian-shell.is-popping {
-      animation: islandCelebrateBounce calc(0.46s * var(--motion-scale)) var(--spring-curve);
+      animation: islandToastJellyPop calc(0.54s * var(--motion-scale)) var(--island-open-curve);
     }
 
     .obsidian-shell.is-morphing-expand {
-      animation: islandLiquidMorphExpand calc(0.46s * var(--motion-scale)) var(--spring-curve);
+      animation: islandLiquidMorphExpand calc(0.62s * var(--motion-scale)) var(--island-open-curve);
     }
 
     .obsidian-shell.is-morphing-collapse {
-      animation: islandLiquidMorphCollapse calc(0.44s * var(--motion-scale)) var(--spring-curve);
+      animation: islandLiquidMorphCollapse calc(0.48s * var(--motion-scale)) var(--island-close-curve);
     }
 
     .obsidian-shell.is-live {
@@ -961,32 +984,59 @@
       width: min(92vw, 336px);
       height: 48px;
       border-radius: 24px;
+      transition:
+        width calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        height calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        border-radius calc(0.54s * var(--motion-scale)) var(--island-open-curve),
+        box-shadow calc(0.54s * var(--motion-scale)) ease,
+        transform calc(0.5s * var(--motion-scale)) var(--island-open-curve),
+        opacity calc(0.28s * var(--motion-scale)) ease,
+        background 0.26s ease,
+        border-color 0.26s ease;
     }
 
+    /* باز شدن سنگین، آرام و باوقار (0.62s با جرم بالا و ترمز مخملی) */
     .obsidian-shell.is-expanded {
       width: min(92vw, 344px);
       height: 168px;
       border-radius: 30px;
       cursor: default;
       box-shadow: var(--island-shadow-expanded);
+      transition:
+        width calc(0.62s * var(--motion-scale)) var(--island-open-curve),
+        height calc(0.62s * var(--motion-scale)) var(--island-open-curve),
+        border-radius calc(0.62s * var(--motion-scale)) var(--island-open-curve),
+        box-shadow calc(0.62s * var(--motion-scale)) ease,
+        transform calc(0.58s * var(--motion-scale)) var(--island-open-curve),
+        opacity calc(0.28s * var(--motion-scale)) ease,
+        background 0.26s ease,
+        border-color 0.26s ease;
     }
 
+    /* قفل کردن مقیاس و حرکت محتوای داخلی با بدنه (Matched Geometry Scale) */
     .island-layer {
       position: absolute;
       top: 0;
       left: 50%;
       transform-origin: top center;
       transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
       opacity: 1;
-      filter: blur(0px);
       transition:
-        opacity calc(0.26s * var(--motion-scale)) ease 0.05s,
-        transform calc(0.46s * var(--motion-scale)) var(--spring-curve);
+        opacity calc(0.3s * var(--motion-scale)) cubic-bezier(0.2, 0.9, 0.3, 1) 0.06s,
+        transform calc(0.52s * var(--motion-scale)) var(--island-open-curve);
     }
 
+    /* عرض ثابت لایه پایه تا هنگام باز شدن آیلند هیچ بازمحاسبه متن و برش انجام نشود */
     #island-idle-layer {
-      width: 100%;
+      width: 226px;
       height: 44px;
+    }
+
+    .obsidian-shell.is-live #island-idle-layer {
+      width: 252px;
     }
 
     #island-toast-layer {
@@ -997,6 +1047,9 @@
     #island-expanded-layer {
       width: min(92vw, 344px);
       height: 168px;
+      transition:
+        opacity calc(0.34s * var(--motion-scale)) cubic-bezier(0.2, 0.9, 0.3, 1) 0.08s,
+        transform calc(0.58s * var(--motion-scale)) var(--island-open-curve);
     }
 
     .island-timer-capsule {
@@ -1018,10 +1071,25 @@
     .island-layer.is-hidden {
       opacity: 0;
       pointer-events: none;
-      transform: translate3d(-50%, -4px, 0) scale3d(0.9, 0.9, 1);
+      transform: translate3d(-50%, -4px, 0) scale3d(0.88, 0.84, 1);
       transition:
-        opacity 0.14s ease,
-        transform 0.24s var(--ios-fluid-curve);
+        opacity calc(0.24s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.42s * var(--motion-scale)) var(--island-close-curve);
+    }
+
+    /* پیوستگی هندسی: لایه بازشده به داخل کپسول بالایی جمع می‌شود و لایه پایه هم‌زمان بالا می‌رود */
+    #island-expanded-layer.is-hidden {
+      transform: translate3d(-50%, -6px, 0) scale3d(0.82, 0.70, 1);
+      transition:
+        opacity calc(0.26s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.44s * var(--motion-scale)) var(--island-close-curve);
+    }
+
+    #island-idle-layer.is-hidden {
+      transform: translate3d(-50%, 6px, 0) scale3d(1.06, 1.06, 1);
+      transition:
+        opacity calc(0.22s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1),
+        transform calc(0.44s * var(--motion-scale)) var(--island-open-curve);
     }
 
     .island-primary-text {
@@ -4709,7 +4777,7 @@
           osc.start(now);
           osc.stop(now + 0.075);
         } else if (type === 'scrub-tick') {
-          /* تیک کریستالی ظریف هنگام سر خوردن انگشت روی نوار تب‌ها */
+          /* تیک کریستالی ظریف هنگام سر خوردن انگشت روی نوار تب‌ها یا کشیدن داینامیک آیلند */
           const clampedStep = Math.max(-2, Math.min(2, Number(directionStep) || 0));
           const tickFreq = 740 + clampedStep * 55;
           osc.type = 'sine';
@@ -4869,7 +4937,13 @@
       return nextSmart;
     }
 
-    function setIslandMode(mode) {
+    function clearIslandAnimationClasses(shell) {
+      if (!shell) return;
+      shell.classList.remove('is-popping', 'is-morphing-expand', 'is-morphing-collapse');
+    }
+
+    function setIslandMode(mode, options = {}) {
+      const skipMorph = Boolean(options.skipMorph);
       const prevMode = state.islandMode;
       state.islandMode = mode;
       const shell = document.getElementById('dynamic-island');
@@ -4886,11 +4960,11 @@
       toastLayer.classList.toggle('is-hidden', mode !== 'toast');
       expandedLayer.classList.toggle('is-hidden', mode !== 'expanded');
 
-      /* فیزیک کشسانی و فشردگی قطره جیوه هنگام تغییر ابعاد داینامیک آیلند */
-      if (prevMode !== mode && !shell.classList.contains('is-hidden-for-sheet')) {
-        shell.classList.remove('is-morphing-expand', 'is-morphing-collapse');
+      /* پاک‌سازی کامل انیمیشن‌های قبلی برای جلوگیری از هرگونه تداخل با Toast یا کشیدن زنده انگشت */
+      clearIslandAnimationClasses(shell);
+      if (!skipMorph && prevMode !== mode && !shell.classList.contains('is-hidden-for-sheet')) {
         void shell.offsetWidth;
-        if (mode === 'expanded' || (prevMode === 'idle' && mode === 'toast')) {
+        if (mode === 'expanded') {
           shell.classList.add('is-morphing-expand');
         } else if (mode === 'idle') {
           shell.classList.add('is-morphing-collapse');
@@ -4936,9 +5010,10 @@
         actionBtn.classList.toggle('hidden', !hasAction);
       }
 
-      setIslandMode('toast');
-      if (shell) {
-        shell.classList.remove('is-popping');
+      /* بدون تداخل با is-morphing-expand: تنها انیمیشن اختصاصی Toast Jelly Pop اجرا می‌شود */
+      setIslandMode('toast', { skipMorph: true });
+      if (shell && !shell.classList.contains('is-hidden-for-sheet')) {
+        clearIslandAnimationClasses(shell);
         void shell.offsetWidth;
         shell.classList.add('is-popping');
       }
@@ -7895,7 +7970,7 @@
         const islandEl = document.getElementById('dynamic-island');
         if (!islandEl) return;
         if (hideIsland && state.islandMode === 'expanded') {
-          setIslandMode('idle');
+          setIslandMode('idle', { skipMorph: true });
         }
         islandEl.classList.toggle('is-hidden-for-sheet', Boolean(hideIsland));
       };
@@ -9409,59 +9484,183 @@
         onSelectValue: (val, fromScrub) => setNotebookFilter(val, { fromScrub }),
       });
 
+      /* ==================== تعامل زنده و کشسانی انگشتی روی داینامیک آیلند (Live Pull Stretch) ==================== */
       const islandEl = document.getElementById('dynamic-island');
       if (islandEl) {
+        let islandTouchStartX = 0;
         let islandTouchStartY = 0;
+        let islandPullActive = false;
+        let islandPullDy = 0;
+        let islandDetentCrossed = false;
+        let islandPullRafPending = false;
+        let islandSuppressClick = false;
+        let pendingIslandTransform = '';
 
-        islandEl.addEventListener('click', (e) => {
-          if (state.islandMode === 'idle') {
-            setIslandMode('expanded');
-            playTactileSound('pop');
-            triggerHaptic(8);
-          } else if (state.islandMode === 'toast' && !e.target.closest('#island-undo-btn')) {
-            setIslandMode('expanded');
-          }
+        islandEl.addEventListener('animationend', () => {
+          clearIslandAnimationClasses(islandEl);
         });
+
+        const applyIslandPullFrame = () => {
+          islandPullRafPending = false;
+          if (!islandPullActive) return;
+          islandEl.style.transform = pendingIslandTransform;
+        };
+
+        islandEl.addEventListener(
+          'click',
+          (e) => {
+            if (islandSuppressClick) {
+              e.stopImmediatePropagation();
+              e.preventDefault();
+              islandSuppressClick = false;
+              return;
+            }
+            if (state.islandMode === 'idle') {
+              setIslandMode('expanded');
+              playTactileSound('pop');
+              triggerHaptic(8);
+            } else if (state.islandMode === 'toast' && !e.target.closest('#island-undo-btn')) {
+              if (state.toastTimeout) {
+                clearTimeout(state.toastTimeout);
+                state.toastTimeout = null;
+              }
+              setIslandMode('expanded');
+            }
+          },
+          true
+        );
 
         islandEl.addEventListener(
           'touchstart',
           (e) => {
-            if (e.touches.length === 1) {
-              islandTouchStartY = e.touches[0].clientY;
-              islandEl.classList.add('is-island-pressing');
+            if (e.touches.length !== 1 || islandEl.classList.contains('is-hidden-for-sheet')) return;
+            if (state.islandMode === 'expanded' && (e.target.closest('button') || e.target.closest('[data-liquid-scrub-bar]'))) {
+              islandTouchStartY = 0;
+              return;
             }
+            const t = e.touches[0];
+            islandTouchStartX = t.clientX;
+            islandTouchStartY = t.clientY;
+            islandPullActive = false;
+            islandPullDy = 0;
+            islandDetentCrossed = false;
+            clearIslandAnimationClasses(islandEl);
+            islandEl.classList.add('is-island-pressing');
           },
           { passive: true }
         );
 
         islandEl.addEventListener(
-          'touchend',
+          'touchmove',
           (e) => {
-            islandEl.classList.remove('is-island-pressing');
-            if (islandTouchStartY && e.changedTouches.length === 1) {
-              const dy = e.changedTouches[0].clientY - islandTouchStartY;
-              if (state.islandMode === 'expanded' && dy < -26) {
-                setIslandMode('idle');
-                playTactileSound('pop');
-              } else if (state.islandMode === 'idle' && dy > 20) {
-                setIslandMode('expanded');
-                playTactileSound('pop');
-                triggerHaptic(8);
+            if (!islandTouchStartY || e.touches.length !== 1) return;
+            const t = e.touches[0];
+            const dx = t.clientX - islandTouchStartX;
+            const dy = t.clientY - islandTouchStartY;
+
+            if (!islandPullActive) {
+              if (Math.abs(dy) < 6) return;
+              if (Math.abs(dx) > Math.abs(dy) * 1.2) {
+                islandTouchStartY = 0;
+                islandEl.classList.remove('is-island-pressing');
+                return;
+              }
+              islandPullActive = true;
+              islandSuppressClick = true;
+              islandEl.classList.remove('is-island-pressing');
+              islandEl.classList.add('is-island-pulling');
+            }
+
+            if (e.cancelable) e.preventDefault();
+            islandPullDy = dy;
+
+            let stretchX = 1;
+            let stretchY = 1;
+            let shiftY = 0;
+
+            if (state.islandMode === 'idle' || state.islandMode === 'toast') {
+              if (dy > 0) {
+                const pull = computeIosRubberBand(dy, 72);
+                stretchY = 1 + pull * 0.0095;
+                stretchX = 1 + pull * 0.0024;
+                shiftY = pull * 0.16;
+
+                const crossed = dy > 38;
+                if (crossed !== islandDetentCrossed) {
+                  islandDetentCrossed = crossed;
+                  triggerHaptic(7);
+                  playTactileSound('scrub-tick', crossed ? 1 : -1);
+                }
+              } else {
+                const push = computeIosRubberBand(Math.abs(dy), 48);
+                stretchY = Math.max(0.88, 1 - push * 0.0045);
+                stretchX = 1 + push * 0.0022;
+                shiftY = -push * 0.12;
+                islandDetentCrossed = false;
+              }
+            } else if (state.islandMode === 'expanded') {
+              if (dy < 0) {
+                const pullUp = computeIosRubberBand(Math.abs(dy), 76);
+                stretchY = Math.max(0.84, 1 - pullUp * 0.0042);
+                stretchX = Math.max(0.93, 1 - pullUp * 0.0018);
+                shiftY = -pullUp * 0.18;
+
+                const crossed = dy < -34;
+                if (crossed !== islandDetentCrossed) {
+                  islandDetentCrossed = crossed;
+                  triggerHaptic(7);
+                  playTactileSound('scrub-tick', crossed ? -1 : 1);
+                }
+              } else {
+                const pullDown = computeIosRubberBand(dy, 64);
+                stretchY = 1 + pullDown * 0.0028;
+                stretchX = Math.max(0.96, 1 - pullDown * 0.0012);
+                shiftY = pullDown * 0.16;
+                islandDetentCrossed = false;
               }
             }
-            islandTouchStartY = 0;
+
+            pendingIslandTransform = `translate3d(0, ${shiftY.toFixed(2)}px, 0) scale3d(${stretchX.toFixed(4)}, ${stretchY.toFixed(4)}, 1)`;
+            if (!islandPullRafPending) {
+              islandPullRafPending = true;
+              requestAnimationFrame(applyIslandPullFrame);
+            }
           },
-          { passive: true }
+          { passive: false }
         );
 
-        islandEl.addEventListener(
-          'touchcancel',
-          () => {
-            islandEl.classList.remove('is-island-pressing');
-            islandTouchStartY = 0;
-          },
-          { passive: true }
-        );
+        const finishIslandPull = () => {
+          islandEl.classList.remove('is-island-pressing');
+          if (!islandTouchStartY) return;
+          islandTouchStartY = 0;
+
+          if (!islandPullActive) return;
+          islandPullActive = false;
+          islandPullRafPending = false;
+          islandEl.classList.remove('is-island-pulling');
+          islandEl.style.transform = '';
+
+          if ((state.islandMode === 'idle' || state.islandMode === 'toast') && islandPullDy > 38) {
+            if (state.toastTimeout) {
+              clearTimeout(state.toastTimeout);
+              state.toastTimeout = null;
+            }
+            setIslandMode('expanded', { skipMorph: true });
+            playTactileSound('pop');
+            triggerHaptic(10);
+          } else if (state.islandMode === 'expanded' && islandPullDy < -34) {
+            setIslandMode('idle', { skipMorph: true });
+            playTactileSound('pop');
+            triggerHaptic(8);
+          }
+
+          setTimeout(() => {
+            islandSuppressClick = false;
+          }, 120);
+        };
+
+        islandEl.addEventListener('touchend', finishIslandPull);
+        islandEl.addEventListener('touchcancel', finishIslandPull);
       }
 
       document.addEventListener('click', (e) => {
