@@ -2014,3 +2014,37 @@ body.theme-light .avatar-surface {
   background-color: rgba(var(--mint-accent-rgb), 0.18) !important;
   border-color: rgba(var(--mint-accent-rgb), 0.42) !important;
 }
+
+/* ==================== پرده تمام‌صفحه شیشه‌ای بروزرسانی اتمی ==================== */
+#app-update-overlay {
+  opacity: 1;
+  transition: opacity calc(0.36s * var(--motion-scale)) var(--sheet-curve);
+  will-change: opacity;
+}
+
+#app-update-overlay.is-overlay-entering {
+  animation: modalBackdropIn calc(0.34s * var(--motion-scale)) var(--sheet-curve) both;
+}
+
+#app-update-overlay.is-overlay-fading-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes updateIconFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -3px, 0) scale(1.06);
+  }
+}
+
+#update-overlay-icon {
+  display: inline-block;
+  animation: updateIconFloat 1.9s ease-in-out infinite;
+}
+
+#update-overlay-progress-fill {
+  transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+}
