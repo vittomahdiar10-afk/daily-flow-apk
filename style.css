@@ -1,0 +1,2016 @@
+/* ==================== متغیرهای پایه، پالت رنگی و منحنی‌های فنری ==================== */
+:root {
+  color-scheme: dark;
+  --app-viewport-height: 100lvh;
+  --keyboard-offset: 0px;
+  --mint-accent: #7fd5d8;
+  --mint-accent-strong: #4ebec2;
+  --mint-accent-rgb: 127, 213, 216;
+  --mint-contrast-text: #0b1617;
+  --card-radius: 24px;
+  --glass-blur: 10px;
+  --island-blur: 12px;
+  --motion-scale: 1;
+
+  /* منحنی‌های فنری و ابریشمی منطبق با فیزیک iOS & HyperOS */
+  --spring-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
+  --spring-curve: linear(
+    0, 0.012 2.2%, 0.048 4.5%, 0.185 9.5%, 0.56 18%, 0.84 26%,
+    0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
+  );
+
+  /* منحنی‌های سریع، واکنش‌گرا و مخملی بومی iOS برای داینامیک آیلند */
+  --island-open-curve: cubic-bezier(0.16, 1, 0.3, 1);
+  --island-open-curve: linear(
+    0, 0.024 2.2%, 0.092 4.8%, 0.275 10%, 0.56 18%, 0.785 27%,
+    0.912 37%, 0.972 49%, 0.994 63%, 0.999 78%, 1
+  );
+  --island-close-curve: cubic-bezier(0.22, 1, 0.36, 1);
+  --island-close-curve: linear(
+    0, 0.032 2%, 0.12 4.5%, 0.34 9.5%, 0.64 17%, 0.845 26%,
+    0.945 37%, 0.986 50%, 0.998 66%, 1
+  );
+  --sheet-curve: cubic-bezier(0.19, 1, 0.22, 1);
+  --ios-fluid-curve: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --ios-fluid-curve: linear(
+    0, 0.010 2.5%, 0.040 5.2%, 0.155 11%, 0.47 21%, 0.75 32%,
+    0.90 43%, 0.968 55%, 0.992 68%, 0.999 83%, 1
+  );
+
+  --bg-primary: #0b1012;
+  --bg-elevated: #131a1c;
+  --bg-input: #12191b;
+  --bg-chip: #1a2224;
+  --glass-bg: #131a1c;
+  /* رنگ دقیق ترکیب‌شده کارت روی پس‌زمینه تیره برای حذف کامل پرش شفافیت در WebView */
+  --glass-card-bg: #151d1f;
+  --glass-modal-surface: rgba(18, 25, 28, 0.995);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --specular-edge: rgba(255, 255, 255, 0.14);
+  --text-main: #f4f7f7;
+  --text-muted: #93a3a5;
+  --scrim-bg: rgba(11, 16, 18, 0.86);
+  --island-bg: linear-gradient(180deg, rgba(23, 32, 35, 0.96) 0%, rgba(15, 21, 23, 0.99) 100%);
+  --island-border: rgba(255, 255, 255, 0.1);
+  --island-shadow:
+    0 4px 14px -2px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+  --island-shadow-expanded:
+    0 18px 40px -8px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --island-text: #ffffff;
+  --island-subtext: #9fb0b2;
+}
+
+/* ==================== تم روز (Light Mode) ==================== */
+body.theme-light {
+  color-scheme: light;
+  --bg-primary: #eef3f5;
+  --bg-elevated: #ffffff;
+  --bg-input: #f4f7f8;
+  --bg-chip: #e6eef0;
+  --glass-bg: #f8fbfc;
+  --glass-card-bg: #fefeff;
+  --glass-modal-surface: rgba(244, 247, 249, 0.995);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --specular-edge: rgba(255, 255, 255, 0.95);
+  --text-main: #0f172a;
+  --text-muted: #5b6b73;
+  --scrim-bg: rgba(238, 243, 245, 0.88);
+  --island-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 250, 251, 0.995) 100%);
+  --island-border: rgba(15, 23, 42, 0.08);
+  --island-shadow:
+    0 4px 14px -4px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --island-shadow-expanded:
+    0 18px 38px -8px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  --island-text: #0f172a;
+  --island-subtext: #52636b;
+}
+
+/* ==================== متغیرهای انیمیشن سخت‌افزاری داینامیک آیلند ==================== */
+@property --island-inset-x {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 59px;
+}
+
+@property --island-inset-b {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 124px;
+}
+
+@property --island-radius {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 22px;
+}
+
+/* ==================== سطوح بهینه‌سازی GPU برای نرخ فریم‌های مختلف ==================== */
+body.gpu-tier-balanced {
+  --glass-blur: 6px;
+  --island-blur: 8px;
+  --glass-bg: #141b1d;
+  --glass-card-bg: #161e20;
+}
+body.theme-light.gpu-tier-balanced {
+  --glass-bg: #fafcfd;
+  --glass-card-bg: #ffffff;
+}
+
+body.gpu-tier-performance {
+  --glass-blur: 0px;
+  --island-blur: 0px;
+  --glass-bg: #161e21;
+  --glass-card-bg: #182124;
+  --island-bg: linear-gradient(180deg, rgba(26, 36, 40, 0.99) 0%, rgba(16, 22, 25, 0.99) 100%);
+}
+body.theme-light.gpu-tier-performance {
+  --glass-bg: #ffffff;
+  --glass-card-bg: #ffffff;
+  --island-bg: linear-gradient(180deg, #ffffff 0%, #f4f8fa 100%);
+}
+
+/* ==================== استایل‌های پایه و چیدمان اصلی ==================== */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+  min-height: 100lvh;
+  background-color: #0b1012;
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100lvh;
+  font-family: 'Vazirmatn', 'Tahoma', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  overflow-x: clip;
+  overscroll-behavior-y: none;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  text-rendering: optimizeSpeed;
+  transition: background-color 0.24s ease, color 0.24s ease;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.app-safe-main {
+  min-height: 100lvh;
+  padding-top: calc(4.85rem + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px) + var(--keyboard-offset));
+  transform-origin: top center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.app-safe-main.is-stage-animating {
+  will-change: transform;
+}
+
+.app-safe-main.is-stage-settled-back {
+  transition: transform calc(0.5s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1);
+  transform: translate3d(0, 10px, 0) scale3d(0.955, 0.955, 1);
+}
+
+.app-safe-main.is-stage-restoring {
+  transition: transform calc(0.46s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1);
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+}
+
+@media (min-width: 1024px) {
+  .app-safe-main {
+    padding-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: 3rem;
+  }
+}
+
+/* پس‌زمینه مودال‌ها بدون بلور سنگین برای حداکثر نرخ فریم GPU */
+[id$="-modal"] {
+  height: var(--app-viewport-height);
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background-color: rgba(6, 10, 12, 0.68) !important;
+}
+
+body.theme-light [id$="-modal"] {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+}
+
+[id$="-modal"]:not(#task-composer-modal) .sheet-animate {
+  max-height: calc(var(--app-viewport-height) - 1.5rem - env(safe-area-inset-top, 0px));
+}
+
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(var(--mint-accent-rgb), 0.11) 0%, transparent 42%),
+    radial-gradient(circle at 84% 78%, rgba(var(--mint-accent-rgb), 0.07) 0%, transparent 46%);
+}
+
+.status-bar-scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(18px + env(safe-area-inset-top, 0px));
+  z-index: 44;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--scrim-bg) 45%, transparent 100%);
+}
+
+.nav-bar-scrim {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 38;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--scrim-bg) 50%, transparent 100%);
+}
+
+/* ==================== سطوح شیشه‌ای ==================== */
+.liquid-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--card-radius);
+  contain: layout style;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* سطح شیشه‌ای فوق‌سریع قفل‌شده روی GPU برای کارت‌های داخلی صفحه */
+.liquid-surface-fast {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  border-radius: var(--card-radius);
+  contain: layout style;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+[id$="-modal"]:not(#task-composer-modal) > .liquid-glass {
+  background: var(--glass-modal-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge) !important;
+}
+
+/* ==================== سیستم کپسول‌های جیوه‌ای یکپارچه (Liquid Morphing Pills) ==================== */
+.liquid-seg-indicator {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  will-change: transform;
+  transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.liquid-dynamic-indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  will-change: transform, width;
+  transition:
+    transform calc(0.42s * var(--motion-scale)) var(--spring-curve),
+    width calc(0.38s * var(--motion-scale)) var(--spring-curve);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.liquid-seg-indicator.is-scrubbing,
+.liquid-dynamic-indicator.is-scrubbing,
+.day-nav-indicator.is-scrubbing,
+.tg-nav-indicator.is-scrubbing {
+  transition: none !important;
+}
+
+.liquid-seg-blob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--mint-accent);
+  box-shadow:
+    0 3px 12px rgba(var(--mint-accent-rgb), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  transform-origin: center;
+  will-change: transform, filter;
+  --stretch-x: 1.18;
+  --squash-y: 0.91;
+}
+
+.liquid-seg-blob.is-stretching {
+  animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
+}
+
+.liquid-seg-blob.is-scrubbing-blob {
+  transform: scale3d(1.07, 0.93, 1);
+  filter: brightness(1.07);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.liquid-seg-btn {
+  position: relative;
+  z-index: 1;
+  transition:
+    color 0.18s ease,
+    transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+.liquid-seg-btn.is-active {
+  color: var(--mint-contrast-text) !important;
+  font-weight: 800;
+}
+
+/* ==================== سوییچر سه‌حالته زمان (دیروز • امروز • فردا) ==================== */
+.day-switcher-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  touch-action: pan-y;
+}
+
+.day-nav-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: calc((100% - 8px) / 3);
+  height: calc(100% - 8px);
+  will-change: transform;
+  transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.day-nav-indicator-blob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--mint-accent);
+  box-shadow:
+    0 4px 14px rgba(var(--mint-accent-rgb), 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.44);
+  transform-origin: center;
+  will-change: transform, filter;
+  --stretch-x: 1.16;
+  --squash-y: 0.92;
+}
+
+.day-nav-indicator-blob.is-stretching {
+  animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
+}
+
+.day-nav-indicator-blob.is-scrubbing-blob,
+.tg-nav-indicator-blob.is-scrubbing-blob {
+  transform: scale3d(1.06, 0.94, 1);
+  filter: brightness(1.06);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.day-tab-btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+.day-tab-btn.is-active {
+  color: var(--mint-contrast-text);
+  font-weight: 800;
+}
+
+.day-tab-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  transition: background-color 0.18s ease;
+}
+
+.day-tab-btn.is-active .day-tab-badge {
+  background: rgba(0, 0, 0, 0.16);
+  color: var(--mint-contrast-text);
+}
+
+body.theme-light .day-tab-btn:not(.is-active) .day-tab-badge {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* ==================== کانال‌های زنده سه‌روزه — تعویض آنی ۰ میلی‌ثانیه و ۱۰۰٪ شارپ ==================== */
+.day-channel-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.day-channel-pane.is-channel-hidden {
+  display: none !important;
+}
+
+/* ==================== شیت تک‌لایه تمام‌GPU بخش «کار جدید» با میکرو-کشسانی مایع ==================== */
+#task-composer-modal {
+  padding: 0 !important;
+}
+
+@media (max-width: 639px) {
+  #task-composer-modal,
+  #task-composer-modal.is-closing {
+    align-items: stretch !important;
+    animation: none !important;
+    will-change: opacity;
+  }
+
+  #composer-shutter-sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: var(--app-viewport-height);
+    max-height: var(--app-viewport-height);
+    background: var(--glass-modal-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 0 var(--specular-edge);
+    border: 1px solid var(--glass-border);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    transform-origin: center top;
+    transform: translate3d(0, 100%, 0) scale3d(1, 1, 1);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
+    animation: none;
+    transition: none;
+    overflow: hidden;
+    contain: layout style;
+  }
+
+  #composer-scroll-body {
+    padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  #composer-shutter-sheet.is-fullscreen #composer-scroll-body {
+    transform: translate3d(0, 26px, 0);
+  }
+}
+
+@media (min-width: 640px) {
+  #task-composer-modal {
+    padding: 1rem !important;
+    align-items: center !important;
+  }
+
+  #composer-shutter-sheet {
+    max-height: 88vh;
+    background: var(--glass-modal-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42), inset 0 1px 0 0 var(--specular-edge);
+    overflow: hidden;
+  }
+
+  #composer-scroll-body {
+    padding-bottom: 18px;
+  }
+}
+
+/* هدر شیشه‌ای یکپارچه بین حالت نیمه‌باز و تمام‌صفحه — ۱۰۰٪ مبتنی بر GPU بدون تغییر چیدمان */
+#composer-unified-header {
+  padding: 4px 16px 12px;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#composer-shutter-sheet.is-fullscreen #composer-unified-header {
+  transform: translate3d(0, 26px, 0);
+}
+
+#composer-grabber-zone {
+  height: 22px;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+#composer-shutter-sheet.is-fullscreen #composer-grabber-zone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.composer-glass-capsule {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.095) 0%, rgba(255, 255, 255, 0.045) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+body.theme-light .composer-glass-capsule {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 246, 248, 0.92) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+#composer-leading-btn .icon-close {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#composer-leading-btn .icon-chevron {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-90deg) scale(0.72) !important;
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#composer-shutter-sheet.is-fullscreen #composer-leading-btn .icon-close {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(90deg) scale(0.72) !important;
+}
+#composer-shutter-sheet.is-fullscreen #composer-leading-btn .icon-chevron {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1) !important;
+}
+
+.composer-fs-folder-pill {
+  white-space: nowrap;
+  opacity: 0.92;
+}
+
+.composer-submit-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
+  color: var(--mint-contrast-text);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    transform calc(0.28s * var(--motion-scale)) var(--spring-curve),
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.composer-submit-pill:disabled {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.04) 100%);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+body.theme-light .composer-submit-pill:disabled {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(235, 242, 245, 0.88) 100%);
+  color: #7c8d95;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* ==================== کارت‌های تسک و دفترچه یادداشت ==================== */
+.liquid-card {
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  border-radius: var(--card-radius);
+  contain: layout style;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition:
+    transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
+    border-color 0.2s ease;
+}
+
+.liquid-card.is-card-pressing {
+  transform: scale3d(0.982, 0.982, 1) !important;
+  transition: transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+.notebook-entry-card {
+  background: #12191b;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  border-radius: calc(var(--card-radius) - 4px);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition:
+    transform calc(0.3s * var(--motion-scale)) var(--spring-curve),
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.notebook-entry-card.is-pinned {
+  border-color: rgba(var(--mint-accent-rgb), 0.38);
+  background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.09) 0%, #12191b 100%);
+}
+
+body.theme-light .notebook-entry-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .notebook-entry-card.is-pinned {
+  border-color: rgba(var(--mint-accent-rgb), 0.45);
+  background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.11) 0%, #ffffff 100%);
+}
+
+@media (hover: hover) {
+  .notebook-entry-card:hover {
+    border-color: rgba(var(--mint-accent-rgb), 0.36);
+  }
+}
+
+/* ==================== نگاشت رنگ‌های تم روز (Light Mode Overrides) ==================== */
+body.theme-light [id$="-modal"] > .liquid-glass {
+  background: var(--glass-modal-surface) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+body.theme-light [id$="-modal"]:not(#task-composer-modal) > .liquid-glass {
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+body.theme-light .text-white {
+  color: #0f172a !important;
+}
+body.theme-light .text-slate-200,
+body.theme-light .text-slate-300 {
+  color: #334155 !important;
+}
+body.theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+body.theme-light .text-\[\#7fd5d8\] {
+  color: var(--mint-accent) !important;
+}
+body.theme-light .bg-\[\#7fd5d8\] {
+  background-color: var(--mint-accent) !important;
+  color: var(--mint-contrast-text) !important;
+}
+body.theme-light .border-\[\#7fd5d8\] {
+  border-color: var(--mint-accent) !important;
+}
+body.theme-light .text-rose-200,
+body.theme-light .text-rose-300 {
+  color: #be123c !important;
+}
+body.theme-light .text-emerald-200,
+body.theme-light .text-emerald-300 {
+  color: #047857 !important;
+}
+body.theme-light .text-amber-300 {
+  color: #b45309 !important;
+}
+body.theme-light .text-indigo-300 {
+  color: #4338ca !important;
+}
+body.theme-light .text-sky-300 {
+  color: #0369a1 !important;
+}
+body.theme-light .text-violet-300 {
+  color: #6d28d9 !important;
+}
+body.theme-light .bg-\[\#12191b\],
+body.theme-light .bg-\[\#12191b\]\/90 {
+  background-color: #ffffff !important;
+}
+body.theme-light .bg-\[\#1a2224\],
+body.theme-light .bg-\[\#161e20\] {
+  background-color: #e6eef0 !important;
+}
+body.theme-light .border-white\/10,
+body.theme-light .border-white\/\[0\.07\],
+body.theme-light .border-white\/\[0\.08\] {
+  border-color: rgba(15, 23, 42, 0.09) !important;
+}
+body.theme-light .bg-white\/10,
+body.theme-light .bg-white\/\[0\.06\],
+body.theme-light .bg-white\/\[0\.07\] {
+  background-color: rgba(15, 23, 42, 0.065) !important;
+}
+body.theme-light .hover\:bg-white\/15:hover {
+  background-color: rgba(15, 23, 42, 0.12) !important;
+}
+body.theme-light .tg-switch:not(.is-on) {
+  background-color: rgba(15, 23, 42, 0.16);
+}
+body.theme-light .focus-min-chip.bg-\[\#7fd5d8\] {
+  background-color: var(--mint-accent) !important;
+  color: var(--mint-contrast-text) !important;
+}
+
+/* ==================== دکمه‌های فنری و آیکون‌های دایره‌ای ==================== */
+.spring-btn {
+  touch-action: manipulation;
+  user-select: none;
+  line-height: 1;
+  transition:
+    transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+    background-color 0.18s ease,
+    opacity 0.18s ease,
+    border-color 0.18s ease;
+}
+.spring-btn:active {
+  transform: scale3d(0.925, 0.925, 1);
+  transition: transform 0.1s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.icon-circle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  line-height: 0 !important;
+  vertical-align: middle;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.icon-circle-btn > svg {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ==================== داینامیک آیلند هوشمند با موتور رندر ۱۰۰٪ GPU ==================== */
+.island-stage {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.obsidian-shell {
+  pointer-events: none;
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-touch-callout: none;
+  position: relative;
+  width: min(92vw, 344px);
+  --island-expanded-h: 168px;
+  --island-closed-inset-x: 59px;
+  --island-live-inset-x: 46px;
+  --island-closed-inset-b: 124px;
+  --island-toast-inset-b: 120px;
+  --island-specular-x: 50%;
+  height: var(--island-expanded-h);
+  --island-inset-x: var(--island-closed-inset-x);
+  --island-inset-b: var(--island-closed-inset-b);
+  --island-radius: 22px;
+  contain: layout style;
+  will-change: transform, opacity, --island-inset-x, --island-inset-b, --island-radius;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  transform-origin: top center;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.42));
+  transition:
+    --island-inset-x calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    --island-inset-b calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    --island-radius calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    transform calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    opacity calc(0.22s * var(--motion-scale)) ease;
+}
+
+body.theme-light .obsidian-shell {
+  filter: drop-shadow(0 10px 22px rgba(15, 23, 42, 0.14));
+}
+
+.island-gpu-rim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(128px circle at var(--island-specular-x, 50%) 0%, rgba(255, 255, 255, 0.34) 0%, transparent 72%),
+    linear-gradient(180deg, var(--specular-edge) 0%, var(--island-border) 32%, var(--island-border) 100%);
+  clip-path: inset(0px var(--island-inset-x) var(--island-inset-b) var(--island-inset-x) round var(--island-radius));
+  will-change: clip-path;
+  transition: background 0.24s ease;
+}
+
+body.theme-light .island-gpu-rim {
+  background:
+    radial-gradient(132px circle at var(--island-specular-x, 50%) 0%, rgba(255, 255, 255, 0.98) 0%, transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, var(--island-border) 36%, var(--island-border) 100%);
+}
+
+.obsidian-shell.is-expanded .island-gpu-rim,
+.obsidian-shell.is-toast .island-gpu-rim,
+.obsidian-shell.is-island-rim-glow .island-gpu-rim {
+  background:
+    radial-gradient(160px circle at var(--island-specular-x, 50%) 0%, rgba(255, 255, 255, 0.56) 0%, rgba(var(--mint-accent-rgb), 0.34) 48%, transparent 80%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(var(--mint-accent-rgb), 0.28) 38%, var(--island-border) 100%);
+}
+
+.island-gpu-core {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--island-bg);
+  clip-path: inset(
+    1px
+    calc(var(--island-inset-x) + 1px)
+    calc(var(--island-inset-b) + 1px)
+    calc(var(--island-inset-x) + 1px)
+    round calc(var(--island-radius) - 1px)
+  );
+  will-change: clip-path;
+  overflow: hidden;
+  transition: background 0.24s ease;
+}
+
+.island-specular-sheen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  pointer-events: none;
+  background: radial-gradient(65% 100% at var(--island-specular-x, 50%) 0%, rgba(255, 255, 255, 0.16) 0%, transparent 100%);
+  opacity: 0.72;
+  transition: opacity 0.24s ease;
+}
+
+.obsidian-shell.is-expanded .island-specular-sheen,
+.obsidian-shell.is-island-rim-glow .island-specular-sheen {
+  opacity: 1;
+}
+
+@keyframes islandLabelSlideNext {
+  0% {
+    opacity: 0.35;
+    transform: translate3d(-10px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes islandLabelSlidePrev {
+  0% {
+    opacity: 0.35;
+    transform: translate3d(10px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+#island-idle-label.is-sliding-next {
+  animation: islandLabelSlideNext calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+#island-idle-label.is-sliding-prev {
+  animation: islandLabelSlidePrev calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+.obsidian-shell.is-island-pulling {
+  transition: none !important;
+  animation: none !important;
+}
+
+.obsidian-shell.is-hidden-for-sheet {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translate3d(0, -32px, 0) scale3d(0.72, 0.66, 1) !important;
+  transition:
+    opacity calc(0.22s * var(--motion-scale)) ease,
+    transform calc(0.32s * var(--motion-scale)) var(--island-close-curve) !important;
+}
+
+#island-expanded-layer button,
+#island-toast-layer button {
+  touch-action: manipulation;
+}
+
+#island-timer-pill-group {
+  touch-action: none;
+}
+
+.obsidian-shell:not(.is-expanded):not(.is-island-pulling):hover .island-gpu-rim {
+  background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.45) 0%, rgba(var(--mint-accent-rgb), 0.34) 100%);
+}
+
+.obsidian-shell.is-expanded.is-island-pressing {
+  transform: translate3d(0, 0, 0) scale3d(0.988, 0.988, 1) !important;
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+@keyframes islandToastJellyPop {
+  0% {
+    transform: translate3d(0, 0, 0) scale3d(0.96, 0.98, 1);
+  }
+  34% {
+    transform: translate3d(0, 1.5px, 0) scale3d(1.024, 0.982, 1);
+  }
+  70% {
+    transform: translate3d(0, 0, 0) scale3d(0.996, 1.004, 1);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+.obsidian-shell.is-popping {
+  animation: islandToastJellyPop calc(0.38s * var(--motion-scale)) var(--island-open-curve);
+}
+
+.obsidian-shell.is-live {
+  --island-inset-x: var(--island-live-inset-x);
+}
+
+.obsidian-shell.is-live .island-gpu-rim {
+  background: linear-gradient(180deg, rgba(var(--mint-accent-rgb), 0.46) 0%, rgba(var(--mint-accent-rgb), 0.36) 100%);
+}
+
+.obsidian-shell.is-toast {
+  --island-inset-x: 4px;
+  --island-inset-b: var(--island-toast-inset-b);
+  --island-radius: 24px;
+  transition:
+    --island-inset-x calc(0.36s * var(--motion-scale)) var(--island-open-curve),
+    --island-inset-b calc(0.36s * var(--motion-scale)) var(--island-open-curve),
+    --island-radius calc(0.36s * var(--motion-scale)) var(--island-open-curve),
+    transform calc(0.36s * var(--motion-scale)) var(--island-open-curve),
+    opacity calc(0.22s * var(--motion-scale)) ease;
+}
+
+.obsidian-shell.is-expanded {
+  pointer-events: auto;
+  --island-inset-x: 0px;
+  --island-inset-b: 0px;
+  --island-radius: 30px;
+  cursor: default;
+  transition:
+    --island-inset-x calc(0.40s * var(--motion-scale)) var(--island-open-curve),
+    --island-inset-b calc(0.40s * var(--motion-scale)) var(--island-open-curve),
+    --island-radius calc(0.40s * var(--motion-scale)) var(--island-open-curve),
+    transform calc(0.40s * var(--motion-scale)) var(--island-open-curve),
+    opacity calc(0.22s * var(--motion-scale)) ease;
+}
+
+/* لایه‌های داخلی داینامیک آیلند بدون هم‌پوشانی یا بریدگی */
+.island-layer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-touch-callout: none;
+  transform-origin: top center;
+  transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  opacity: 1;
+  transition:
+    opacity calc(0.18s * var(--motion-scale)) ease calc(0.10s * var(--motion-scale)),
+    transform calc(0.32s * var(--motion-scale)) var(--island-close-curve) calc(0.05s * var(--motion-scale));
+}
+
+#island-idle-layer {
+  width: 226px;
+  height: 44px;
+}
+
+#island-idle-layer.is-wide-idle,
+.obsidian-shell.is-live #island-idle-layer {
+  width: 252px;
+}
+
+#island-toast-layer {
+  width: min(92vw, 336px);
+  height: 48px;
+  transition:
+    opacity calc(0.18s * var(--motion-scale)) ease calc(0.06s * var(--motion-scale)),
+    transform calc(0.34s * var(--motion-scale)) var(--island-open-curve) calc(0.03s * var(--motion-scale));
+}
+
+#island-expanded-layer {
+  width: min(92vw, 344px);
+  height: auto;
+  min-height: 168px;
+  cursor: default;
+  transition:
+    opacity calc(0.22s * var(--motion-scale)) ease calc(0.08s * var(--motion-scale)),
+    transform calc(0.40s * var(--motion-scale)) var(--island-open-curve) calc(0.02s * var(--motion-scale));
+}
+
+/* پشتیبان سازگاری برای مرورگرهای قدیمی فاقد CSS @property */
+body.island-legacy-box .obsidian-shell {
+  pointer-events: auto;
+  width: 226px;
+  height: 44px;
+  border-radius: 22px;
+  background: var(--island-bg);
+  border: 1px solid var(--island-border);
+  box-shadow: var(--island-shadow);
+  filter: none;
+  overflow: hidden;
+  transition:
+    width calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    height calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    border-radius calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    transform calc(0.32s * var(--motion-scale)) var(--island-close-curve),
+    opacity calc(0.22s * var(--motion-scale)) ease;
+}
+body.island-legacy-box .island-gpu-rim,
+body.island-legacy-box .island-gpu-core {
+  display: none;
+}
+body.island-legacy-box .obsidian-shell.is-live {
+  width: 252px;
+}
+body.island-legacy-box .obsidian-shell.is-toast {
+  width: min(92vw, 336px);
+  height: 48px;
+  border-radius: 24px;
+}
+body.island-legacy-box .obsidian-shell.is-expanded {
+  width: min(92vw, 344px);
+  height: var(--island-expanded-h, 168px);
+  border-radius: 30px;
+  box-shadow: var(--island-shadow-expanded);
+}
+
+.island-timer-capsule {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+body.theme-light .island-timer-capsule {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.07);
+}
+
+body.theme-light #island-quick-complete-btn {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+  border-color: rgba(5, 150, 105, 0.32) !important;
+  color: #047857 !important;
+}
+
+.island-layer.is-hidden {
+  opacity: 0;
+  pointer-events: none !important;
+  transform: translate3d(-50%, -2px, 0) scale3d(0.94, 0.94, 1);
+  transition:
+    opacity calc(0.10s * var(--motion-scale)) ease 0s,
+    transform calc(0.24s * var(--motion-scale)) var(--island-close-curve) 0s;
+}
+
+#island-expanded-layer.is-hidden {
+  opacity: 0;
+  transform: translate3d(-50%, -6px, 0) scale3d(0.90, 0.86, 1);
+  transition:
+    opacity calc(0.11s * var(--motion-scale)) ease 0s,
+    transform calc(0.28s * var(--motion-scale)) var(--island-close-curve) 0s;
+}
+
+#island-idle-layer.is-hidden {
+  opacity: 0;
+  transform: translate3d(-50%, 2px, 0) scale3d(0.96, 0.96, 1);
+  transition:
+    opacity calc(0.10s * var(--motion-scale)) ease 0s,
+    transform calc(0.24s * var(--motion-scale)) var(--island-open-curve) 0s;
+}
+
+.island-primary-text {
+  color: var(--island-text) !important;
+}
+.island-secondary-text {
+  color: var(--island-subtext) !important;
+}
+
+/* بنر اعلان داخلی هنگام باز بودن داینامیک آیلند */
+.island-expanded-toast-banner {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  min-height: 44px;
+  height: auto;
+  z-index: 12;
+  border-radius: 18px;
+  background: var(--island-bg);
+  border: 1px solid rgba(var(--mint-accent-rgb), 0.36);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36), inset 0 1px 0 var(--specular-edge);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, -6px, 0) scale3d(0.96, 0.96, 1);
+  will-change: transform, opacity;
+  transition:
+    opacity calc(0.2s * var(--motion-scale)) ease,
+    transform calc(0.32s * var(--motion-scale)) var(--island-open-curve);
+}
+
+body.theme-light .island-expanded-toast-banner {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+.island-expanded-toast-banner.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+}
+
+@keyframes islandDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.24);
+    opacity: 0.72;
+  }
+}
+
+.island-dot-live {
+  animation: islandDotPulse 1.8s ease-in-out infinite;
+}
+
+/* خط پیشرفت قفل‌شده به لبه پایینی کپسول GPU */
+.island-progress-hairline {
+  position: absolute;
+  bottom: 1px;
+  left: calc(var(--island-inset-x) + 1px);
+  right: calc(var(--island-inset-x) + 1px);
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+  overflow: hidden;
+  transform: translate3d(0, calc(var(--island-inset-b) * -1), 0);
+  will-change: transform;
+}
+
+.island-progress-hairline-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
+  transition: transform calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve);
+}
+
+.audio-wave-bar {
+  width: 2.5px;
+  height: 13px;
+  border-radius: 99px;
+  background-color: var(--mint-accent);
+  transform-origin: bottom center;
+  animation: wavePulse 0.9s ease-in-out infinite;
+}
+.audio-wave-bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.audio-wave-bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes wavePulse {
+  0%, 100% {
+    transform: scaleY(0.32);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* ==================== چک‌باکس‌ها و نوارهای پیشرفت ==================== */
+@keyframes checkStrokeDraw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.check-stroke-anim {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: checkStrokeDraw calc(0.28s * var(--motion-scale)) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.check-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid rgba(147, 163, 165, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.check-circle.checked {
+  background-color: var(--mint-accent);
+  border-color: var(--mint-accent);
+  transform: scale3d(1.06, 1.06, 1);
+}
+
+.subtask-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1.7px solid rgba(147, 163, 165, 0.52);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.subtask-check.checked {
+  background-color: var(--mint-accent);
+  border-color: var(--mint-accent);
+  transform: scale3d(1.05, 1.05, 1);
+}
+
+.liquid-bar-track {
+  background: rgba(147, 163, 165, 0.16);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.liquid-bar-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  transform-origin: right center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
+  transition: transform calc(0.48s * var(--motion-scale)) var(--ios-fluid-curve);
+}
+
+.ambient-chip.is-active {
+  background: rgba(var(--mint-accent-rgb), 0.24) !important;
+  border-color: rgba(var(--mint-accent-rgb), 0.55) !important;
+  color: var(--mint-accent) !important;
+}
+
+/* ==================== نمودارهای آمار و رادار رشد شخصی ==================== */
+.chart-bar-fill {
+  background: linear-gradient(180deg, var(--mint-accent) 0%, var(--mint-accent-strong) 100%);
+  transition: height calc(0.46s * var(--motion-scale)) var(--ios-fluid-curve);
+}
+
+.radar-stage-box {
+  background: radial-gradient(circle at 50% 50%, rgba(var(--mint-accent-rgb), 0.08) 0%, rgba(10, 15, 17, 0.42) 72%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: calc(var(--card-radius) - 4px);
+}
+
+body.theme-light .radar-stage-box {
+  background: radial-gradient(circle at 50% 50%, rgba(var(--mint-accent-rgb), 0.1) 0%, rgba(241, 246, 248, 0.85) 75%);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.radar-grid-line {
+  stroke: rgba(255, 255, 255, 0.11);
+}
+
+body.theme-light .radar-grid-line {
+  stroke: rgba(15, 23, 42, 0.12);
+}
+
+.radar-node-core {
+  fill: #0d1518;
+  stroke: var(--mint-accent);
+  stroke-width: 2.5;
+}
+
+body.theme-light .radar-node-core {
+  fill: #ffffff;
+}
+
+.radar-axis-pill {
+  transition:
+    transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.radar-axis-pill.is-selected {
+  background: rgba(var(--mint-accent-rgb), 0.18) !important;
+  border-color: rgba(var(--mint-accent-rgb), 0.52) !important;
+}
+
+/* ==================== انیمیشن‌های مودال و شیت‌ها ==================== */
+@keyframes modalBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalBackdropOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheetSlideUpMobile {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sheetSlideDownMobile {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes sheetScaleInDesktop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale3d(0.95, 0.95, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes sheetScaleOutDesktop {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale3d(0.96, 0.96, 1);
+  }
+}
+
+[id$="-modal"]:not(#task-composer-modal) {
+  animation: modalBackdropIn calc(0.36s * var(--motion-scale)) var(--sheet-curve) both;
+}
+
+[id$="-modal"]:not(#task-composer-modal).is-closing {
+  pointer-events: none;
+  animation: modalBackdropOut calc(0.32s * var(--motion-scale)) var(--sheet-curve) forwards;
+}
+
+.sheet-animate {
+  animation: sheetSlideUpMobile calc(0.46s * var(--motion-scale)) var(--sheet-curve) both;
+  will-change: transform;
+}
+
+[id$="-modal"]:not(#task-composer-modal).is-closing .sheet-animate {
+  animation: sheetSlideDownMobile calc(0.32s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  #task-composer-modal {
+    animation: modalBackdropIn calc(0.34s * var(--motion-scale)) var(--sheet-curve) both;
+  }
+
+  #task-composer-modal.is-closing {
+    pointer-events: none;
+    animation: modalBackdropOut calc(0.28s * var(--motion-scale)) var(--sheet-curve) forwards;
+  }
+
+  .sheet-animate {
+    animation: sheetScaleInDesktop calc(0.4s * var(--motion-scale)) var(--sheet-curve) both;
+  }
+
+  [id$="-modal"].is-closing .sheet-animate {
+    animation: sheetScaleOutDesktop calc(0.26s * var(--motion-scale)) cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  }
+}
+
+.privacy-blur-text {
+  filter: blur(5.5px);
+  transition: filter 0.2s ease;
+}
+
+/* ==================== پروفایل، ردیف‌های تنظیمات و سوئیچ‌های شیشه‌ای ==================== */
+.avatar-surface {
+  background: linear-gradient(145deg, rgba(var(--mint-accent-rgb), 0.22), rgba(var(--mint-accent-rgb), 0.08));
+  border: 1.5px solid rgba(var(--mint-accent-rgb), 0.42);
+}
+
+body.theme-light .avatar-surface {
+  background: linear-gradient(145deg, #ffffff, rgba(var(--mint-accent-rgb), 0.2));
+  border-color: rgba(var(--mint-accent-rgb), 0.55);
+}
+
+.tg-settings-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.78rem 0.95rem;
+  text-align: right;
+  cursor: pointer;
+  transition: background-color 0.16s ease, transform 0.24s var(--ios-fluid-curve);
+}
+.tg-settings-row:hover {
+  background-color: rgba(147, 163, 165, 0.08);
+}
+.tg-settings-row:active {
+  background-color: rgba(147, 163, 165, 0.14);
+  transform: scale3d(0.988, 0.988, 1);
+}
+
+.tg-icon-circle {
+  width: 31px;
+  height: 31px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.tg-switch {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background-color: rgba(147, 163, 165, 0.28);
+  padding: 2px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.24s var(--ios-fluid-curve);
+}
+.tg-switch.is-on {
+  background-color: var(--mint-accent);
+}
+.tg-switch-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  transform-origin: center;
+  will-change: transform;
+  transition: transform calc(0.32s * var(--motion-scale)) var(--spring-curve);
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+}
+.tg-switch.is-on .tg-switch-knob {
+  transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+}
+
+.tg-settings-row:active .tg-switch:not(.is-on) .tg-switch-knob {
+  transform: translate3d(0, 0, 0) scale3d(1.16, 0.93, 1);
+}
+.tg-settings-row:active .tg-switch.is-on .tg-switch-knob {
+  transform: translate3d(-18px, 0, 0) scale3d(1.16, 0.93, 1);
+}
+
+@keyframes tgKnobMorphOn {
+  0% {
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+  36% {
+    transform: translate3d(-9px, 0, 0) scale3d(1.38, 0.86, 1);
+  }
+  72% {
+    transform: translate3d(-19.5px, 0, 0) scale3d(0.94, 1.04, 1);
+  }
+  100% {
+    transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+@keyframes tgKnobMorphOff {
+  0% {
+    transform: translate3d(-18px, 0, 0) scale3d(1, 1, 1);
+  }
+  36% {
+    transform: translate3d(-9px, 0, 0) scale3d(1.38, 0.86, 1);
+  }
+  72% {
+    transform: translate3d(1.5px, 0, 0) scale3d(0.94, 1.04, 1);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+.tg-switch-knob.is-morphing-on {
+  animation: tgKnobMorphOn calc(0.36s * var(--motion-scale)) var(--spring-curve);
+}
+
+.tg-switch-knob.is-morphing-off {
+  animation: tgKnobMorphOff calc(0.36s * var(--motion-scale)) var(--spring-curve);
+}
+
+/* ==================== نوار ناوبری پایینی و دکمه شناور + ==================== */
+.tg-bottom-dock {
+  position: fixed;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  z-index: 40;
+  width: min(94vw, 430px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.tg-nav-pill {
+  pointer-events: auto;
+  flex: 1;
+  height: 58px;
+  border-radius: 999px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 4px;
+  position: relative;
+  contain: layout style paint;
+  touch-action: pan-y;
+}
+
+.tg-nav-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: calc(25% - 2px);
+  height: calc(100% - 8px);
+  will-change: transform;
+  transition: transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
+  pointer-events: none;
+}
+
+.tg-nav-indicator-blob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(var(--mint-accent-rgb), 0.18);
+  border: 1px solid rgba(var(--mint-accent-rgb), 0.36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform-origin: center;
+  will-change: transform, filter;
+  --stretch-x: 1.18;
+  --squash-y: 0.91;
+}
+
+@keyframes liquidPillStretchX {
+  0% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1);
+  }
+  32% {
+    transform: scale3d(var(--stretch-x, 1.2), var(--squash-y, 0.9), 1);
+    filter: brightness(1.1);
+  }
+  68% {
+    transform: scale3d(0.96, 1.03, 1);
+    filter: brightness(1.02);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+    filter: brightness(1);
+  }
+}
+
+.tg-nav-indicator-blob.is-stretching {
+  animation: liquidPillStretchX calc(0.42s * var(--motion-scale)) var(--spring-curve);
+}
+
+@keyframes navIconSpring {
+  0% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+  38% {
+    transform: scale3d(1.16, 1.16, 1) translate3d(0, -1.5px, 0);
+  }
+  72% {
+    transform: scale3d(0.96, 0.96, 1) translate3d(0, 0.5px, 0);
+  }
+  100% {
+    transform: scale3d(1, 1, 1) translate3d(0, 0, 0);
+  }
+}
+
+.tg-nav-btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.18s ease, transform 0.24s var(--spring-curve);
+}
+.tg-nav-btn.is-active {
+  color: var(--mint-accent);
+}
+.tg-nav-btn.is-bouncing svg,
+.rail-nav-btn.is-bouncing svg {
+  animation: navIconSpring calc(0.4s * var(--motion-scale)) var(--spring-curve);
+}
+.tg-nav-btn:active {
+  transform: scale3d(0.91, 0.91, 1);
+}
+
+.tg-fab-add {
+  pointer-events: auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--mint-accent), var(--mint-accent-strong));
+  color: var(--mint-contrast-text);
+  box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.34);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  will-change: transform;
+  transition: transform calc(0.36s * var(--motion-scale)) var(--spring-curve);
+}
+
+.tg-fab-add:active {
+  transform: scale3d(0.85, 0.85, 1) !important;
+  transition: transform 0.11s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+@keyframes fabLiquidPop {
+  0% {
+    transform: scale3d(0.86, 0.86, 1);
+  }
+  38% {
+    transform: scale3d(1.15, 0.89, 1);
+  }
+  70% {
+    transform: scale3d(0.95, 1.06, 1);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes fabIconRotatePop {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  45% {
+    transform: rotate(90deg) scale(1.14);
+  }
+  100% {
+    transform: rotate(90deg) scale(1);
+  }
+}
+
+.tg-fab-add.is-liquid-popping {
+  animation: fabLiquidPop calc(0.44s * var(--motion-scale)) var(--spring-curve);
+}
+
+.tg-fab-add.is-liquid-popping svg {
+  animation: fabIconRotatePop calc(0.44s * var(--motion-scale)) var(--spring-curve);
+}
+
+/* ==================== ذرات جشن، سوایپ کارت‌ها و ریل دسکتاپ ==================== */
+.sparkle-particle {
+  position: fixed;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 65;
+  animation: sparkleFly 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sparkleFly {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), var(--dy), 0) scale(0.2);
+  }
+}
+
+.task-swipe-slot {
+  position: relative;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  contain: layout style;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.task-swipe-slot.is-actively-swiping .task-card {
+  will-change: transform;
+  transition: none !important;
+}
+
+.task-swipe-backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, background-color 0.16s ease;
+}
+
+.task-swipe-slot.is-swiping-complete .task-swipe-backdrop {
+  opacity: 1;
+  background: rgba(var(--mint-accent-rgb), 0.22);
+}
+
+.task-swipe-slot.is-swiping-delete .task-swipe-backdrop {
+  opacity: 1;
+  background: rgba(244, 63, 94, 0.22);
+}
+
+.tab-view.is-tab-hidden {
+  display: none !important;
+}
+
+@media (hover: hover) {
+  .liquid-card:hover {
+    border-color: rgba(var(--mint-accent-rgb), 0.34);
+    transform: translate3d(0, -1.5px, 0);
+  }
+}
+
+.desktop-glass-rail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .island-stage {
+    top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+
+  .tg-bottom-dock {
+    display: none !important;
+  }
+
+  .desktop-glass-rail {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
+    z-index: 42;
+    width: 68px;
+    max-height: calc(100vh - 44px);
+    border-radius: 34px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 0 var(--specular-edge);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 8px;
+    gap: 10px;
+  }
+
+  .rail-nav-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 46px;
+    height: 46px;
+    will-change: transform;
+    transition: transform calc(0.44s * var(--motion-scale)) var(--spring-curve);
+    pointer-events: none;
+  }
+
+  .rail-nav-indicator-blob {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 18px;
+    background: rgba(var(--mint-accent-rgb), 0.18);
+    border: 1px solid rgba(var(--mint-accent-rgb), 0.38);
+    transform-origin: center;
+    will-change: transform, filter;
+    --stretch-y: 1.18;
+    --squash-x: 0.91;
+  }
+
+  @keyframes liquidPillStretchY {
+    0% {
+      transform: scale3d(1, 1, 1);
+      filter: brightness(1);
+    }
+    32% {
+      transform: scale3d(var(--squash-x, 0.9), var(--stretch-y, 1.2), 1);
+      filter: brightness(1.1);
+    }
+    68% {
+      transform: scale3d(1.03, 0.96, 1);
+      filter: brightness(1.02);
+    }
+    100% {
+      transform: scale3d(1, 1, 1);
+      filter: brightness(1);
+    }
+  }
+
+  .rail-nav-indicator-blob.is-stretching {
+    animation: liquidPillStretchY calc(0.42s * var(--motion-scale)) var(--spring-curve);
+  }
+
+  .rail-nav-btn {
+    position: relative;
+    z-index: 1;
+    width: 46px;
+    height: 46px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, transform 0.28s var(--spring-curve);
+  }
+
+  .rail-nav-btn:hover:not(.is-active) {
+    background: rgba(var(--mint-accent-rgb), 0.08);
+    color: var(--text-main);
+  }
+
+  .rail-nav-btn.is-active {
+    color: var(--mint-accent);
+  }
+}
+
+.task-card.is-dragging {
+  opacity: 0.42;
+  transform: scale(0.985);
+}
+
+.task-card.is-inspected {
+  border-color: rgba(var(--mint-accent-rgb), 0.58) !important;
+  background: rgba(var(--mint-accent-rgb), 0.08) !important;
+}
+
+.task-swipe-slot.drag-over-top {
+  box-shadow: 0 -3px 0 0 var(--mint-accent);
+}
+
+.task-swipe-slot.drag-over-bottom {
+  box-shadow: 0 3px 0 0 var(--mint-accent);
+}
+
+#desktop-focus-dropzone {
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.28s var(--spring-curve);
+}
+
+#desktop-focus-dropzone.is-drag-target {
+  border-color: var(--mint-accent) !important;
+  background-color: rgba(var(--mint-accent-rgb), 0.14) !important;
+  transform: scale(1.015);
+}
+
+.cmd-item {
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.cmd-item.is-selected {
+  background-color: rgba(var(--mint-accent-rgb), 0.18) !important;
+  border-color: rgba(var(--mint-accent-rgb), 0.42) !important;
+}
