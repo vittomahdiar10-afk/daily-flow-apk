@@ -45,10 +45,14 @@
       });
     })();
   </script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  </noscript>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -2178,6 +2182,68 @@
       </div>
     </div>
   </div>
+
+  <!-- ==================== پرده تمام‌صفحه شیشه‌ای بروزرسانی اتمی ==================== -->
+  <div
+    id="app-update-overlay"
+    class="fixed inset-0 z-[90] hidden items-center justify-center p-5"
+    style="background-color: var(--bg-primary); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="update-overlay-title"
+  >
+    <div class="liquid-surface-fast rounded-3xl w-full max-w-sm p-6 flex flex-col items-center text-center gap-4 border border-[#7fd5d8]/35 shadow-2xl">
+      <div class="relative w-16 h-16 rounded-3xl bg-[#7fd5d8]/15 border border-[#7fd5d8]/40 flex items-center justify-center text-3xl shadow-lg">
+        <span id="update-overlay-icon">✨</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1">
+        <span id="update-overlay-version" class="ltr font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8]">
+          v2.6.0
+        </span>
+        <h2 id="update-overlay-title" class="text-base font-extrabold text-white mt-1">
+          در حال آماده‌سازی بروزرسانی...
+        </h2>
+        <p id="update-overlay-status" class="text-xs text-[#93a3a5]">
+          دریافت و هماهنگ‌سازی فایل‌های نسخه جدید
+        </p>
+      </div>
+
+      <ul id="update-overlay-notes" class="w-full text-right rounded-2xl bg-white/[0.04] border border-white/[0.08] p-3 flex flex-col gap-1.5 text-[11px] text-slate-200"></ul>
+
+      <div class="w-full flex flex-col gap-1.5">
+        <div class="flex items-center justify-between text-[11px]">
+          <span id="update-overlay-step-label" class="text-[#93a3a5] font-semibold">در حال نصب تغییرات...</span>
+          <span id="update-overlay-percent" class="ltr font-mono font-extrabold text-[#7fd5d8]">0%</span>
+        </div>
+        <div class="liquid-bar-track h-2.5 w-full">
+          <div id="update-overlay-progress-fill" class="liquid-bar-fill" style="transform: scaleX(0)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* حفظ پرده بروزرسانی بلافاصله پس از رفرش تا پایان رندر کامل نسخه جدید */
+    (function () {
+      try {
+        if (sessionStorage.getItem('df_applying_update') === '1') {
+          var ov = document.getElementById('app-update-overlay');
+          var titleEl = document.getElementById('update-overlay-title');
+          var statusEl = document.getElementById('update-overlay-status');
+          var fillEl = document.getElementById('update-overlay-progress-fill');
+          var pctEl = document.getElementById('update-overlay-percent');
+          if (ov) {
+            ov.classList.remove('hidden');
+            ov.classList.add('flex');
+          }
+          if (titleEl) titleEl.textContent = 'در حال اعمال تغییرات...';
+          if (statusEl) statusEl.textContent = 'نهایی‌سازی رابط کاربری نسخه جدید';
+          if (fillEl) fillEl.style.transform = 'scaleX(0.85)';
+          if (pctEl) pctEl.textContent = '85%';
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <script src="./app.js"></script>
 </body>
