@@ -577,6 +577,28 @@
                 🔁 تکرار روزانه
               </button>
             </div>
+
+            <div class="rounded-2xl bg-white/[0.04] border border-white/10 px-3 py-2 flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-white">ساعت یادآور (⏰)</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <input
+                  id="inspector-reminder-time-input"
+                  type="time"
+                  aria-label="ساعت یادآور کار"
+                  class="ltr font-mono text-xs font-extrabold text-[#7fd5d8] bg-white/10 border border-white/10 rounded-full px-2.5 py-1 outline-none cursor-pointer"
+                />
+                <button
+                  id="inspector-clear-reminder-btn"
+                  type="button"
+                  aria-label="حذف ساعت یادآور"
+                  class="hidden spring-btn icon-circle-btn w-6 h-6 rounded-full bg-rose-500/15 text-rose-300 cursor-pointer"
+                >
+                  <svg width="12" height="12" class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
@@ -1049,6 +1071,81 @@
           </div>
         </div>
 
+        <!-- ==================== بخش اعلان‌ها و یادآورها (مراحل ۲، ۳ و ۴) ==================== -->
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-bold text-[#7fd5d8] px-2">اعلان‌ها و یادآورها</span>
+          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+            <button id="tg-row-notif-permission" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#06b6d4]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-white">مجوز اعلان‌های سیستم</div>
+                  <div id="tg-notif-permission-subtext" class="text-[11px] text-[#93a3a5] truncate">نمایش نوتیفیکیشن یادآور کارها و پایان تمرکز</div>
+                </div>
+              </div>
+              <span id="tg-val-notif-permission" class="text-xs font-bold text-[#7fd5d8] shrink-0">بررسی...</span>
+            </button>
+
+            <div id="tg-row-daily-reminder" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#f97316]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-white">یادآور هوشمند حفظ استریک 🔥</div>
+                  <div id="tg-daily-reminder-subtext" class="text-[11px] text-[#93a3a5] truncate">یادآوری روزانه اگر کار انجام‌نشده باقی مانده باشد</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <input
+                  id="daily-reminder-time-input"
+                  type="time"
+                  value="21:00"
+                  aria-label="ساعت یادآور روزانه"
+                  class="ltr font-mono text-xs font-extrabold text-[#7fd5d8] bg-white/10 border border-white/10 rounded-full px-2.5 py-1 outline-none cursor-pointer"
+                />
+                <span id="tg-switch-daily-reminder" class="tg-switch"><span class="tg-switch-knob block"></span></span>
+              </div>
+            </div>
+
+            <button id="tg-row-exact-alarm" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#8b5cf6]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-white">آلارم دقیق در حالت قفل گوشی</div>
+                  <div class="text-[11px] text-[#93a3a5] truncate">ارسال به‌موقع یادآور حتی هنگام بسته بودن برنامه</div>
+                </div>
+              </div>
+              <span id="tg-val-exact-alarm" class="text-xs font-bold text-[#7fd5d8] shrink-0">دقیق ✓</span>
+            </button>
+
+            <button id="tg-row-test-notif" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#10b981]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-white">تست فوری نوتیفیکیشن</div>
+                  <div class="text-[11px] text-[#93a3a5] truncate">ارسال یک اعلان آزمایشی روی نوار اعلان گوشی</div>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-[#7fd5d8] shrink-0">ارسال تست ‹</span>
+            </button>
+          </div>
+        </div>
+
         <div class="flex flex-col gap-1.5">
           <span class="text-[11px] font-bold text-[#7fd5d8] px-2">تمرکز و رفتار هوشمند</span>
           <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
@@ -1125,92 +1222,6 @@
                 </div>
               </div>
               <span id="tg-switch-autosort" class="tg-switch"><span class="tg-switch-knob block"></span></span>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <span class="text-[11px] font-bold text-[#7fd5d8] px-2">اعلان‌ها و یادآورها</span>
-          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
-            <button id="tg-row-notif-permission" type="button" class="tg-settings-row">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#f59e0b]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">مجوز ارسال اعلان‌ها</div>
-                  <div id="tg-sub-notif-permission" class="text-[11px] text-[#93a3a5] truncate">بررسی دسترسی سیستم برای نمایش نوتیفیکیشن</div>
-                </div>
-              </div>
-              <span id="tg-val-notif-permission" class="text-xs font-bold text-[#7fd5d8] shrink-0">بررسی...</span>
-            </button>
-
-            <button id="tg-row-daily-reminder-toggle" type="button" class="tg-settings-row">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#f97316]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">یادآور روزانه و حفظ استریک</div>
-                  <div id="tg-sub-daily-reminder" class="text-[11px] text-[#93a3a5] truncate">یادآوری هوشمند شبانه برای تکمیل کارهای باقی‌مانده</div>
-                </div>
-              </div>
-              <span id="tg-switch-daily-reminder" class="tg-switch"><span class="tg-switch-knob block"></span></span>
-            </button>
-
-            <div id="tg-row-daily-reminder-time" class="tg-settings-row">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#8b5cf6]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">ساعت یادآور روزانه</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">زمان ارسال اعلان شبانه حفظ استریک</div>
-                </div>
-              </div>
-              <input
-                id="daily-reminder-time-input"
-                type="time"
-                value="21:00"
-                aria-label="ساعت یادآور روزانه"
-                class="ltr font-mono text-xs font-extrabold text-[#7fd5d8] bg-white/10 border border-white/10 rounded-full px-3 py-1.5 outline-none cursor-pointer shrink-0"
-              />
-            </div>
-
-            <button id="tg-row-exact-alarm" type="button" class="tg-settings-row hidden">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#06b6d4]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">مجوز آلارم دقیق در حالت قفل گوشی</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">ارسال اعلان سر ثانیه حتی هنگام قفل بودن صفحه</div>
-                </div>
-              </div>
-              <span id="tg-val-exact-alarm" class="text-xs font-bold text-amber-300 shrink-0">فعال‌سازی ‹</span>
-            </button>
-
-            <button id="tg-row-test-notification" type="button" class="tg-settings-row">
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="tg-icon-circle bg-[#10b981]">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                  </svg>
-                </span>
-                <div class="min-w-0">
-                  <div class="text-sm font-semibold text-white">تست فوری نوتیفیکیشن</div>
-                  <div class="text-[11px] text-[#93a3a5] truncate">ارسال یک اعلان آزمایشی برای اطمینان از عملکرد</div>
-                </div>
-              </div>
-              <span class="text-xs font-bold text-[#7fd5d8] shrink-0">ارسال ‹</span>
             </button>
           </div>
         </div>
@@ -1432,6 +1443,7 @@
   </nav>
 
   <!-- ==================== MODALS ==================== -->
+  <!-- ==================== پنجره کامل دفترچه یادداشت ==================== -->
   <div id="notebook-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center p-2.5 sm:p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-2xl p-4 sm:p-5 flex flex-col gap-3.5 h-[88vh] sm:h-[84vh]">
       <div data-sheet-handle class="sm:hidden pt-0.5 pb-1 -mt-1.5 cursor-grab active:cursor-grabbing touch-none flex justify-center shrink-0">
@@ -1467,6 +1479,7 @@
         </div>
       </div>
 
+      <!-- جستجو و فیلتر برچسب‌ها -->
       <div class="flex flex-col gap-2 shrink-0">
         <div class="relative">
           <input
@@ -1504,10 +1517,12 @@
         </div>
       </div>
 
+      <!-- فهرست یادداشت‌های دفترچه -->
       <div id="notebook-entries-list" class="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-0.5"></div>
     </div>
   </div>
 
+  <!-- ==================== پنجره نوشتن / خواندن و ویرایش یادداشت ==================== -->
   <div id="note-editor-modal" class="fixed inset-0 z-[55] hidden items-end sm:items-center justify-center p-2.5 sm:p-4">
     <div class="liquid-glass sheet-animate rounded-3xl w-full max-w-lg p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-y-auto">
       <div data-sheet-handle class="sm:hidden pt-0.5 pb-1 -mt-2 cursor-grab active:cursor-grabbing touch-none flex justify-center shrink-0">
@@ -1538,6 +1553,7 @@
       </div>
 
       <form id="note-editor-form" action="javascript:void(0)" class="flex flex-col gap-3">
+        <!-- انتخاب دسته‌بندی / برچسب یادداشت -->
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           <button type="button" data-editor-tag="general" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">📝 عمومی</button>
           <button type="button" data-editor-tag="idea" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 cursor-pointer">💡 ایده</button>
@@ -1799,6 +1815,31 @@
           </button>
         </div>
 
+        <div class="rounded-2xl bg-white/[0.04] border border-white/10 px-3.5 py-2.5 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <span class="block text-xs font-bold text-white">ساعت یادآور (⏰)</span>
+            <span class="block text-[10px] text-[#93a3a5]">ارسال نوتیفیکیشن سر ساعت انتخاب‌شده</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <input
+              id="edit-task-reminder-time-input"
+              type="time"
+              aria-label="ساعت یادآور کار"
+              class="ltr font-mono text-xs font-extrabold text-[#7fd5d8] bg-white/10 border border-white/10 rounded-full px-2.5 py-1 outline-none cursor-pointer"
+            />
+            <button
+              id="edit-task-clear-reminder-btn"
+              type="button"
+              aria-label="حذف ساعت یادآور"
+              class="hidden spring-btn icon-circle-btn w-6 h-6 rounded-full bg-rose-500/15 text-rose-300 cursor-pointer"
+            >
+              <svg width="12" height="12" class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
         <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-[#7fd5d8]">مراحل فرعی (چک‌لیست)</span>
@@ -1994,6 +2035,7 @@
               <span class="text-xs font-extrabold text-[#7fd5d8]">تنظیمات کار</span>
             </div>
 
+            <!-- انتخاب‌گر جیوه‌ای روز اجرا: دیروز | امروز | فردا -->
             <div class="px-4 py-3 flex items-center justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="tg-icon-circle bg-[#14b8a6]">
@@ -2076,6 +2118,38 @@
               </div>
               <span id="composer-switch-habit" class="tg-switch"><span class="tg-switch-knob block"></span></span>
             </button>
+
+            <div id="composer-row-reminder" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#06b6d4]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-white">ساعت یادآور (نوتیفیکیشن) ⏰</div>
+                  <div id="composer-reminder-subtext" class="text-[10px] text-[#93a3a5] truncate">اختیاری • ارسال اعلان سر ساعت مشخص</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <input
+                  id="composer-reminder-time-input"
+                  type="time"
+                  aria-label="ساعت یادآور کار جدید"
+                  class="ltr font-mono text-xs font-extrabold text-[#7fd5d8] bg-white/10 border border-white/10 rounded-full px-2.5 py-1 outline-none cursor-pointer"
+                />
+                <button
+                  id="composer-clear-reminder-btn"
+                  type="button"
+                  aria-label="حذف ساعت یادآور"
+                  class="hidden spring-btn icon-circle-btn w-6 h-6 rounded-full bg-rose-500/15 text-rose-300 cursor-pointer"
+                >
+                  <svg width="12" height="12" class="w-3 h-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </form>
       </div>

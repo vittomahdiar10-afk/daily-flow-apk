@@ -11,6 +11,16 @@ let draggedTaskId = null;
 let syncBackLayerCallback = null;
 let composerShutterController = null;
 
+/* ==================== کانال‌ها و شناسه‌های موتور نوتیفیکیشن بومی ==================== */
+const NOTIFICATION_CHANNELS = {
+  tasks: 'daily_flow_reminders',
+  focus: 'daily_flow_focus',
+  daily: 'daily_flow_daily_streak',
+};
+const FOCUS_TIMER_NOTIF_ID = 'focus_timer_session_end';
+const DAILY_STREAK_NOTIF_ID = 'daily_streak_evening_reminder';
+const inPageScheduledTimers = new Map();
+
 /* تابع کشسانی لبه iOS Rubber-Banding برای حس لمسی واقعی هنگام کشیدن بیش از حد */
 function computeIosRubberBand(offset, dimension = 64) {
   const absOffset = Math.abs(offset);
@@ -121,7 +131,7 @@ const RADAR_AXES = {
 
 const state = {
   tasks: [],
-  selectedDayView: 'today', // 'yesterday' | 'today' | 'tomorrow'
+  selectedDayView: 'today',
   filter: 'all',
   folderFilter: 'all',
   searchQuery: '',
@@ -144,13 +154,13 @@ const state = {
   moveUndoSnapshot: null,
   noteUndoSnapshot: null,
   soundEnabled: true,
+  dailyReminderEnabled: false,
+  dailyReminderTime: '21:00',
   gpuQualityMode: 'auto',
   detectedHz: 120,
   activeGpuTier: 'ultra',
   autoSortCompleted: false,
   privacyBlur: false,
-  dailyReminderEnabled: false,
-  dailyReminderTime: '21:00',
   dailyGoal: 5,
   accentTheme: 'mint',
   colorMode: 'dark',
@@ -173,6 +183,7 @@ const state = {
   draftEditDay: 'today',
   draftEditUrgent: false,
   draftEditHabit: false,
+  draftEditReminderTime: '',
   draftFolderEmoji: '🎓',
   composerSubtasks: [],
   composerDay: 'today',
@@ -180,6 +191,7 @@ const state = {
   composerAutoComplete: true,
   composerUrgent: false,
   composerHabit: false,
+  composerReminderTime: '',
   profile: {
     name: 'دوست من',
     bio: 'تمرکز عمیق و پیشرفت روزانه',
@@ -193,6 +205,412 @@ const state = {
   draftAvatar: '🧑‍💻',
   draftPhotoDataUrl: '',
 };
+
+/* ==================== لایه ارتباطی یکپارچه نوتیفیکیشن (APK بومی + مرورگر) ==================== */
+function hasNativeSchedulerBridge() {
+  return Boolean(
+    window.AndroidNative &&
+      typeof window.AndroidNative.scheduleNotification === 'function' &&
+      typeof window.AndroidNative.showInstantNotification === 'function'
+  );
+}
+
+function getNotificationPermissionStatus() {
+  if (window.AndroidNative) {
+    if (typeof window.AndroidNative.hasNotificationPermission === 'function') {
+      try {
+        return window.AndroidNative.hasNotificationPermission() ? 'granted' : 'denied';
+      } catch (e) {
+        return 'denied';
+      }
+    }
+    return 'needs_apk_update';
+  }
+  if (typeof Notification === 'undefined') return 'unsupported';
+  return Notification.permission;
+}
+
+async function requestAppNotificationPermission() {
+  if (window.AndroidNative) {
+    if (typeof window.AndroidNative.requestNotificationPermission === 'function') {
+      try {
+        window.AndroidNative.requestNotificationPermission();
+      } catch (e) {}
+    }
+    updateNotificationSettingsUI();
+    return getNotificationPermissionStatus() === 'granted';
+  }
+  if (typeof Notification === 'undefined') return false;
+  if (Notification.permission === 'granted') return true;
+  try {
+    const res = await Notification.requestPermission();
+    updateNotificationSettingsUI();
+    return res === 'granted';
+  } catch (e) {
+    return false;
+  }
+}
+
+function canScheduleExactAlarmsStatus() {
+  if (window.AndroidNative && typeof window.AndroidNative.canScheduleExactAlarms === 'function') {
+    try {
+      return Boolean(window.AndroidNative.canScheduleExactAlarms());
+    } catch (e) {
+      return true;
+    }
+  }
+  return true;
+}
+
+function showInstantAppNotification({ idKey, title, body, channelId }) {
+  const safeId = String(idKey || `instant_${Date.now()}`);
+  const safeTitle = String(title || 'Daily Flow');
+  const safeBody = String(body || '');
+  const safeChannel = channelId || NOTIFICATION_CHANNELS.tasks;
+
+  if (window.AndroidNative && typeof window.AndroidNative.showInstantNotification === 'function') {
+    try {
+      return Boolean(
+        window.AndroidNative.showInstantNotification(safeId, safeTitle, safeBody, safeChannel)
+      );
+    } catch (e) {}
+  }
+
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready
+          .then((reg) => {
+            if (reg && typeof reg.showNotification === 'function') {
+              reg.showNotification(safeTitle, {
+                body: safeBody,
+                icon: './icon-192.png',
+                badge: './icon-192.png',
+                tag: safeId,
+              });
+            }
+          })
+          .catch(() => {});
+        return true;
+      }
+      new Notification(safeTitle, { body: safeBody, icon: './icon-192.png', tag: safeId });
+      return true;
+    } catch (e) {}
+  }
+
+  return false;
+}
+
+function cancelAppNotification(idKey) {
+  const safeId = String(idKey || '');
+  if (!safeId) return;
+
+  if (inPageScheduledTimers.has(safeId)) {
+    clearTimeout(inPageScheduledTimers.get(safeId));
+    inPageScheduledTimers.delete(safeId);
+  }
+
+  if (window.AndroidNative && typeof window.AndroidNative.cancelNotification === 'function') {
+    try {
+      window.AndroidNative.cancelNotification(safeId);
+    } catch (e) {}
+  }
+}
+
+function scheduleAppNotification({ idKey, triggerAtMillis, title, body, channelId, repeatDaily = false }) {
+  const safeId = String(idKey || '');
+  const targetMs = Number(triggerAtMillis) || 0;
+  if (!safeId || targetMs <= Date.now() + 1000) {
+    cancelAppNotification(safeId);
+    return false;
+  }
+
+  if (inPageScheduledTimers.has(safeId)) {
+    clearTimeout(inPageScheduledTimers.get(safeId));
+    inPageScheduledTimers.delete(safeId);
+  }
+
+  const safeTitle = String(title || 'Daily Flow');
+  const safeBody = String(body || '');
+  const safeChannel = channelId || NOTIFICATION_CHANNELS.tasks;
+  let scheduledNative = false;
+
+  if (window.AndroidNative && typeof window.AndroidNative.scheduleNotification === 'function') {
+    try {
+      scheduledNative = Boolean(
+        window.AndroidNative.scheduleNotification(
+          safeId,
+          Math.round(targetMs),
+          safeTitle,
+          safeBody,
+          safeChannel,
+          Boolean(repeatDaily)
+        )
+      );
+    } catch (e) {
+      scheduledNative = false;
+    }
+  }
+
+  /* تایمر پشتیبان درون‌صفحه‌ای برای مرورگر وب یا زمانی که اپ در پیش‌زمینه باز است */
+  const delayMs = targetMs - Date.now();
+  if (!scheduledNative && delayMs > 0 && delayMs <= 24 * 60 * 60 * 1000) {
+    const tid = setTimeout(() => {
+      inPageScheduledTimers.delete(safeId);
+      showInstantAppNotification({
+        idKey: safeId,
+        title: safeTitle,
+        body: safeBody,
+        channelId: safeChannel,
+      });
+      if (repeatDaily) {
+        scheduleAppNotification({
+          idKey: safeId,
+          triggerAtMillis: targetMs + 24 * 60 * 60 * 1000,
+          title: safeTitle,
+          body: safeBody,
+          channelId: safeChannel,
+          repeatDaily: true,
+        });
+      }
+    }, delayMs);
+    inPageScheduledTimers.set(safeId, tid);
+  }
+
+  return scheduledNative || inPageScheduledTimers.has(safeId);
+}
+
+/* ==================== زمان‌بندی یادآور روزانه و حفظ استریک (مرحله ۲) ==================== */
+function parseReminderTimeParts(timeStr) {
+  const clean = normalizeReminderTime(timeStr) || '21:00';
+  const [hStr, mStr] = clean.split(':');
+  return {
+    hour: Number(hStr) || 21,
+    minute: Number(mStr) || 0,
+  };
+}
+
+function syncDailyStreakReminderNotification(silent = true, fromStartup = false) {
+  if (!state.dailyReminderEnabled) {
+    cancelAppNotification(DAILY_STREAK_NOTIF_ID);
+    updateNotificationSettingsUI();
+    return false;
+  }
+
+  const normalizedTime = normalizeReminderTime(state.dailyReminderTime) || '21:00';
+  state.dailyReminderTime = normalizedTime;
+  const { hour, minute } = parseReminderTimeParts(normalizedTime);
+
+  const todayTasks = getTasksForDayView('today');
+  const remainingCount = todayTasks.filter((t) => !t.completed).length;
+  const allTodayCompleted = todayTasks.length > 0 && remainingCount === 0;
+  const userName = (state.profile && state.profile.name) || 'دوست من';
+  const streakDays = toPersianDigits(state.streak.count || 1);
+
+  const now = new Date();
+  const target = new Date();
+  target.setHours(hour, minute, 0, 0);
+
+  if (target.getTime() <= now.getTime() + 2000 || allTodayCompleted) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const title = '🔥 یادآور برنامه روزانه و حفظ استریک';
+  const body =
+    remainingCount > 0 && !allTodayCompleted
+      ? `${userName}، هنوز ${toPersianDigits(remainingCount)} کار از برنامه امروزت باقی مانده! برای حفظ استریک ${streakDays} روزه سر بزن.`
+      : `${userName}، وقت مرور برنامه روزانه و حفظ استریک ${streakDays} روزه است!`;
+
+  const ok = scheduleAppNotification({
+    idKey: DAILY_STREAK_NOTIF_ID,
+    triggerAtMillis: target.getTime(),
+    title,
+    body,
+    channelId: NOTIFICATION_CHANNELS.daily,
+    repeatDaily: true,
+  });
+
+  updateNotificationSettingsUI();
+  if (!silent && !fromStartup) {
+    triggerIslandToast(
+      '⏰',
+      `یادآور روزانه روی ساعت ${toPersianDigits(normalizedTime)} تنظیم شد`
+    );
+  }
+  return ok;
+}
+
+function updateNotificationSettingsUI() {
+  const permStatus = getNotificationPermissionStatus();
+  const permValEl = document.getElementById('tg-val-notif-permission');
+  const permSubEl = document.getElementById('tg-notif-permission-subtext');
+  if (permValEl) {
+    if (permStatus === 'granted') {
+      permValEl.textContent = 'فعال ✓';
+    } else if (permStatus === 'needs_apk_update') {
+      permValEl.textContent = 'نیاز به APK جدید';
+    } else if (permStatus === 'denied') {
+      permValEl.textContent = 'غیرفعال • فعال‌سازی ‹';
+    } else {
+      permValEl.textContent = 'نیاز به مجوز ‹';
+    }
+  }
+  if (permSubEl) {
+    permSubEl.textContent =
+      permStatus === 'granted'
+        ? 'نوتیفیکیشن یادآور کارها و پایان تمرکز آماده ارسال است'
+        : 'برای دریافت یادآور در حالت قفل گوشی مجوز اعلان را فعال کن';
+  }
+
+  const dailySwitch = document.getElementById('tg-switch-daily-reminder');
+  const dailyInput = document.getElementById('daily-reminder-time-input');
+  const dailySub = document.getElementById('tg-daily-reminder-subtext');
+  setTgSwitchState(dailySwitch, Boolean(state.dailyReminderEnabled), false);
+  if (dailyInput && document.activeElement !== dailyInput) {
+    dailyInput.value = normalizeReminderTime(state.dailyReminderTime) || '21:00';
+  }
+  if (dailySub) {
+    const fmtTime = toPersianDigits(normalizeReminderTime(state.dailyReminderTime) || '21:00');
+    dailySub.textContent = state.dailyReminderEnabled
+      ? `فعال • یادآوری هوشمند هر روز ساعت ${fmtTime}`
+      : 'یادآوری روزانه اگر کار انجام‌نشده باقی مانده باشد';
+  }
+
+  const exactValEl = document.getElementById('tg-val-exact-alarm');
+  if (exactValEl) {
+    const canExact = canScheduleExactAlarmsStatus();
+    exactValEl.textContent = canExact ? 'دقیق ✓' : 'تنظیم مجوز ‹';
+  }
+}
+
+/* ==================== اتصال تایمر تمرکز به نوتیفیکیشن بومی (مرحله ۳) ==================== */
+function cancelFocusEndNotification() {
+  cancelAppNotification(FOCUS_TIMER_NOTIF_ID);
+}
+
+function scheduleFocusEndNotification() {
+  if (!state.focusRunning || typeof state.focusEndTimestamp !== 'number') {
+    cancelFocusEndNotification();
+    return;
+  }
+  if (state.focusEndTimestamp <= Date.now() + 1500) {
+    cancelFocusEndNotification();
+    return;
+  }
+
+  const todayTasks = getTasksForDayView('today');
+  const focusedTask = todayTasks.find((t) => t.id === state.focusedTaskId) || getSmartFocusCandidate();
+  const minsLabel = toPersianDigits(state.focusDurationMinutes || 25);
+  const title = '⏱️ پایان جلسه تمرکز عمیق!';
+  const body = focusedTask
+    ? `جلسه ${minsLabel} دقیقه‌ای روی «${focusedTask.title}» به پایان رسید. آفرین بر تمرکزت!`
+    : `جلسه تمرکز ${minsLabel} دقیقه‌ای با موفقیت کامل شد!`;
+
+  scheduleAppNotification({
+    idKey: FOCUS_TIMER_NOTIF_ID,
+    triggerAtMillis: state.focusEndTimestamp,
+    title,
+    body,
+    channelId: NOTIFICATION_CHANNELS.focus,
+    repeatDaily: false,
+  });
+}
+
+/* ==================== زمان‌بندی و لغو یادآور ساعت‌دار کارها (مرحله ۴) ==================== */
+function normalizeReminderTime(rawTime) {
+  const clean = String(rawTime || '').trim();
+  const match = clean.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return '';
+  const hh = Number(match[1]);
+  const mm = Number(match[2]);
+  if (Number.isNaN(hh) || Number.isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) {
+    return '';
+  }
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+function getTaskReminderAlarmKey(taskId) {
+  return `task_reminder_${String(taskId || '')}`;
+}
+
+function parseDateKeyToLocalDate(dayKey) {
+  const parts = String(dayKey || '').split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) {
+    return new Date();
+  }
+  return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+}
+
+function cancelTaskReminderNotification(taskId) {
+  if (!taskId) return;
+  cancelAppNotification(getTaskReminderAlarmKey(taskId));
+}
+
+function scheduleTaskReminderNotification(task) {
+  if (!task || !task.id) return false;
+  const alarmKey = getTaskReminderAlarmKey(task.id);
+  const reminderTime = normalizeReminderTime(task.reminderTime);
+
+  if (!reminderTime || task.completed) {
+    cancelAppNotification(alarmKey);
+    return false;
+  }
+
+  const { hour, minute } = parseReminderTimeParts(reminderTime);
+  const now = Date.now();
+  const todayKey = getTodayKey();
+  const userName = (state.profile && state.profile.name) || 'دوست من';
+  const title = `⏰ یادآور کار: ${task.title}`;
+  const body = task.description
+    ? `${task.description}`
+    : `${userName}، وقت انجام «${task.title}» (${getFolderDisplay(task.category)}) رسیده است.`;
+
+  if (task.isHabit) {
+    const target = new Date();
+    target.setHours(hour, minute, 0, 0);
+    if (target.getTime() <= now + 1000) {
+      target.setDate(target.getDate() + 1);
+    }
+    return scheduleAppNotification({
+      idKey: alarmKey,
+      triggerAtMillis: target.getTime(),
+      title,
+      body,
+      channelId: NOTIFICATION_CHANNELS.tasks,
+      repeatDaily: true,
+    });
+  }
+
+  const targetDayKey = task.scheduledDate || todayKey;
+  if (targetDayKey < todayKey) {
+    cancelAppNotification(alarmKey);
+    return false;
+  }
+
+  const targetDate = parseDateKeyToLocalDate(targetDayKey);
+  targetDate.setHours(hour, minute, 0, 0);
+
+  if (targetDate.getTime() <= now + 1000) {
+    cancelAppNotification(alarmKey);
+    return false;
+  }
+
+  return scheduleAppNotification({
+    idKey: alarmKey,
+    triggerAtMillis: targetDate.getTime(),
+    title,
+    body,
+    channelId: NOTIFICATION_CHANNELS.tasks,
+    repeatDaily: false,
+  });
+}
+
+function syncAllTaskReminderNotifications() {
+  if (!Array.isArray(state.tasks)) return;
+  state.tasks.forEach((task) => {
+    scheduleTaskReminderNotification(task);
+  });
+}
 
 /* ==================== ابزارهای فیزیک مایع (Liquid Squash & Stretch Helpers) ==================== */
 function setTgSwitchState(switchEl, isOn, animate = false) {
@@ -265,7 +683,7 @@ function syncDynamicPillIndicator({ barId, indicatorId, blobId, btnSelector, act
   }
 }
 
-/* موتور رندر گرافیکی تطبیقی برای نرخ فریم‌های ۶۰، ۹۰، ۱۲۰ و ۱۴۴ هرتز و GPUهای مختلف موبایل */
+/* ==================== موتور رندر گرافیکی تطبیقی برای نرخ فریم‌های مختلف ==================== */
 function snapToStandardHz(rawHz) {
   if (rawHz >= 134) return 144;
   if (rawHz >= 106) return 120;
@@ -377,6 +795,7 @@ function initAdaptiveRenderEngine() {
   });
 }
 
+/* ==================== توابع کمکی تاریخ شمسی و قالب‌بندی ==================== */
 function toPersianDigits(val) {
   const map = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
   return String(val).replace(/\d/g, (d) => map[Number(d)]);
@@ -578,7 +997,7 @@ function getRecent7DaysMeta() {
   return result;
 }
 
-/* بررسی اینکه یک تسک متعلق به کدام روز است و وضعیت انجامش در آن روز چیست */
+/* ==================== مدیریت داده‌ها، روزها و ذخیره‌سازی ==================== */
 function isTaskScheduledForDayKey(task, targetDayKey) {
   if (!task) return false;
   const todayKey = getTodayKey();
@@ -653,6 +1072,7 @@ function getDefaultSampleTasks() {
       category: 'سلامتی',
       urgent: false,
       isHabit: true,
+      reminderTime: '',
       autoCompleteSubtasks: true,
       completed: false,
       scheduledDate: todayKey,
@@ -671,6 +1091,7 @@ function getDefaultSampleTasks() {
       category: 'کار',
       urgent: true,
       isHabit: false,
+      reminderTime: '',
       autoCompleteSubtasks: true,
       completed: false,
       scheduledDate: todayKey,
@@ -684,6 +1105,7 @@ function getDefaultSampleTasks() {
       category: 'یادگیری',
       urgent: false,
       isHabit: true,
+      reminderTime: '',
       autoCompleteSubtasks: true,
       completed: false,
       scheduledDate: todayKey,
@@ -714,11 +1136,11 @@ function saveState() {
     focusRemainingMs: state.focusRemainingMs,
     focusEndTimestamp: state.focusEndTimestamp,
     soundEnabled: state.soundEnabled,
+    dailyReminderEnabled: state.dailyReminderEnabled,
+    dailyReminderTime: state.dailyReminderTime,
     gpuQualityMode: state.gpuQualityMode,
     autoSortCompleted: state.autoSortCompleted,
     privacyBlur: state.privacyBlur,
-    dailyReminderEnabled: state.dailyReminderEnabled,
-    dailyReminderTime: state.dailyReminderTime,
     dailyGoal: state.dailyGoal,
     accentTheme: state.accentTheme,
     colorMode: state.colorMode,
@@ -736,10 +1158,6 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, serialized);
   } catch (e) {}
-
-  if (typeof syncDailyStreakReminderNotification === 'function') {
-    syncDailyStreakReminderNotification(true, false);
-  }
 }
 
 function loadState() {
@@ -779,17 +1197,17 @@ function loadState() {
         }
       }
       if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
+      if (typeof parsed.dailyReminderEnabled === 'boolean') {
+        state.dailyReminderEnabled = parsed.dailyReminderEnabled;
+      }
+      if (typeof parsed.dailyReminderTime === 'string') {
+        state.dailyReminderTime = normalizeReminderTime(parsed.dailyReminderTime) || '21:00';
+      }
       if (['auto', 'ultra', 'balanced', 'performance'].includes(parsed.gpuQualityMode)) {
         state.gpuQualityMode = parsed.gpuQualityMode;
       }
       if (typeof parsed.autoSortCompleted === 'boolean') state.autoSortCompleted = parsed.autoSortCompleted;
       if (typeof parsed.privacyBlur === 'boolean') state.privacyBlur = parsed.privacyBlur;
-      if (typeof parsed.dailyReminderEnabled === 'boolean') {
-        state.dailyReminderEnabled = parsed.dailyReminderEnabled;
-      }
-      if (typeof parsed.dailyReminderTime === 'string' && /^\d{2}:\d{2}$/.test(parsed.dailyReminderTime)) {
-        state.dailyReminderTime = parsed.dailyReminderTime;
-      }
       if (typeof parsed.dailyGoal === 'number') state.dailyGoal = parsed.dailyGoal;
       if (ACCENT_PALETTES[parsed.accentTheme]) state.accentTheme = parsed.accentTheme;
       if (parsed.colorMode === 'light' || parsed.colorMode === 'dark') state.colorMode = parsed.colorMode;
@@ -820,6 +1238,7 @@ function loadState() {
     if (!task.scheduledDate) {
       task.scheduledDate = fallbackDayForLegacy;
     }
+    task.reminderTime = normalizeReminderTime(task.reminderTime);
     if (task.isHabit && (!task.habitHistory || typeof task.habitHistory !== 'object')) {
       task.habitHistory = {};
     }
@@ -948,6 +1367,7 @@ function applyThemePreferences() {
   });
 }
 
+/* ==================== موتور صدا، ویبره و صدای محیطی ==================== */
 function ensureAudioContext() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -990,7 +1410,6 @@ function playTactileSound(type, directionStep = 0) {
       osc.start(now);
       osc.stop(now + 0.11);
     } else if (type === 'nav-step') {
-      /* صدای شیشه‌ای جهت‌دار: حرکت به آینده/تب‌های جلو زیرتر و شاداب‌تر، برگشت بم‌تر */
       const clampedStep = Math.max(-3, Math.min(3, Number(directionStep) || 0));
       const baseFreq = 640 + clampedStep * 68;
       const endFreq = baseFreq + (clampedStep >= 0 ? 115 : -85);
@@ -1002,7 +1421,6 @@ function playTactileSound(type, directionStep = 0) {
       osc.start(now);
       osc.stop(now + 0.075);
     } else if (type === 'scrub-tick') {
-      /* تیک کریستالی ظریف هنگام سر خوردن انگشت روی نوار تب‌ها یا کشیدن داینامیک آیلند */
       const clampedStep = Math.max(-2, Math.min(2, Number(directionStep) || 0));
       const tickFreq = 740 + clampedStep * 55;
       osc.type = 'sine';
@@ -1030,413 +1448,6 @@ function triggerHaptic(ms = 10) {
     if (navigator.vibrate) navigator.vibrate(ms);
   } catch (e) {}
 }
-
-/* ==================== لایه یکپارچه مدیریت نوتیفیکیشن بومی اندروید و وب ==================== */
-const NOTIFICATION_CHANNELS = {
-  tasks: 'daily_flow_reminders',
-  focus: 'daily_flow_focus',
-  daily: 'daily_flow_daily_streak',
-};
-const DAILY_REMINDER_ID_KEY = 'daily_streak_reminder';
-const FOCUS_TIMER_NOTIF_ID = 'focus_timer_session_end';
-const webScheduledNotifTimers = new Map();
-let lastScheduledDailyReminderSig = '';
-let pendingTestNotificationAfterGrant = false;
-
-function isNativeAndroidApp() {
-  return Boolean(window.AndroidNative);
-}
-
-function hasFullNativeNotificationBridge() {
-  return Boolean(
-    window.AndroidNative &&
-      typeof window.AndroidNative.showInstantNotification === 'function' &&
-      typeof window.AndroidNative.scheduleNotification === 'function' &&
-      typeof window.AndroidNative.cancelNotification === 'function'
-  );
-}
-
-function getNotificationPermissionStatus() {
-  if (isNativeAndroidApp()) {
-    if (!hasFullNativeNotificationBridge()) {
-      return 'needs_apk_update';
-    }
-    try {
-      if (typeof window.AndroidNative.hasNotificationPermission === 'function') {
-        return window.AndroidNative.hasNotificationPermission() ? 'granted' : 'denied';
-      }
-    } catch (e) {}
-    return 'granted';
-  }
-  if (typeof Notification === 'undefined') {
-    return 'unsupported';
-  }
-  return Notification.permission; // 'granted' | 'denied' | 'default'
-}
-
-function canScheduleExactAlarmsNative() {
-  if (!isNativeAndroidApp()) return true;
-  try {
-    if (typeof window.AndroidNative.canScheduleExactAlarms === 'function') {
-      return Boolean(window.AndroidNative.canScheduleExactAlarms());
-    }
-  } catch (e) {}
-  return true;
-}
-
-async function requestAppNotificationPermission() {
-  if (isNativeAndroidApp()) {
-    if (!hasFullNativeNotificationBridge()) {
-      triggerIslandToast('📲', 'برای نوتیفیکیشن بومی، نسخه جدید APK را نصب کن', { duration: 3600 });
-      return false;
-    }
-    const current = getNotificationPermissionStatus();
-    if (current === 'granted') return true;
-    try {
-      if (typeof window.AndroidNative.requestNotificationPermission === 'function') {
-        window.AndroidNative.requestNotificationPermission();
-      }
-    } catch (e) {}
-    return false;
-  }
-
-  if (typeof Notification === 'undefined') {
-    triggerIslandToast('⚠️', 'مرورگر فعلی از نوتیفیکیشن پشتیبانی نمی‌کند');
-    return false;
-  }
-
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied') {
-    triggerIslandToast('⚠️', 'مجوز اعلان در تنظیمات مرورگر مسدود شده است');
-    return false;
-  }
-
-  try {
-    const res = await Notification.requestPermission();
-    updateNotificationSettingsUI();
-    return res === 'granted';
-  } catch (e) {
-    return false;
-  }
-}
-
-function sendInstantAppNotification({ idKey, title, body, channelId = NOTIFICATION_CHANNELS.tasks }) {
-  if (isNativeAndroidApp()) {
-    if (!hasFullNativeNotificationBridge()) {
-      return false;
-    }
-    try {
-      return Boolean(
-        window.AndroidNative.showInstantNotification(
-          String(idKey || `instant_${Date.now()}`),
-          String(title || 'Daily Flow'),
-          String(body || ''),
-          String(channelId || NOTIFICATION_CHANNELS.tasks)
-        )
-      );
-    } catch (e) {
-      return false;
-    }
-  }
-
-  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    try {
-      new Notification(String(title || 'Daily Flow'), {
-        body: String(body || ''),
-        icon: './icon.svg',
-        tag: String(idKey || 'daily_flow_notif'),
-      });
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-  return false;
-}
-
-function cancelAppNotification(idKey) {
-  const key = String(idKey || '');
-  if (!key) return;
-
-  if (webScheduledNotifTimers.has(key)) {
-    clearTimeout(webScheduledNotifTimers.get(key));
-    webScheduledNotifTimers.delete(key);
-  }
-
-  if (hasFullNativeNotificationBridge()) {
-    try {
-      window.AndroidNative.cancelNotification(key);
-    } catch (e) {}
-  }
-}
-
-function scheduleAppNotification({
-  idKey,
-  triggerAtMillis,
-  title,
-  body,
-  channelId = NOTIFICATION_CHANNELS.tasks,
-  repeatDaily = false,
-}) {
-  const key = String(idKey || '');
-  const targetMs = Number(triggerAtMillis);
-  if (!key || !Number.isFinite(targetMs)) return false;
-
-  if (hasFullNativeNotificationBridge()) {
-    try {
-      return Boolean(
-        window.AndroidNative.scheduleNotification(
-          key,
-          targetMs,
-          String(title || 'Daily Flow'),
-          String(body || ''),
-          String(channelId || NOTIFICATION_CHANNELS.tasks),
-          Boolean(repeatDaily)
-        )
-      );
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /* پشتیبان وب (وقتی برنامه داخل مرورگر باز است) */
-  cancelAppNotification(key);
-  const delayMs = targetMs - Date.now();
-  if (delayMs > 1000 && delayMs <= 2147483000) {
-    const timerId = setTimeout(() => {
-      webScheduledNotifTimers.delete(key);
-      sendInstantAppNotification({ idKey: key, title, body, channelId });
-    }, delayMs);
-    webScheduledNotifTimers.set(key, timerId);
-    return true;
-  }
-  return false;
-}
-
-function scheduleFocusEndNotification() {
-  if (!state.focusRunning || typeof state.focusEndTimestamp !== 'number') {
-    cancelFocusEndNotification();
-    return false;
-  }
-  if (state.focusEndTimestamp <= Date.now() + 1000) {
-    return false;
-  }
-
-  const todayTasks = getTasksForDayView('today');
-  const focusedTask = todayTasks.find((t) => t.id === state.focusedTaskId) || getSmartFocusCandidate();
-  const durationFa = toPersianDigits(state.focusDurationMinutes || 25);
-  const userName = (state.profile && state.profile.name) || 'دوست من';
-
-  const title = '🎉 جلسه تمرکز کامل شد!';
-  const body = focusedTask
-    ? `${userName}، زمان تمرکز ${durationFa} دقیقه‌ای روی «${focusedTask.title}» به پایان رسید. خسته نباشی! ✨`
-    : `${userName}، جلسه تمرکز ${durationFa} دقیقه‌ای شما با موفقیت به پایان رسید. عالی بود! ✨`;
-
-  return scheduleAppNotification({
-    idKey: FOCUS_TIMER_NOTIF_ID,
-    triggerAtMillis: state.focusEndTimestamp,
-    title,
-    body,
-    channelId: NOTIFICATION_CHANNELS.focus,
-    repeatDaily: false,
-  });
-}
-
-function cancelFocusEndNotification() {
-  cancelAppNotification(FOCUS_TIMER_NOTIF_ID);
-}
-
-function parseReminderTimeParts(timeStr) {
-  const match = String(timeStr || '21:00').match(/^(\d{1,2}):(\d{2})$/);
-  const hour = match ? Math.min(23, Math.max(0, Number(match[1]))) : 21;
-  const minute = match ? Math.min(59, Math.max(0, Number(match[2]))) : 0;
-  return { hour, minute };
-}
-
-function computeDailyReminderTrigger(timeStr, skipToday = false) {
-  const { hour, minute } = parseReminderTimeParts(timeStr);
-  const target = new Date();
-  target.setHours(hour, minute, 0, 0);
-  if (skipToday || target.getTime() <= Date.now() + 5000) {
-    target.setDate(target.getDate() + 1);
-  }
-  return target.getTime();
-}
-
-function syncDailyStreakReminderNotification(silent = true, force = false) {
-  if (!state.dailyReminderEnabled) {
-    if (force || lastScheduledDailyReminderSig !== 'off') {
-      cancelAppNotification(DAILY_REMINDER_ID_KEY);
-      lastScheduledDailyReminderSig = 'off';
-    }
-    return false;
-  }
-
-  const todayTasks = getTasksForDayView('today');
-  const totalToday = todayTasks.length;
-  const remainingToday = todayTasks.filter((t) => !t.completed).length;
-  const allDoneToday = totalToday > 0 && remainingToday === 0;
-  const userName = (state.profile && state.profile.name) || 'دوست من';
-  const streakCount = state.streak?.count || 1;
-  const timeVal = state.dailyReminderTime || '21:00';
-
-  const sig = `on|${timeVal}|${remainingToday}|${totalToday}|${streakCount}|${userName}`;
-  if (!force && sig === lastScheduledDailyReminderSig) {
-    return true;
-  }
-
-  const triggerAt = computeDailyReminderTrigger(timeVal, allDoneToday);
-  const isTriggerToday = getDayKeyFromDate(new Date(triggerAt)) === getTodayKey();
-  const streakFa = toPersianDigits(streakCount);
-
-  let title = '✨ وقت مرور برنامه Daily Flow';
-  let body = `${userName}، برنامه امروزت رو چک کن و کارهات رو تیک بزن تا استریک ${streakFa} روزه‌ات حفظ بشه 🔥`;
-
-  if (isTriggerToday && remainingToday > 0) {
-    title = '🔥 یادآور برنامه امروز Daily Flow';
-    body = `${userName}، ${toPersianDigits(remainingToday)} کار از برنامه امروزت باقی مونده! انجامشون بده تا استریک ${streakFa} روزه‌ات قطع نشه.`;
-  }
-
-  const scheduled = scheduleAppNotification({
-    idKey: DAILY_REMINDER_ID_KEY,
-    triggerAtMillis: triggerAt,
-    title,
-    body,
-    channelId: NOTIFICATION_CHANNELS.daily,
-    repeatDaily: true,
-  });
-
-  lastScheduledDailyReminderSig = sig;
-
-  if (!silent) {
-    if (scheduled) {
-      triggerIslandToast('🔔', `یادآور روزانه برای ساعت ${toPersianDigits(timeVal)} تنظیم شد`);
-    } else if (isNativeAndroidApp() && !hasFullNativeNotificationBridge()) {
-      triggerIslandToast('📲', 'تنظیم ذخیره شد؛ برای ارسال اعلان نسخه جدید APK را نصب کن', { duration: 3600 });
-    } else {
-      triggerIslandToast('🔔', `ساعت یادآور روزانه روی ${toPersianDigits(timeVal)} ذخیره شد`);
-    }
-  }
-  return scheduled;
-}
-
-function updateNotificationSettingsUI() {
-  const status = getNotificationPermissionStatus();
-  const valPermEl = document.getElementById('tg-val-notif-permission');
-  const subPermEl = document.getElementById('tg-sub-notif-permission');
-  const subDailyEl = document.getElementById('tg-sub-daily-reminder');
-  const timeInput = document.getElementById('daily-reminder-time-input');
-  const timeRow = document.getElementById('tg-row-daily-reminder-time');
-  const exactAlarmRow = document.getElementById('tg-row-exact-alarm');
-  const exactAlarmVal = document.getElementById('tg-val-exact-alarm');
-
-  if (valPermEl && subPermEl) {
-    if (status === 'granted') {
-      valPermEl.textContent = 'فعال ✓';
-      valPermEl.className = 'text-xs font-bold text-emerald-300 shrink-0';
-      subPermEl.textContent = isNativeAndroidApp()
-        ? 'اعلان‌های بومی فعال است • لمس برای تنظیمات سیستم'
-        : 'اعلان‌های مرورگر فعال است';
-    } else if (status === 'needs_apk_update') {
-      valPermEl.textContent = 'نیاز به APK جدید';
-      valPermEl.className = 'text-xs font-bold text-amber-300 shrink-0';
-      subPermEl.textContent = 'برای فعال‌سازی موتور اعلان، APK جدید مرحله ۱ را نصب کن';
-    } else if (status === 'unsupported') {
-      valPermEl.textContent = 'پشتیبانی نمی‌شود';
-      valPermEl.className = 'text-xs font-bold text-[#93a3a5] shrink-0';
-      subPermEl.textContent = 'این مرورگر از نمایش نوتیفیکیشن پشتیبانی نمی‌کند';
-    } else if (status === 'denied') {
-      valPermEl.textContent = 'غیرفعال ‹';
-      valPermEl.className = 'text-xs font-bold text-rose-300 shrink-0';
-      subPermEl.textContent = 'برای دریافت یادآورها، لمس کن و مجوز اعلان را فعال کن';
-    } else {
-      valPermEl.textContent = 'فعال‌سازی ‹';
-      valPermEl.className = 'text-xs font-bold text-[#7fd5d8] shrink-0';
-      subPermEl.textContent = 'برای دریافت یادآور کارها و تایمر، مجوز اعلان را فعال کن';
-    }
-  }
-
-  setTgSwitchState(
-    document.getElementById('tg-switch-daily-reminder'),
-    state.dailyReminderEnabled,
-    false
-  );
-
-  if (timeInput && document.activeElement !== timeInput) {
-    timeInput.value = state.dailyReminderTime || '21:00';
-  }
-
-  if (timeRow) {
-    timeRow.classList.toggle('opacity-55', !state.dailyReminderEnabled);
-  }
-
-  if (subDailyEl) {
-    subDailyEl.textContent = state.dailyReminderEnabled
-      ? `هر شب ساعت ${toPersianDigits(state.dailyReminderTime || '21:00')} (در صورت ناتمام بودن کارهای امروز)`
-      : 'یادآوری هوشمند شبانه برای تکمیل کارهای باقی‌مانده';
-  }
-
-  if (exactAlarmRow) {
-    const showExactRow = isNativeAndroidApp() && hasFullNativeNotificationBridge();
-    exactAlarmRow.classList.toggle('hidden', !showExactRow);
-    if (showExactRow && exactAlarmVal) {
-      const canExact = canScheduleExactAlarmsNative();
-      exactAlarmVal.textContent = canExact ? 'دقیق ✓' : 'فعال‌سازی ‹';
-      exactAlarmVal.className = canExact
-        ? 'text-xs font-bold text-emerald-300 shrink-0'
-        : 'text-xs font-bold text-amber-300 shrink-0';
-    }
-  }
-}
-
-function sendTestAppNotification() {
-  const ok = sendInstantAppNotification({
-    idKey: 'daily_flow_test_notif',
-    title: '🔔 اعلان‌های Daily Flow فعال است!',
-    body: `${state.profile.name || 'دوست من'}، یادآورها و نوتیفیکیشن‌های برنامه روی دستگاهت آماده به کار هستند ✨`,
-    channelId: NOTIFICATION_CHANNELS.tasks,
-  });
-
-  if (ok) {
-    playTactileSound('complete');
-    triggerHaptic(12);
-    triggerIslandToast('🔔', 'نوتیفیکیشن آزمایشی ارسال شد!');
-  } else if (isNativeAndroidApp() && !hasFullNativeNotificationBridge()) {
-    triggerIslandToast('📲', 'برای ارسال اعلان بومی، APK جدید را نصب کن', { duration: 3600 });
-  } else {
-    triggerIslandToast('⚠️', 'ارسال اعلان انجام نشد؛ مجوز اعلان‌ها را بررسی کن');
-  }
-}
-
-window.__onNativeNotificationPermission = (granted) => {
-  updateNotificationSettingsUI();
-  if (granted) {
-    playTactileSound('complete');
-    if (state.dailyReminderEnabled) {
-      syncDailyStreakReminderNotification(true, true);
-    }
-    if (state.focusRunning && typeof state.focusEndTimestamp === 'number') {
-      scheduleFocusEndNotification();
-    }
-    if (pendingTestNotificationAfterGrant) {
-      pendingTestNotificationAfterGrant = false;
-      sendTestAppNotification();
-    } else {
-      triggerIslandToast('🔔', 'مجوز اعلان‌ها با موفقیت فعال شد');
-    }
-  } else {
-    pendingTestNotificationAfterGrant = false;
-    triggerIslandToast('⚠️', 'مجوز اعلان داده نشد؛ از تنظیمات گوشی فعال کن');
-  }
-};
-
-window.__onNativeNotificationOpen = (channelType) => {
-  if (channelType === 'focus') {
-    switchTab('focus');
-  } else {
-    switchTab('tasks');
-  }
-};
 
 function setAmbientMode(mode) {
   state.ambientMode = mode || 'off';
@@ -1540,6 +1551,7 @@ function spawnCelebrationSparkles() {
   }
 }
 
+/* ==================== داینامیک آیلند و تایمر تمرکز ==================== */
 function getSmartFocusCandidate() {
   const todayTasks = getTasksForDayView('today');
   if (todayTasks.length === 0) return null;
@@ -1638,7 +1650,6 @@ function expireIslandToast() {
   state.toastActionCallback = null;
   setExpandedToastBannerVisible(false);
 
-  /* تنها در صورتی به حالت پایه برمی‌گردد که آیلند در وضعیت toast باشد؛ منوی باز هرگز بسته نمی‌شود */
   if (state.islandMode === 'toast') {
     applyIslandVisualState('idle');
   }
@@ -1678,7 +1689,6 @@ function applyIslandVisualState(mode) {
   toastLayer.classList.toggle('is-hidden', !isToast);
   expandedLayer.classList.toggle('is-hidden', !isExpanded);
 
-  /* همگام‌سازی کامل دسترس‌پذیری و ایزوله‌سازی فوکوس لایه‌های غیرفعال */
   idleLayer.setAttribute('aria-hidden', isIdle ? 'false' : 'true');
   idleLayer.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
   toastLayer.setAttribute('aria-hidden', isToast ? 'false' : 'true');
@@ -1758,15 +1768,15 @@ function syncDynamicIslandExpandedHeight() {
 
   const measured = Math.max(168, Math.ceil(expandedLayer.scrollHeight || expandedLayer.offsetHeight || 168));
   const shellWidth = shell.offsetWidth || Math.min(window.innerWidth * 0.92, 344);
+  const hasLiveActivity = Boolean(state.focusRunning || state.ambientMode !== 'off');
+  const idleWidth = hasLiveActivity ? 252 : 226;
 
-  const closedInsetX = Math.max(0, Math.round((shellWidth - 226) / 2));
-  const liveInsetX = Math.max(0, Math.round((shellWidth - 252) / 2));
+  const closedInsetX = Math.max(0, Math.round((shellWidth - idleWidth) / 2));
   const closedInsetB = Math.max(0, measured - 44);
   const toastInsetB = Math.max(0, measured - 48);
 
   shell.style.setProperty('--island-expanded-h', `${measured}px`);
   shell.style.setProperty('--island-closed-inset-x', `${closedInsetX}px`);
-  shell.style.setProperty('--island-live-inset-x', `${liveInsetX}px`);
   shell.style.setProperty('--island-closed-inset-b', `${closedInsetB}px`);
   shell.style.setProperty('--island-toast-inset-b', `${toastInsetB}px`);
 }
@@ -2057,6 +2067,7 @@ function setFocusDuration(minutes, options = {}) {
   if (state.focusRunning) {
     pauseFocusTimer(true);
   }
+  cancelFocusEndNotification();
   state.focusDurationMinutes = minutes;
   state.focusSeconds = minutes * 60;
   state.focusRemainingMs = minutes * 60 * 1000;
@@ -2132,19 +2143,7 @@ function startFocusTimer() {
   state.focusRunning = true;
   state.focusLastRenderedSecond = Math.ceil(state.focusRemainingMs / 1000);
   ensureFocusIntervalLoop();
-
-  if (!isNativeAndroidApp() && typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    Notification.requestPermission()
-      .then((res) => {
-        updateNotificationSettingsUI();
-        if (res === 'granted' && state.focusRunning) {
-          scheduleFocusEndNotification();
-        }
-      })
-      .catch(() => {});
-  }
   scheduleFocusEndNotification();
-
   saveState();
   updateFocusUI();
   playTactileSound('pop');
@@ -2193,6 +2192,7 @@ function setFocusedTask(taskId) {
   triggerIslandToast('🎯', `تمرکز روی: ${found.title}`);
 }
 
+/* ==================== به‌روزرسانی هدر، نوار پیشرفت و سوییچر سه‌روزه ==================== */
 function updateHeaderAndProgress() {
   const greetingEl = document.getElementById('greeting-title');
   const dateEl = document.getElementById('jalali-date-label');
@@ -2304,6 +2304,7 @@ function setSelectedDayView(dayView, options = {}) {
   updateHeaderAndProgress();
 }
 
+/* ==================== رندر و مدیریت لیست کارها ==================== */
 function renderFolderFilterChips() {
   const container = document.getElementById('folder-filter-chips-container');
   if (!container) return;
@@ -2344,6 +2345,7 @@ function buildTaskCardHtml(task, dayView) {
   const isFocused = state.focusedTaskId === task.id;
   const isInspected = state.inspectedTaskId === task.id;
   const privacyClass = state.privacyBlur ? 'privacy-blur-text' : '';
+  const reminderTime = normalizeReminderTime(task.reminderTime);
 
   const subtasksHtml =
     subs.length > 0
@@ -2448,6 +2450,13 @@ function buildTaskCardHtml(task, dayView) {
                 ${
                   task.isHabit
                     ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-400/30">🔁 عادت</span>'
+                    : ''
+                }
+                ${
+                  reminderTime
+                    ? `<span class="ltr font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-400/30 ${
+                        task.completed ? 'opacity-55 line-through' : ''
+                      }">⏰ ${escapeHtml(reminderTime)}</span>`
                     : ''
                 }
                 ${
@@ -2616,9 +2625,11 @@ function setupTaskListDelegation() {
         const task = state.tasks.find((t) => t.id === taskId);
         if (task) {
           task.scheduledDate = getTodayKey();
+          scheduleTaskReminderNotification(task);
           saveState();
           renderTasks();
           updateHeaderAndProgress();
+          syncDailyStreakReminderNotification(true, false);
           playTactileSound('pop');
           triggerIslandToast('☀️', 'کار به برنامه امروز منتقل شد');
         }
@@ -2785,6 +2796,7 @@ function addTask(title, options = {}) {
   const isHabit = Boolean(options.isHabit);
   const scheduledDate = isHabit ? getTodayKey() : getDayKeyForView(dayView);
   const rawSubs = Array.isArray(options.subtasks) ? options.subtasks : [];
+  const reminderTime = normalizeReminderTime(options.reminderTime);
 
   const newTask = {
     id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -2793,6 +2805,7 @@ function addTask(title, options = {}) {
     category: options.category || state.selectedCategory || 'شخصی',
     urgent: Boolean(options.urgent),
     isHabit,
+    reminderTime,
     autoCompleteSubtasks: options.autoCompleteSubtasks !== false,
     completed: false,
     scheduledDate,
@@ -2810,6 +2823,7 @@ function addTask(title, options = {}) {
     state.focusedTaskId = newTask.id;
   }
 
+  const reminderScheduled = scheduleTaskReminderNotification(newTask);
   saveState();
   renderTasks();
   if (!isHabit && state.selectedDayView !== dayView) {
@@ -2817,9 +2831,17 @@ function addTask(title, options = {}) {
   } else {
     updateHeaderAndProgress();
   }
+  syncDailyStreakReminderNotification(true, false);
   if (state.activeTab === 'stats') renderSecondaryTabViews();
   playTactileSound('complete');
-  triggerIslandToast('✨', `«${cleanTitle}» اضافه شد`);
+
+  if (reminderTime && reminderScheduled) {
+    triggerIslandToast('⏰', `«${cleanTitle}» با یادآور ${toPersianDigits(reminderTime)} ثبت شد`);
+  } else if (reminderTime && !reminderScheduled) {
+    triggerIslandToast('✨', `«${cleanTitle}» اضافه شد (ساعت یادآور گذشته بود)`);
+  } else {
+    triggerIslandToast('✨', `«${cleanTitle}» اضافه شد`);
+  }
 }
 
 function toggleTask(taskId, silent = false, dayView = state.selectedDayView) {
@@ -2848,6 +2870,9 @@ function toggleTask(taskId, silent = false, dayView = state.selectedDayView) {
     }
   }
 
+  /* لغو خودکار یادآور هنگام تیک خوردن کار و بازتنظیم در صورت برداشتن تیک */
+  scheduleTaskReminderNotification(task);
+
   if (nextCompleted && state.focusedTaskId === task.id) {
     advanceSmartFocusTask(false);
   }
@@ -2855,6 +2880,7 @@ function toggleTask(taskId, silent = false, dayView = state.selectedDayView) {
   saveState();
   renderTasks();
   updateHeaderAndProgress();
+  syncDailyStreakReminderNotification(true, false);
   if (state.inspectedTaskId === task.id) renderDesktopInspector();
   if (state.activeTab === 'stats') renderSecondaryTabViews();
 
@@ -2899,9 +2925,11 @@ function toggleSubtask(taskId, subtaskId, silent = false, dayView = state.select
       const allDone = task.subtasks.every((s) => s.completed);
       if (allDone && !task.completed) {
         task.completed = true;
+        scheduleTaskReminderNotification(task);
         if (!silent) spawnCelebrationSparkles();
       } else if (!allDone && task.completed) {
         task.completed = false;
+        scheduleTaskReminderNotification(task);
       }
     }
     if (task.isHabit) {
@@ -2912,6 +2940,7 @@ function toggleSubtask(taskId, subtaskId, silent = false, dayView = state.select
   saveState();
   renderTasks();
   updateHeaderAndProgress();
+  syncDailyStreakReminderNotification(true, false);
   if (state.inspectedTaskId === task.id) renderDesktopInspector();
   if (state.activeTab === 'stats') renderSecondaryTabViews();
   if (!silent) {
@@ -2927,6 +2956,7 @@ function deleteTask(taskId) {
   const removed = state.tasks[idx];
   state.undoSnapshot = JSON.parse(JSON.stringify(state.tasks));
   state.tasks.splice(idx, 1);
+  cancelTaskReminderNotification(taskId);
 
   if (state.focusedTaskId === taskId) {
     const next = getSmartFocusCandidate();
@@ -2940,6 +2970,7 @@ function deleteTask(taskId) {
   saveState();
   renderTasks();
   updateHeaderAndProgress();
+  syncDailyStreakReminderNotification(true, false);
   if (state.activeTab === 'stats') renderSecondaryTabViews();
   playTactileSound('delete');
   triggerHaptic(10);
@@ -2951,12 +2982,17 @@ function deleteTask(taskId) {
       if (!state.undoSnapshot) return;
       state.tasks = state.undoSnapshot;
       state.undoSnapshot = null;
+      const restoredTask = state.tasks.find((t) => t.id === taskId);
+      if (restoredTask) {
+        scheduleTaskReminderNotification(restoredTask);
+      }
       const next = getSmartFocusCandidate();
       state.focusedTaskId = next ? next.id : null;
       if (state.focusRunning) scheduleFocusEndNotification();
       saveState();
       renderTasks();
       updateHeaderAndProgress();
+      syncDailyStreakReminderNotification(true, false);
       if (state.activeTab === 'stats') renderSecondaryTabViews();
       playTactileSound('complete');
       triggerIslandToast('↩️', 'کار بازگردانده شد');
@@ -3313,28 +3349,23 @@ function copyNotebookEntryText(noteId) {
     playTactileSound('complete');
     triggerIslandToast('📋', 'متن یادداشت کپی شد');
   };
-  const legacyCopy = () => {
-    const ta = document.createElement('textarea');
-    ta.value = fullText;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      if (document.execCommand('copy')) {
-        onCopied();
-      }
-    } catch (e) {}
-    ta.remove();
-  };
   if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(fullText).then(onCopied).catch(legacyCopy);
-  } else {
-    legacyCopy();
+    navigator.clipboard.writeText(fullText).then(onCopied).catch(() => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = fullText;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        if (document.execCommand('copy')) onCopied();
+        ta.remove();
+      } catch (e) {}
+    });
   }
 }
 
+/* ==================== پنل جزئیات کار در دسکتاپ (Desktop Inspector) ==================== */
 function renderDesktopInspector() {
   const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
   if (!task) {
@@ -3386,6 +3417,7 @@ function renderDesktopInspector() {
     catContainer.querySelectorAll('[data-inspector-cat]').forEach((btn) => {
       btn.addEventListener('click', () => {
         task.category = btn.dataset.inspectorCat;
+        scheduleTaskReminderNotification(task);
         saveState();
         renderDesktopInspector();
         renderTasks();
@@ -3406,6 +3438,17 @@ function renderDesktopInspector() {
     habitBtn.classList.toggle('bg-indigo-500/20', task.isHabit);
     habitBtn.classList.toggle('border-indigo-400/45', task.isHabit);
     habitBtn.classList.toggle('text-indigo-300', task.isHabit);
+  }
+
+  const inspectorRemInp = document.getElementById('inspector-reminder-time-input');
+  const inspectorClearRemBtn = document.getElementById('inspector-clear-reminder-btn');
+  const normRem = normalizeReminderTime(task.reminderTime);
+  if (inspectorRemInp && document.activeElement !== inspectorRemInp) {
+    inspectorRemInp.value = normRem;
+  }
+  if (inspectorClearRemBtn) {
+    inspectorClearRemBtn.classList.toggle('hidden', !normRem);
+    inspectorClearRemBtn.classList.toggle('inline-flex', Boolean(normRem));
   }
 
   const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
@@ -3457,6 +3500,7 @@ function renderDesktopInspector() {
   }
 }
 
+/* ==================== تحلیل هوشمند ابعاد رشد و نمودار راداری ==================== */
 function analyzeTaskSmartDimensions(task) {
   const subTexts = Array.isArray(task?.subtasks) ? task.subtasks.map((s) => s.title || '').join(' ') : '';
   const rawCorpus = `${task?.title || ''} ${task?.description || ''} ${subTexts} ${task?.category || ''}`.toLowerCase();
@@ -3908,7 +3952,6 @@ function switchTab(tabName, options = {}) {
 
   state.activeTab = tabName;
 
-  /* نمایش آنی و کاملاً شارپ محتوای تب جدید در ۰ میلی‌ثانیه بدون محو شدن یا چشمک */
   document.querySelectorAll('.tab-view').forEach((view) => {
     const isTarget = view.id === `tab-view-${tabName}`;
     view.classList.toggle('hidden', !isTarget);
@@ -3969,7 +4012,7 @@ function switchTab(tabName, options = {}) {
   }
 }
 
-/* ==================== سر خوردن کپسول شیشه‌ای زیر انگشت (Interactive Finger Scrubbing) ==================== */
+/* ==================== سر خوردن کپسول شیشه‌ای زیر انگشت ==================== */
 function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrentIndex, onSelectIndex, direction = 'rtl', edgeInset = 4 }) {
   if (!barEl || !Array.isArray(items) || items.length < 2) return;
 
@@ -4100,7 +4143,6 @@ function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrent
   barEl.addEventListener('touchcancel', finishScrub);
 }
 
-/* اسکرول انگشتی برای کپسول‌های با عرض متغیر (فیلتر کارها و فیلتر دفترچه یادداشت) */
 function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, dataAttr, getCurrentValue, onSelectValue }) {
   if (!barEl) return;
 
@@ -4238,9 +4280,9 @@ function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, da
   barEl.addEventListener('touchcancel', finishScrub);
 }
 
+/* ==================== مدیریت شیت‌ها و مودال‌ها ==================== */
 const modalCloseTimers = new Map();
 
-/* ایجاد عمق پس‌زمینه همگام با شیت (Telegram / iOS UISheetPresentation Depth Effect) */
 function updateMainStageDepth(depthRatio, smoothTransition = true) {
   const mainStage = document.getElementById('app-main-stage');
   if (!mainStage) return;
@@ -4346,7 +4388,7 @@ function closeModal(id, fromDrag = false) {
   modalCloseTimers.set(id, timer);
 }
 
-/* ==================== موتور شیت تک‌لایه تمام‌GPU بخش «کار جدید» با میکرو-کشسانی مایع ==================== */
+/* ==================== موتور شیت کرکره‌ای تمام‌GPU بخش «کار جدید» ==================== */
 function initComposerShutterGesture() {
   const modal = document.getElementById('task-composer-modal');
   const sheet = document.getElementById('composer-shutter-sheet');
@@ -4485,7 +4527,6 @@ function initComposerShutterGesture() {
     updateMainStageDepth(1, true);
 
     sheet.style.opacity = '1';
-    /* میکرو-کشسانی عمودی بسیار ظریف (۱.۸٪) هنگام قفل شدن تمام‌صفحه روی GPU بدون تار کردن متن */
     const entryStretchY = Math.min(1.022, 1.01 + Math.min(800, Math.abs(initialVel)) * 0.000014);
     const entrySquashX = 2 - entryStretchY;
     sheet.style.transition = `transform ${Math.round(dur * 0.34)}ms cubic-bezier(0.2, 0.9, 0.3, 1)`;
@@ -4541,7 +4582,6 @@ function initComposerShutterGesture() {
     modal.style.opacity = '0';
     sheet.style.transition = 'none';
     sheet.style.opacity = '1';
-    /* شروع از حالت کمی جمع‌شده افقی و کشیده عمودی برای حس جهش مایع هنگام باز شدن */
     sheet.style.transform = `translate3d(0, ${metrics.vh}px, 0) scale3d(0.978, 1.024, 1)`;
     currentY = metrics.vh;
     currentScaleX = 1;
@@ -4578,7 +4618,6 @@ function initComposerShutterGesture() {
     modal.style.opacity = '0';
     updateMainStageDepth(0, true);
 
-    /* جمع شدن ظریف عرض شیت به سمت پایین صفحه و دکمه شناور + */
     sheet.style.transition = `transform ${dur}ms ${IOS_CLOSE_CURVE}`;
     sheet.style.opacity = '1';
     sheet.style.transform = `translate3d(0, ${vh}px, 0) scale3d(0.955, 0.985, 1)`;
@@ -4647,7 +4686,6 @@ function initComposerShutterGesture() {
     }
   });
 
-  /* حین درگ، موقعیت Y به همراه میکرو-کشسانی GPU (حداکثر ۲٪) اعمال می‌شود تا متن کاملاً شارپ بماند */
   const renderDragFrame = () => {
     rafPending = false;
     if (!dragging) return;
@@ -4757,7 +4795,6 @@ function initComposerShutterGesture() {
           currentScaleY = 1 + pullRatio * 0.022;
           currentScaleX = 1 - pullRatio * 0.011;
         } else {
-          /* کشسانی بسیار ظریف وابسته به سرعت حرکت عمودی دست (محدود به ۱.۶٪) */
           const velStretch = Math.max(-0.016, Math.min(0.016, -instantVel * 0.008));
           currentScaleY = 1 + velStretch;
           currentScaleX = 1 - velStretch * 0.5;
@@ -4934,6 +4971,7 @@ function setupSheetSwipeToClose(modalId) {
   sheet.addEventListener('touchcancel', finishDrag);
 }
 
+/* ==================== پروفایل، پشتیبان‌گیری و مودال‌های ویرایش ==================== */
 function updateProfileModalPreview() {
   const previewEl = document.getElementById('profile-modal-preview');
   const removeBtn = document.getElementById('remove-avatar-photo-btn');
@@ -5114,6 +5152,16 @@ function renderTaskEditModalControls() {
     habitBtn.classList.toggle('text-indigo-300', state.draftEditHabit);
   }
 
+  const editReminderInp = document.getElementById('edit-task-reminder-time-input');
+  const editClearReminderBtn = document.getElementById('edit-task-clear-reminder-btn');
+  if (editReminderInp && document.activeElement !== editReminderInp) {
+    editReminderInp.value = state.draftEditReminderTime || '';
+  }
+  if (editClearReminderBtn) {
+    editClearReminderBtn.classList.toggle('hidden', !state.draftEditReminderTime);
+    editClearReminderBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
+  }
+
   const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
   const counterEl = document.getElementById('edit-subtasks-counter');
   const listEl = document.getElementById('edit-subtasks-list');
@@ -5168,13 +5216,16 @@ function openTaskEditModal(taskId) {
   state.draftEditDay = getDayViewFromKey(task.scheduledDate || getTodayKey());
   state.draftEditUrgent = Boolean(task.urgent);
   state.draftEditHabit = Boolean(task.isHabit);
+  state.draftEditReminderTime = normalizeReminderTime(task.reminderTime);
 
   const titleInput = document.getElementById('edit-task-title-input');
   const descInput = document.getElementById('edit-task-desc-input');
   const newSubInput = document.getElementById('new-subtask-input');
+  const reminderInp = document.getElementById('edit-task-reminder-time-input');
   if (titleInput) titleInput.value = task.title;
   if (descInput) descInput.value = task.description || '';
   if (newSubInput) newSubInput.value = '';
+  if (reminderInp) reminderInp.value = state.draftEditReminderTime || '';
 
   renderTaskEditModalControls();
   openModal('task-edit-modal');
@@ -5249,6 +5300,7 @@ function openFoldersModal() {
   openModal('folders-modal');
 }
 
+/* ==================== منطق فرم شیت کرکره‌ای کار جدید ==================== */
 function updateComposerSmartBadges() {
   const badgesEl = document.getElementById('composer-smart-detect-badges');
   const titleInput = document.getElementById('composer-title-input');
@@ -5409,6 +5461,22 @@ function updateComposerTogglesUI(options = {}) {
   setTgSwitchState(document.getElementById('composer-switch-autocomplete'), state.composerAutoComplete, animateSwitches);
   setTgSwitchState(document.getElementById('composer-switch-urgent'), state.composerUrgent, animateSwitches);
   setTgSwitchState(document.getElementById('composer-switch-habit'), state.composerHabit, animateSwitches);
+
+  const remInp = document.getElementById('composer-reminder-time-input');
+  const remClearBtn = document.getElementById('composer-clear-reminder-btn');
+  const remSubtext = document.getElementById('composer-reminder-subtext');
+  if (remInp && document.activeElement !== remInp) {
+    remInp.value = state.composerReminderTime || '';
+  }
+  if (remClearBtn) {
+    remClearBtn.classList.toggle('hidden', !state.composerReminderTime);
+    remClearBtn.classList.toggle('inline-flex', Boolean(state.composerReminderTime));
+  }
+  if (remSubtext) {
+    remSubtext.textContent = state.composerReminderTime
+      ? `یادآور روی ساعت ${toPersianDigits(state.composerReminderTime)} تنظیم شد`
+      : 'اختیاری • ارسال اعلان سر ساعت مشخص';
+  }
 }
 
 function openTaskComposer(defaultDayOverride = null) {
@@ -5418,11 +5486,14 @@ function openTaskComposer(defaultDayOverride = null) {
   state.composerAutoComplete = true;
   state.composerUrgent = state.filter === 'urgent';
   state.composerHabit = state.filter === 'habit';
+  state.composerReminderTime = '';
 
   const titleInput = document.getElementById('composer-title-input');
   const descInput = document.getElementById('composer-desc-input');
+  const remInp = document.getElementById('composer-reminder-time-input');
   if (titleInput) titleInput.value = '';
   if (descInput) descInput.value = '';
+  if (remInp) remInp.value = '';
 
   updateComposerTogglesUI({ animateSwitches: false });
   renderComposerSubtasks();
@@ -5446,6 +5517,7 @@ function openTaskComposer(defaultDayOverride = null) {
   }
 }
 
+/* ==================== پنجره فرمان سریع (Command Palette) ==================== */
 function renderCommandPaletteList(queryText = '') {
   const listEl = document.getElementById('command-palette-list');
   if (!listEl) return;
@@ -5542,8 +5614,8 @@ function renderCommandPaletteList(queryText = '') {
     },
     {
       icon: '⚙️',
-      title: 'تنظیمات و پشتیبان‌گیری آفلاین',
-      sub: 'مدیریت پوشه‌ها، تم و خروجی JSON',
+      title: 'تنظیمات، اعلان‌ها و پشتیبان‌گیری آفلاین',
+      sub: 'مدیریت یادآورها، پوشه‌ها و خروجی JSON',
       action: () => {
         closeModal('command-palette-modal');
         switchTab('settings');
@@ -5609,6 +5681,7 @@ function openCommandPalette() {
   setTimeout(() => input?.focus(), 60);
 }
 
+/* ==================== مدیریت دکمه بازگشت اندروید و نمایشگر تمام‌صفحه ==================== */
 function setupAndroidBackButtonHandler() {
   let hasBackLayer = false;
   let ignoreNextPop = false;
@@ -5793,6 +5866,7 @@ function registerOfflineServiceWorker() {
   });
 }
 
+/* ==================== راه‌اندازی اولیه برنامه ==================== */
 function initApp() {
   const supportsGpuIslandClip =
     typeof CSS !== 'undefined' &&
@@ -5819,6 +5893,29 @@ function initApp() {
   setupAndroidBackButtonHandler();
   registerOfflineServiceWorker();
 
+  /* اتصال رویدادهای بازگشت از نوتیفیکیشن بومی اندروید */
+  window.__onNativeNotificationPermission = (granted) => {
+    updateNotificationSettingsUI();
+    if (granted && state.dailyReminderEnabled) {
+      syncDailyStreakReminderNotification(true, false);
+    }
+    if (granted) {
+      syncAllTaskReminderNotifications();
+    }
+  };
+
+  window.__onNativeNotificationOpen = (channel) => {
+    if (channel === 'focus') {
+      switchTab('focus');
+    }
+  };
+
+  if (state.dailyReminderEnabled) {
+    syncDailyStreakReminderNotification(true, true);
+  }
+  syncAllTaskReminderNotifications();
+  updateNotificationSettingsUI();
+
   if (state.focusRunning && typeof state.focusEndTimestamp === 'number') {
     syncFocusTimerTick(true);
     if (state.focusRunning) {
@@ -5838,11 +5935,6 @@ function initApp() {
   });
   window.addEventListener('pageshow', wakeUpAtomicTimer, { passive: true });
   window.addEventListener('focus', wakeUpAtomicTimer, { passive: true });
-
-  if (state.dailyReminderEnabled) {
-    syncDailyStreakReminderNotification(true, true);
-  }
-  updateNotificationSettingsUI();
 
   composerShutterController = initComposerShutterGesture();
 
@@ -5935,13 +6027,13 @@ function initApp() {
     onSelectValue: (val, fromScrub) => setNotebookFilter(val, { fromScrub }),
   });
 
-  /* ==================== تعامل زنده، دسترس‌پذیری و ایزوله‌سازی کامل لمس لایه‌های داخلی داینامیک آیلند ==================== */
+  /* ==================== ژست‌ها و تعاملات داینامیک آیلند ==================== */
   const islandEl = document.getElementById('dynamic-island');
   const islandIdleLayerEl = document.getElementById('island-idle-layer');
   if (islandEl) {
     let islandTouchStartX = 0;
     let islandTouchStartY = 0;
-    let islandGestureAxis = null; // 'vertical' | 'horizontal'
+    let islandGestureAxis = null;
     let islandPullActive = false;
     let islandPullDx = 0;
     let islandPullDy = 0;
@@ -5953,7 +6045,6 @@ function initApp() {
     let pendingIdleParallaxX = 0;
     let pendingSpecularPct = 50;
 
-    /* مهار انتشار رویدادهای لمس و کلیک در سطح کانتینر آیلند تا ژست‌های داخلی کار کنند و به صفحه نشت نکنند */
     ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'click'].forEach((evtName) => {
       islandEl.addEventListener(
         evtName,
@@ -6170,7 +6261,6 @@ function initApp() {
       islandTouchStartY = 0;
 
       if (!islandPullActive) {
-        /* حفظ حالت فشردگی تا لحظه اجرای click برای جلوگیری از پرش چندفریمی بین touchend و باز شدن آیلند */
         if (islandPressReleaseTimer) clearTimeout(islandPressReleaseTimer);
         islandPressReleaseTimer = setTimeout(() => {
           islandEl.classList.remove('is-island-pressing');
@@ -6398,6 +6488,11 @@ function initApp() {
 
   const handleClearCompleted = () => {
     const activeDayKey = getDayKeyForView(state.selectedDayView);
+    const removedTasks = state.tasks.filter((t) => {
+      if (t.isHabit) return false;
+      const taskDay = t.scheduledDate || getTodayKey();
+      return taskDay === activeDayKey && t.completed;
+    });
     const before = state.tasks.length;
     state.tasks = state.tasks.filter((t) => {
       if (t.isHabit) return true;
@@ -6406,12 +6501,14 @@ function initApp() {
       return true;
     });
     if (state.tasks.length === before) return;
+    removedTasks.forEach((rt) => cancelTaskReminderNotification(rt.id));
     const next = getSmartFocusCandidate();
     state.focusedTaskId = next ? next.id : null;
     if (state.focusRunning) scheduleFocusEndNotification();
     saveState();
     renderTasks();
     updateHeaderAndProgress();
+    syncDailyStreakReminderNotification(true, false);
     playTactileSound('delete');
     triggerIslandToast('🧹', 'کارهای تکمیل‌شده حذف شدند');
   };
@@ -6419,6 +6516,7 @@ function initApp() {
   document.getElementById('clear-completed-btn')?.addEventListener('click', handleClearCompleted);
   document.getElementById('clear-completed-desktop-btn')?.addEventListener('click', handleClearCompleted);
 
+  /* ==================== رویدادهای پنل جزئیات دسکتاپ ==================== */
   document.getElementById('close-desktop-inspector-btn')?.addEventListener('click', closeDesktopInspector);
   document.getElementById('inspector-focus-btn')?.addEventListener('click', () => {
     if (state.inspectedTaskId) setFocusedTask(state.inspectedTaskId);
@@ -6433,6 +6531,7 @@ function initApp() {
       if (!task || task.isHabit) return;
       const targetDayView = btn.dataset.inspectorDay || 'today';
       task.scheduledDate = getDayKeyForView(targetDayView);
+      scheduleTaskReminderNotification(task);
       saveState();
       renderDesktopInspector();
       renderTasks();
@@ -6446,6 +6545,7 @@ function initApp() {
     const val = e.target.value.trim();
     if (task && val) {
       task.title = val;
+      scheduleTaskReminderNotification(task);
       if (state.focusRunning && state.focusedTaskId === task.id) {
         scheduleFocusEndNotification();
       }
@@ -6459,6 +6559,7 @@ function initApp() {
     const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
     if (task) {
       task.description = e.target.value.trim();
+      scheduleTaskReminderNotification(task);
       saveState();
       renderTasks();
       updateHeaderAndProgress();
@@ -6484,10 +6585,41 @@ function initApp() {
       task.scheduledDate = getTodayKey();
       syncHabitDaySnapshot(task, getTodayKey());
     }
+    scheduleTaskReminderNotification(task);
     saveState();
     renderDesktopInspector();
     renderTasks();
     updateHeaderAndProgress();
+    playTactileSound('pop');
+  });
+
+  const inspectorRemInput = document.getElementById('inspector-reminder-time-input');
+  inspectorRemInput?.addEventListener('change', async () => {
+    const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
+    if (!task) return;
+    task.reminderTime = normalizeReminderTime(inspectorRemInput.value);
+    if (task.reminderTime) {
+      const perm = getNotificationPermissionStatus();
+      if (perm !== 'granted' && perm !== 'needs_apk_update') {
+        await requestAppNotificationPermission();
+      }
+    }
+    scheduleTaskReminderNotification(task);
+    saveState();
+    renderDesktopInspector();
+    renderTasks();
+    playTactileSound('pop');
+  });
+
+  document.getElementById('inspector-clear-reminder-btn')?.addEventListener('click', () => {
+    const task = state.tasks.find((t) => t.id === state.inspectedTaskId);
+    if (!task) return;
+    task.reminderTime = '';
+    if (inspectorRemInput) inspectorRemInput.value = '';
+    cancelTaskReminderNotification(task.id);
+    saveState();
+    renderDesktopInspector();
+    renderTasks();
     playTactileSound('pop');
   });
 
@@ -6665,6 +6797,96 @@ function initApp() {
     playTactileSound('pop');
   });
 
+  /* ==================== رویدادهای تنظیمات و بخش اعلان‌ها (مرحله ۲) ==================== */
+  document.getElementById('tg-row-notif-permission')?.addEventListener('click', async () => {
+    const status = getNotificationPermissionStatus();
+    if (status === 'needs_apk_update') {
+      triggerIslandToast('📲', 'برای اعلان بومی، آخرین نسخه APK را نصب کن');
+      return;
+    }
+    if (status === 'granted') {
+      if (window.AndroidNative && typeof window.AndroidNative.openNotificationSettings === 'function') {
+        window.AndroidNative.openNotificationSettings();
+      } else {
+        triggerIslandToast('✅', 'مجوز اعلان‌ها فعال است');
+      }
+      return;
+    }
+    const granted = await requestAppNotificationPermission();
+    if (!granted && window.AndroidNative && typeof window.AndroidNative.openNotificationSettings === 'function') {
+      window.AndroidNative.openNotificationSettings();
+    } else if (granted) {
+      triggerIslandToast('🔔', 'مجوز اعلان‌ها فعال شد');
+      playTactileSound('complete');
+    }
+  });
+
+  const dailyReminderTimeInp = document.getElementById('daily-reminder-time-input');
+  document.getElementById('tg-row-daily-reminder')?.addEventListener('click', async (e) => {
+    if (e.target === dailyReminderTimeInp) return;
+    const nextEnabled = !state.dailyReminderEnabled;
+    if (nextEnabled) {
+      const perm = getNotificationPermissionStatus();
+      if (perm !== 'granted' && perm !== 'needs_apk_update') {
+        await requestAppNotificationPermission();
+      }
+    }
+    state.dailyReminderEnabled = nextEnabled;
+    setTgSwitchState(document.getElementById('tg-switch-daily-reminder'), state.dailyReminderEnabled, true);
+    saveState();
+    syncDailyStreakReminderNotification(false, false);
+    if (!state.dailyReminderEnabled) {
+      triggerIslandToast('🔕', 'یادآور روزانه خاموش شد');
+    }
+    playTactileSound('pop');
+  });
+
+  dailyReminderTimeInp?.addEventListener('change', async () => {
+    state.dailyReminderTime = normalizeReminderTime(dailyReminderTimeInp.value) || '21:00';
+    state.dailyReminderEnabled = true;
+    const perm = getNotificationPermissionStatus();
+    if (perm !== 'granted' && perm !== 'needs_apk_update') {
+      await requestAppNotificationPermission();
+    }
+    setTgSwitchState(document.getElementById('tg-switch-daily-reminder'), true, true);
+    saveState();
+    syncDailyStreakReminderNotification(false, false);
+    playTactileSound('pop');
+  });
+
+  document.getElementById('tg-row-exact-alarm')?.addEventListener('click', () => {
+    if (window.AndroidNative && typeof window.AndroidNative.openExactAlarmSettings === 'function') {
+      window.AndroidNative.openExactAlarmSettings();
+    } else {
+      triggerIslandToast('⏰', 'زمان‌بندی آلارم دقیق فعال است');
+    }
+  });
+
+  document.getElementById('tg-row-test-notif')?.addEventListener('click', async () => {
+    const perm = getNotificationPermissionStatus();
+    if (perm === 'needs_apk_update') {
+      triggerIslandToast('📲', 'ابتدا APK جدید را بساز و نصب کن');
+      return;
+    }
+    if (perm !== 'granted') {
+      await requestAppNotificationPermission();
+    }
+    const userName = (state.profile && state.profile.name) || 'دوست من';
+    const sent = showInstantAppNotification({
+      idKey: `test_notif_${Date.now()}`,
+      title: '🔔 تست موفق نوتیفیکیشن Daily Flow',
+      body: `${userName}، اعلان‌های بومی و یادآورهای دقیق با موفقیت روی گوشی شما فعال هستند!`,
+      channelId: NOTIFICATION_CHANNELS.tasks,
+    });
+    if (sent) {
+      playTactileSound('complete');
+      triggerHaptic(12);
+      triggerIslandToast('🔔', 'نوتیفیکیشن آزمایشی ارسال شد');
+    } else {
+      triggerIslandToast('⚠️', 'مجوز اعلان را از تنظیمات گوشی فعال کن');
+    }
+  });
+
   document.getElementById('tg-top-sync-btn')?.addEventListener('click', openSyncModal);
   document.getElementById('tg-row-storage')?.addEventListener('click', openSyncModal);
   document.getElementById('tg-top-export-btn')?.addEventListener('click', exportBackupJsonFile);
@@ -6769,116 +6991,6 @@ function initApp() {
     playTactileSound('pop');
   });
 
-  document.getElementById('tg-row-notif-permission')?.addEventListener('click', async () => {
-    const status = getNotificationPermissionStatus();
-    playTactileSound('pop');
-    if (status === 'needs_apk_update') {
-      triggerIslandToast('📲', 'ابتدا نسخه جدید APK ساخته‌شده در گیت‌هاب را نصب کن', { duration: 3600 });
-      return;
-    }
-    if (isNativeAndroidApp()) {
-      if (status === 'granted') {
-        try {
-          window.AndroidNative.openNotificationSettings?.();
-        } catch (e) {}
-      } else {
-        await requestAppNotificationPermission();
-        setTimeout(() => {
-          if (getNotificationPermissionStatus() !== 'granted') {
-            try {
-              window.AndroidNative.openNotificationSettings?.();
-            } catch (e) {}
-          }
-        }, 450);
-      }
-      return;
-    }
-    const ok = await requestAppNotificationPermission();
-    if (ok) {
-      triggerIslandToast('🔔', 'مجوز اعلان مرورگر فعال شد');
-    }
-  });
-
-  document.getElementById('tg-row-daily-reminder-toggle')?.addEventListener('click', async () => {
-    const nextEnabled = !state.dailyReminderEnabled;
-    if (nextEnabled) {
-      const perm = getNotificationPermissionStatus();
-      if (perm !== 'granted' && perm !== 'needs_apk_update') {
-        await requestAppNotificationPermission();
-      }
-    }
-    state.dailyReminderEnabled = nextEnabled;
-    setTgSwitchState(document.getElementById('tg-switch-daily-reminder'), nextEnabled, true);
-    saveState();
-    syncDailyStreakReminderNotification(false, true);
-    updateNotificationSettingsUI();
-    playTactileSound('pop');
-    if (!nextEnabled) {
-      triggerIslandToast('🔕', 'یادآور روزانه خاموش شد');
-    }
-  });
-
-  const dailyReminderTimeInput = document.getElementById('daily-reminder-time-input');
-  document.getElementById('tg-row-daily-reminder-time')?.addEventListener('click', (e) => {
-    if (e.target === dailyReminderTimeInput) return;
-    if (dailyReminderTimeInput) {
-      try {
-        if (typeof dailyReminderTimeInput.showPicker === 'function') {
-          dailyReminderTimeInput.showPicker();
-        } else {
-          dailyReminderTimeInput.focus();
-          dailyReminderTimeInput.click();
-        }
-      } catch (err) {
-        dailyReminderTimeInput.focus();
-      }
-    }
-  });
-
-  dailyReminderTimeInput?.addEventListener('change', async () => {
-    const val = dailyReminderTimeInput.value;
-    if (!val || !/^\d{2}:\d{2}$/.test(val)) return;
-    state.dailyReminderTime = val;
-    if (!state.dailyReminderEnabled) {
-      state.dailyReminderEnabled = true;
-      const perm = getNotificationPermissionStatus();
-      if (perm !== 'granted' && perm !== 'needs_apk_update') {
-        await requestAppNotificationPermission();
-      }
-    }
-    saveState();
-    syncDailyStreakReminderNotification(false, true);
-    updateNotificationSettingsUI();
-    playTactileSound('complete');
-  });
-
-  document.getElementById('tg-row-exact-alarm')?.addEventListener('click', () => {
-    playTactileSound('pop');
-    if (isNativeAndroidApp() && typeof window.AndroidNative.openExactAlarmSettings === 'function') {
-      try {
-        window.AndroidNative.openExactAlarmSettings();
-      } catch (e) {}
-    }
-  });
-
-  document.getElementById('tg-row-test-notification')?.addEventListener('click', async () => {
-    const status = getNotificationPermissionStatus();
-    if (status === 'needs_apk_update') {
-      triggerIslandToast('📲', 'برای ارسال اعلان بومی، APK جدید را نصب کن', { duration: 3600 });
-      return;
-    }
-    if (status !== 'granted') {
-      pendingTestNotificationAfterGrant = true;
-      const granted = await requestAppNotificationPermission();
-      if (granted) {
-        pendingTestNotificationAfterGrant = false;
-        sendTestAppNotification();
-      }
-      return;
-    }
-    sendTestAppNotification();
-  });
-
   document.getElementById('tg-row-privacy')?.addEventListener('click', () => {
     state.privacyBlur = !state.privacyBlur;
     setTgSwitchState(document.getElementById('tg-switch-privacy'), state.privacyBlur, true);
@@ -6900,6 +7012,7 @@ function initApp() {
     if (state.soundEnabled) playTactileSound('pop');
   });
 
+  /* ==================== رویدادهای پروفایل، پشتیبان‌گیری و پاک‌سازی ==================== */
   document.getElementById('close-profile-modal')?.addEventListener('click', () => closeModal('profile-modal'));
   document.querySelectorAll('.avatar-choice-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -6949,6 +7062,9 @@ function initApp() {
     state.profile.photoDataUrl = state.draftPhotoDataUrl || '';
     saveState();
     updateHeaderAndProgress();
+    if (state.dailyReminderEnabled) {
+      syncDailyStreakReminderNotification(true, false);
+    }
     if (state.activeTab === 'settings') renderSecondaryTabViews();
     closeModal('profile-modal');
     playTactileSound('complete');
@@ -7002,6 +7118,7 @@ function initApp() {
       state.tasks = imported.tasks.map((t) => ({
         ...t,
         scheduledDate: t.scheduledDate || today,
+        reminderTime: normalizeReminderTime(t.reminderTime),
       }));
     }
     if (Array.isArray(imported.customFolders)) state.customFolders = imported.customFolders;
@@ -7015,8 +7132,8 @@ function initApp() {
     if (typeof imported.dailyReminderEnabled === 'boolean') {
       state.dailyReminderEnabled = imported.dailyReminderEnabled;
     }
-    if (typeof imported.dailyReminderTime === 'string' && /^\d{2}:\d{2}$/.test(imported.dailyReminderTime)) {
-      state.dailyReminderTime = imported.dailyReminderTime;
+    if (typeof imported.dailyReminderTime === 'string') {
+      state.dailyReminderTime = normalizeReminderTime(imported.dailyReminderTime) || '21:00';
     }
     if (ACCENT_PALETTES[imported.accentTheme]) state.accentTheme = imported.accentTheme;
     if (imported.colorMode === 'light' || imported.colorMode === 'dark') state.colorMode = imported.colorMode;
@@ -7035,9 +7152,9 @@ function initApp() {
 
     const next = getSmartFocusCandidate();
     state.focusedTaskId = next ? next.id : null;
-    if (state.focusRunning) scheduleFocusEndNotification();
     saveState();
-    syncDailyStreakReminderNotification(true, true);
+    syncAllTaskReminderNotifications();
+    syncDailyStreakReminderNotification(true, false);
     applyThemePreferences();
     renderFolderFilterChips();
     renderTasks();
@@ -7105,19 +7222,21 @@ function initApp() {
     closeModal('cleanup-modal');
   });
   document.getElementById('cleanup-reset-sample-action')?.addEventListener('click', () => {
+    state.tasks.forEach((t) => cancelTaskReminderNotification(t.id));
     state.tasks = getDefaultSampleTasks();
     state.focusedTaskId = state.tasks[0]?.id || null;
-    if (state.focusRunning) scheduleFocusEndNotification();
     saveState();
     renderTasks();
     setSelectedDayView('today');
     updateHeaderAndProgress();
+    syncDailyStreakReminderNotification(true, false);
     if (state.activeTab === 'stats' || state.activeTab === 'settings') renderSecondaryTabViews();
     closeModal('cleanup-modal');
     playTactileSound('pop');
     triggerIslandToast('🔄', 'تسک‌های نمونه بازیابی شدند');
   });
 
+  /* ==================== رویدادهای ویرایش کار و ساعت یادآور (مرحله ۴) ==================== */
   document.getElementById('close-task-edit-modal')?.addEventListener('click', () => closeModal('task-edit-modal'));
   document.querySelectorAll('.edit-day-choice-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -7136,6 +7255,35 @@ function initApp() {
     renderTaskEditModalControls();
     playTactileSound('pop');
   });
+
+  const editReminderInput = document.getElementById('edit-task-reminder-time-input');
+  editReminderInput?.addEventListener('change', async () => {
+    state.draftEditReminderTime = normalizeReminderTime(editReminderInput.value);
+    if (state.draftEditReminderTime) {
+      const perm = getNotificationPermissionStatus();
+      if (perm !== 'granted' && perm !== 'needs_apk_update') {
+        await requestAppNotificationPermission();
+      }
+    }
+    renderTaskEditModalControls();
+    playTactileSound('pop');
+  });
+  editReminderInput?.addEventListener('input', () => {
+    state.draftEditReminderTime = normalizeReminderTime(editReminderInput.value);
+    const clearBtn = document.getElementById('edit-task-clear-reminder-btn');
+    if (clearBtn) {
+      clearBtn.classList.toggle('hidden', !state.draftEditReminderTime);
+      clearBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
+    }
+  });
+  document.getElementById('edit-task-clear-reminder-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.draftEditReminderTime = '';
+    if (editReminderInput) editReminderInput.value = '';
+    renderTaskEditModalControls();
+    playTactileSound('pop');
+  });
+
   document.getElementById('add-subtask-btn')?.addEventListener('click', addSubtaskFromEditModal);
   document.getElementById('new-subtask-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
@@ -7154,11 +7302,13 @@ function initApp() {
     if (!task) return;
     const newTitle = document.getElementById('edit-task-title-input')?.value.trim();
     const newDesc = document.getElementById('edit-task-desc-input')?.value.trim();
+    const remFromDom = normalizeReminderTime(document.getElementById('edit-task-reminder-time-input')?.value);
     if (newTitle) task.title = newTitle;
     task.description = newDesc || '';
     task.category = state.draftEditCategory || 'شخصی';
     task.urgent = state.draftEditUrgent;
     task.isHabit = state.draftEditHabit;
+    task.reminderTime = remFromDom || state.draftEditReminderTime || '';
     let nextView = state.selectedDayView;
     if (task.isHabit) {
       task.scheduledDate = getTodayKey();
@@ -7167,6 +7317,7 @@ function initApp() {
       task.scheduledDate = getDayKeyForView(state.draftEditDay || 'today');
       nextView = state.draftEditDay || 'today';
     }
+    scheduleTaskReminderNotification(task);
     if (state.focusRunning && state.focusedTaskId === task.id) {
       scheduleFocusEndNotification();
     }
@@ -7211,6 +7362,7 @@ function initApp() {
     triggerIslandToast('📁', `پوشه «${name}» ساخته شد`);
   });
 
+  /* ==================== رویدادهای شیت ایجاد کار جدید و یادآور ساعت‌دار (مرحله ۴) ==================== */
   document.getElementById('composer-title-input')?.addEventListener('input', updateComposerSmartBadges);
   document.getElementById('composer-desc-input')?.addEventListener('input', updateComposerSmartBadges);
 
@@ -7270,17 +7422,63 @@ function initApp() {
     playTactileSound('pop');
   });
 
+  const composerReminderInp = document.getElementById('composer-reminder-time-input');
+  document.getElementById('composer-row-reminder')?.addEventListener('click', (e) => {
+    if (e.target === composerReminderInp || e.target.closest('#composer-clear-reminder-btn')) return;
+    if (composerReminderInp) {
+      try {
+        if (typeof composerReminderInp.showPicker === 'function') {
+          composerReminderInp.showPicker();
+        } else {
+          composerReminderInp.focus();
+          composerReminderInp.click();
+        }
+      } catch (err) {
+        composerReminderInp.focus();
+      }
+    }
+  });
+
+  composerReminderInp?.addEventListener('change', async () => {
+    state.composerReminderTime = normalizeReminderTime(composerReminderInp.value);
+    if (state.composerReminderTime) {
+      const perm = getNotificationPermissionStatus();
+      if (perm !== 'granted' && perm !== 'needs_apk_update') {
+        await requestAppNotificationPermission();
+      }
+    }
+    updateComposerTogglesUI({ animateSwitches: false });
+    playTactileSound('pop');
+  });
+
+  composerReminderInp?.addEventListener('input', () => {
+    state.composerReminderTime = normalizeReminderTime(composerReminderInp.value);
+    updateComposerTogglesUI({ animateSwitches: false });
+  });
+
+  document.getElementById('composer-clear-reminder-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.composerReminderTime = '';
+    if (composerReminderInp) composerReminderInp.value = '';
+    updateComposerTogglesUI({ animateSwitches: false });
+    playTactileSound('pop');
+  });
+
   const submitComposerForm = () => {
     const title = document.getElementById('composer-title-input')?.value.trim();
     if (!title) return;
     const description = document.getElementById('composer-desc-input')?.value.trim() || '';
     const cleanSubs = state.composerSubtasks.map((s) => s.trim()).filter(Boolean);
+    const reminderTime =
+      normalizeReminderTime(document.getElementById('composer-reminder-time-input')?.value) ||
+      state.composerReminderTime;
     const taskOptions = {
       description,
       dayView: state.composerDay,
       category: state.composerCategory,
       urgent: state.composerUrgent,
       isHabit: state.composerHabit,
+      reminderTime,
       autoCompleteSubtasks: state.composerAutoComplete,
       subtasks: cleanSubs,
     };
