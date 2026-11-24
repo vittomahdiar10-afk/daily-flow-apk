@@ -150,6 +150,9 @@ const state = {
   activeIslandToast: null,
   toastTimeout: null,
   toastActionCallback: null,
+  pendingUpdateWorker: null,
+  pendingUpdateVersionMeta: null,
+  isApplyingUpdate: false,
   undoSnapshot: null,
   moveUndoSnapshot: null,
   noteUndoSnapshot: null,
@@ -3349,19 +3352,22 @@ function copyNotebookEntryText(noteId) {
     playTactileSound('complete');
     triggerIslandToast('📋', 'متن یادداشت کپی شد');
   };
+  const legacyCopy = () => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = fullText;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      if (document.execCommand('copy')) onCopied();
+      ta.remove();
+    } catch (e) {}
+  };
   if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(fullText).then(onCopied).catch(() => {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = fullText;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        if (document.execCommand('copy')) onCopied();
-        ta.remove();
-      } catch (e) {}
-    });
+    navigator.clipboard.writeText(fullText).then(onCopied).catch(legacyCopy);
+  } else {
+    legacyCopy();
   }
 }
 
@@ -5853,14 +5859,304 @@ function setupFullScreenViewportSync() {
   });
 }
 
+/* ==================== سیستم بروزرسانی اتمی با داینامیک آیلند و پرده تمام‌صفحه ==================== */
+function renderUpdateOverlayNotes(notesList) {
+  const notesEl = document.getElementById('update-overlay-notes');
+  if (!notesEl) return;
+  const cleanNotes = Array.isArray(notesList)
+    ? notesList.map((n) => String(n || '').trim()).filter(Boolean)
+    : [];
+
+  if (cleanNotes.length === 0) {
+    notesEl.classList.add('hidden');
+    notesEl.innerHTML = '';
+    return;
+  }
+
+  notesEl.classList.remove('hidden');
+  notesEl.innerHTML = cleanNotes
+    .slice(0, 4)
+    .map(
+      (item) => `
+      <li class="flex items-start gap-2 leading-relaxed">
+        <span class="text-[#7fd5d8] font-bold shrink-0">•</span>
+        <span>${escapeHtml(item)}</span>
+      </li>
+    `
+    )
+    .join('');
+}
+
+function setUpdateOverlayProgress({ icon, version, title, status, stepLabel, percent, notes }) {
+  const iconEl = document.getElementById('update-overlay-icon');
+  const versionEl = document.getElementById('update-overlay-version');
+  const titleEl = document.getElementById('update-overlay-title');
+  const statusEl = document.getElementById('update-overlay-status');
+  const stepEl = document.getElementById('update-overlay-step-label');
+  const pctEl = document.getElementById('update-overlay-percent');
+  const fillEl = document.getElementById('update-overlay-progress-fill');
+
+  if (icon && iconEl) iconEl.textContent = icon;
+  if (version && versionEl) versionEl.textContent = version;
+  if (title && titleEl) titleEl.textContent = title;
+  if (status && statusEl) statusEl.textContent = status;
+  if (stepLabel && stepEl) stepEl.textContent = stepLabel;
+  if (typeof percent === 'number') {
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    if (pctEl) pctEl.textContent = `${clamped}%`;
+    if (fillEl) fillEl.style.transform = `scaleX(${(clamped / 100).toFixed(4)})`;
+  }
+  if (notes !== undefined) {
+    renderUpdateOverlayNotes(notes);
+  }
+}
+
+function showUpdateReadyInDynamicIsland() {
+  if (!state.pendingUpdateWorker || state.isApplyingUpdate) return;
+
+  const activeTag = document.activeElement?.tagName;
+  if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
+    const resumeAfterTyping = () => {
+      document.removeEventListener('focusout', resumeAfterTyping);
+      setTimeout(() => {
+        if (state.pendingUpdateWorker && !state.isApplyingUpdate) {
+          showUpdateReadyInDynamicIsland();
+        }
+      }, 650);
+    };
+    document.addEventListener('focusout', resumeAfterTyping, { once: true });
+    return;
+  }
+
+  const meta = state.pendingUpdateVersionMeta;
+  const verText = meta && meta.version ? `v${String(meta.version).replace(/^v/i, '')}` : '';
+  const toastMessage = verText
+    ? `بروزرسانی ${verText} آماده است`
+    : 'بروزرسانی جدید آماده است';
+
+  triggerIslandToast('✨', toastMessage, {
+    duration: 20000,
+    actionLabel: 'نصب',
+    onAction: () => {
+      startAtomicAppUpdate();
+    },
+  });
+}
+
+function startAtomicAppUpdate() {
+  if (state.isApplyingUpdate) return;
+  const worker = state.pendingUpdateWorker;
+  if (!worker) return;
+
+  state.isApplyingUpdate = true;
+  clearActiveIslandToastState();
+  if (state.islandMode === 'expanded') {
+    setIslandMode('idle', { skipMorph: true });
+  }
+
+  [
+    'command-palette-modal',
+    'note-editor-modal',
+    'notebook-modal',
+    'task-composer-modal',
+    'task-edit-modal',
+    'folders-modal',
+    'profile-modal',
+    'sync-modal',
+    'cleanup-modal',
+  ].forEach((mId) => closeModal(mId));
+
+  const meta = state.pendingUpdateVersionMeta || {
+    version: 'جدید',
+    title: 'بهبود سرعت و امکانات جدید برنامه',
+    notes: ['آماده‌سازی فایل‌های نسخه جدید بدون بهم‌ریختگی'],
+  };
+  const formattedVersion = meta.version
+    ? /^v/i.test(String(meta.version))
+      ? String(meta.version)
+      : `v${meta.version}`
+    : 'نسخه جدید';
+
+  try {
+    sessionStorage.setItem('df_applying_update', '1');
+    sessionStorage.setItem('df_update_meta', JSON.stringify(meta));
+  } catch (e) {}
+
+  setUpdateOverlayProgress({
+    icon: '✨',
+    version: formattedVersion,
+    title: 'در حال دریافت و آماده‌سازی...',
+    status: meta.title || 'هماهنگ‌سازی فایل‌های نسخه جدید',
+    stepLabel: 'بررسی بسته‌های بروزرسانی...',
+    percent: 18,
+    notes: meta.notes || [],
+  });
+
+  const overlay = document.getElementById('app-update-overlay');
+  if (overlay) {
+    overlay.classList.remove('hidden', 'is-overlay-fading-out');
+    overlay.classList.add('flex', 'is-overlay-entering');
+  }
+
+  playTactileSound('pop');
+  triggerHaptic(10);
+
+  /* تایمر ایمنی ۸ ثانیه‌ای برای جلوگیری از هرگونه گیر کردن صفحه در شرایط غیرمنتظره */
+  const safetyReloadTimer = setTimeout(() => {
+    window.location.reload();
+  }, 8000);
+
+  setTimeout(() => {
+    setUpdateOverlayProgress({
+      title: 'در حال نصب بروزرسانی...',
+      stepLabel: 'پاک‌سازی کش قبلی و جایگزینی فایل‌ها...',
+      percent: 54,
+    });
+    try {
+      if (window.AndroidNative && typeof window.AndroidNative.clearWebCache === 'function') {
+        window.AndroidNative.clearWebCache();
+      }
+    } catch (e) {}
+  }, 460);
+
+  setTimeout(() => {
+    setUpdateOverlayProgress({
+      title: 'در حال اعمال تغییرات...',
+      stepLabel: 'فعال‌سازی نسخه جدید...',
+      percent: 78,
+    });
+
+    try {
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    } catch (e) {
+      clearTimeout(safetyReloadTimer);
+      window.location.reload();
+      return;
+    }
+
+    setTimeout(() => {
+      clearTimeout(safetyReloadTimer);
+      window.location.reload();
+    }, 1600);
+  }, 980);
+}
+
+function finishPostReloadUpdateCurtain() {
+  let isPostUpdate = false;
+  let savedMeta = null;
+  try {
+    isPostUpdate = sessionStorage.getItem('df_applying_update') === '1';
+    const rawMeta = sessionStorage.getItem('df_update_meta');
+    if (rawMeta) savedMeta = JSON.parse(rawMeta);
+  } catch (e) {}
+
+  if (!isPostUpdate) return;
+
+  const overlay = document.getElementById('app-update-overlay');
+  const formattedVersion =
+    savedMeta && savedMeta.version
+      ? /^v/i.test(String(savedMeta.version))
+        ? String(savedMeta.version)
+        : `v${savedMeta.version}`
+      : 'نسخه جدید';
+
+  setUpdateOverlayProgress({
+    icon: '🎉',
+    version: formattedVersion,
+    title: 'در حال اعمال تغییرات...',
+    status: (savedMeta && savedMeta.title) || 'نهایی‌سازی رابط کاربری نسخه جدید',
+    stepLabel: 'نصب با موفقیت انجام شد ✓',
+    percent: 100,
+    notes: (savedMeta && savedMeta.notes) || [],
+  });
+
+  try {
+    sessionStorage.removeItem('df_applying_update');
+    sessionStorage.removeItem('df_update_meta');
+  } catch (e) {}
+
+  setTimeout(() => {
+    playTactileSound('complete');
+    triggerHaptic(12);
+    if (overlay) {
+      overlay.classList.remove('is-overlay-entering');
+      overlay.classList.add('is-overlay-fading-out');
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex', 'is-overlay-fading-out');
+      }, 360);
+    }
+    triggerIslandToast('✨', `برنامه به ${formattedVersion} بروزرسانی شد`);
+  }, 540);
+}
+
+async function handleWaitingServiceWorker(worker) {
+  if (!worker) return;
+  state.pendingUpdateWorker = worker;
+
+  try {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
+    const res = await fetch(`./version.json?t=${Date.now()}`, {
+      cache: 'no-store',
+      signal: controller ? controller.signal : undefined,
+    });
+    if (timeoutId) clearTimeout(timeoutId);
+    if (res && res.ok) {
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        state.pendingUpdateVersionMeta = data;
+      }
+    }
+  } catch (e) {}
+
+  showUpdateReadyInDynamicIsland();
+}
+
 function registerOfflineServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
+
+  let isRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (isRefreshing) return;
+    if (state.isApplyingUpdate) {
+      isRefreshing = true;
+      window.location.reload();
+    }
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('./sw.js', { scope: './' })
+      .register('./sw.js', { scope: './', updateViaCache: 'none' })
       .then((reg) => {
-        reg.update().catch(() => {});
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          handleWaitingServiceWorker(reg.waiting);
+        }
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              handleWaitingServiceWorker(newWorker);
+            }
+          });
+        });
+
+        setTimeout(() => {
+          reg.update().catch(() => {});
+        }, 1600);
+
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            reg.update().catch(() => {});
+          }
+        });
+
+        setInterval(() => {
+          reg.update().catch(() => {});
+        }, 25 * 60 * 1000);
       })
       .catch(() => {});
   });
@@ -5885,6 +6181,7 @@ function initApp() {
   renderQuickNotes();
   updateFocusUI();
   updateHeaderAndProgress();
+  finishPostReloadUpdateCurtain();
   syncDynamicIslandExpandedHeight();
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(syncDynamicIslandExpandedHeight).catch(() => {});
@@ -6102,7 +6399,11 @@ function initApp() {
           playTactileSound('pop');
           triggerHaptic(8);
         } else if (state.islandMode === 'toast' && !e.target.closest('#island-undo-btn')) {
-          setIslandMode('expanded');
+          if (state.pendingUpdateWorker) {
+            startAtomicAppUpdate();
+          } else {
+            setIslandMode('expanded');
+          }
         }
       },
       true
