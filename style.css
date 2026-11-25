@@ -172,6 +172,43 @@ textarea {
   -webkit-user-select: text;
 }
 
+/* زیباسازی بومی انتخاب‌گر ساعت (Time Picker) در حالت روز و شب */
+input[type="time"] {
+  color-scheme: dark;
+  font-variant-numeric: tabular-nums;
+  min-height: 30px;
+  line-height: 1.2;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="time"]:focus {
+  border-color: rgba(var(--mint-accent-rgb), 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(var(--mint-accent-rgb), 0.16);
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  filter: invert(0.85) sepia(0.25) saturate(2) hue-rotate(140deg);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+body.theme-light input[type="time"] {
+  color-scheme: light;
+  background-color: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+body.theme-light input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.72;
+}
+
 .app-safe-main {
   min-height: 100lvh;
   padding-top: calc(4.85rem + env(safe-area-inset-top, 0px));
@@ -298,6 +335,12 @@ body.theme-light [id$="-modal"] {
 }
 
 /* ==================== سیستم کپسول‌های جیوه‌ای یکپارچه (Liquid Morphing Pills) ==================== */
+#task-filter-pill-bar,
+#notebook-filter-pill-bar {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+
 .liquid-seg-indicator {
   position: absolute;
   top: 3px;
@@ -707,7 +750,7 @@ body.theme-light .notebook-entry-card.is-pinned {
   }
 }
 
-/* ==================== نگاشت رنگ‌های تم روز (Light Mode Overrides) ==================== */
+/* ==================== نگاشت کامل رنگ‌های تم روز (Light Mode Overrides) ==================== */
 body.theme-light [id$="-modal"] > .liquid-glass {
   background: var(--glass-modal-surface) !important;
   border-color: rgba(15, 23, 42, 0.1) !important;
@@ -763,18 +806,34 @@ body.theme-light .bg-\[\#1a2224\],
 body.theme-light .bg-\[\#161e20\] {
   background-color: #e6eef0 !important;
 }
+body.theme-light .bg-black\/15 {
+  background-color: rgba(15, 23, 42, 0.045) !important;
+}
 body.theme-light .border-white\/10,
+body.theme-light .border-white\/15,
 body.theme-light .border-white\/\[0\.07\],
 body.theme-light .border-white\/\[0\.08\] {
   border-color: rgba(15, 23, 42, 0.09) !important;
 }
+body.theme-light .divide-white\/\[0\.07\] > :not([hidden]) ~ :not([hidden]),
+body.theme-light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+body.theme-light .bg-white\/\[0\.02\],
+body.theme-light .bg-white\/\[0\.03\],
+body.theme-light .bg-white\/\[0\.04\],
+body.theme-light .bg-white\/\[0\.05\] {
+  background-color: rgba(15, 23, 42, 0.035) !important;
+}
 body.theme-light .bg-white\/10,
 body.theme-light .bg-white\/\[0\.06\],
-body.theme-light .bg-white\/\[0\.07\] {
+body.theme-light .bg-white\/\[0\.07\],
+body.theme-light .bg-white\/\[0\.08\] {
   background-color: rgba(15, 23, 42, 0.065) !important;
 }
-body.theme-light .hover\:bg-white\/15:hover {
-  background-color: rgba(15, 23, 42, 0.12) !important;
+body.theme-light .hover\:bg-white\/15:hover,
+body.theme-light .hover\:bg-white\/10:hover {
+  background-color: rgba(15, 23, 42, 0.11) !important;
 }
 body.theme-light .tg-switch:not(.is-on) {
   background-color: rgba(15, 23, 42, 0.16);
@@ -841,8 +900,8 @@ body.theme-light .focus-min-chip.bg-\[\#7fd5d8\] {
   position: relative;
   width: min(92vw, 344px);
   --island-expanded-h: 168px;
-  --island-closed-inset-x: 59px;
-  --island-live-inset-x: 46px;
+  --island-closed-inset-x: max(18px, calc(50% - 113px));
+  --island-live-inset-x: max(12px, calc(50% - 126px));
   --island-closed-inset-b: 124px;
   --island-toast-inset-b: 120px;
   --island-specular-x: 50%;
@@ -1067,17 +1126,17 @@ body.theme-light .island-gpu-rim {
 }
 
 #island-idle-layer {
-  width: 226px;
+  width: min(84vw, 226px);
   height: 44px;
 }
 
 #island-idle-layer.is-wide-idle,
 .obsidian-shell.is-live #island-idle-layer {
-  width: 252px;
+  width: min(88vw, 252px);
 }
 
 #island-toast-layer {
-  width: min(92vw, 336px);
+  width: min(90vw, 336px);
   height: 48px;
   transition:
     opacity calc(0.18s * var(--motion-scale)) ease calc(0.06s * var(--motion-scale)),
@@ -1097,7 +1156,7 @@ body.theme-light .island-gpu-rim {
 /* پشتیبان سازگاری برای مرورگرهای قدیمی فاقد CSS @property */
 body.island-legacy-box .obsidian-shell {
   pointer-events: auto;
-  width: 226px;
+  width: min(84vw, 226px);
   height: 44px;
   border-radius: 22px;
   background: var(--island-bg);
@@ -1117,10 +1176,10 @@ body.island-legacy-box .island-gpu-core {
   display: none;
 }
 body.island-legacy-box .obsidian-shell.is-live {
-  width: 252px;
+  width: min(88vw, 252px);
 }
 body.island-legacy-box .obsidian-shell.is-toast {
-  width: min(92vw, 336px);
+  width: min(90vw, 336px);
   height: 48px;
   border-radius: 24px;
 }
@@ -2017,9 +2076,16 @@ body.theme-light .avatar-surface {
 
 /* ==================== پرده تمام‌صفحه شیشه‌ای بروزرسانی اتمی ==================== */
 #app-update-overlay {
+  background: rgba(11, 16, 18, 0.72) !important;
+  backdrop-filter: blur(22px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(165%) !important;
   opacity: 1;
   transition: opacity calc(0.36s * var(--motion-scale)) var(--sheet-curve);
   will-change: opacity;
+}
+
+body.theme-light #app-update-overlay {
+  background: rgba(238, 243, 245, 0.76) !important;
 }
 
 #app-update-overlay.is-overlay-entering {
