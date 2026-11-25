@@ -198,23 +198,24 @@
           </div>
         </div>
 
-        <div class="island-timer-capsule rounded-2xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <span id="island-timer-display" class="island-primary-text ltr font-mono text-[23px] font-black tracking-tight tabular-nums leading-none">
+        <div class="island-timer-capsule rounded-2xl px-2.5 py-1.5 flex items-center justify-between gap-1.5">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span id="island-timer-display" class="island-primary-text ltr font-mono text-[21px] font-black tracking-tight tabular-nums leading-none">
               25:00
             </span>
-            <span id="island-timer-state-pill" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 island-secondary-text shrink-0">
+            <span id="island-timer-state-pill" class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 island-secondary-text shrink-0">
               آماده
             </span>
           </div>
 
-          <div id="island-timer-pill-group" dir="ltr" data-liquid-scrub-bar class="relative grid grid-cols-3 bg-white/[0.06] p-0.5 rounded-full shrink-0" role="group" aria-label="مدت تایمر">
-            <div id="island-timer-indicator" class="liquid-seg-indicator" style="top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); transform: translate3d(100%, 0, 0);">
+          <div id="island-timer-pill-group" dir="ltr" data-liquid-scrub-bar class="relative grid grid-cols-4 bg-white/[0.06] p-0.5 rounded-full shrink-0" role="group" aria-label="مدت تایمر">
+            <div id="island-timer-indicator" class="liquid-seg-indicator" style="top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 4); transform: translate3d(100%, 0, 0);">
               <span id="island-timer-indicator-blob" class="liquid-seg-blob"></span>
             </div>
-            <button type="button" data-focus-min="15" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-slate-300 cursor-pointer">15m</button>
-            <button type="button" data-focus-min="25" data-chip-size="island" class="focus-min-chip liquid-seg-btn is-active spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-[#0b1617] cursor-pointer">25m</button>
-            <button type="button" data-focus-min="45" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-2 py-0.5 rounded-full text-slate-300 cursor-pointer">45m</button>
+            <button type="button" data-focus-min="15" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full text-slate-300 cursor-pointer">15m</button>
+            <button type="button" data-focus-min="25" data-chip-size="island" class="focus-min-chip liquid-seg-btn is-active spring-btn font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full text-[#0b1617] cursor-pointer">25m</button>
+            <button type="button" data-focus-min="45" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full text-slate-300 cursor-pointer">45m</button>
+            <button type="button" data-focus-min="60" data-chip-size="island" class="focus-min-chip liquid-seg-btn spring-btn font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full text-slate-300 cursor-pointer">60m</button>
           </div>
         </div>
 
@@ -644,6 +645,7 @@
                 <button type="button" data-focus-min="15" class="focus-min-chip spring-btn ltr font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 cursor-pointer">15m</button>
                 <button type="button" data-focus-min="25" class="focus-min-chip spring-btn ltr font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7fd5d8] text-[#0b1617] cursor-pointer">25m</button>
                 <button type="button" data-focus-min="45" class="focus-min-chip spring-btn ltr font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 cursor-pointer">45m</button>
+                <button type="button" data-focus-min="60" class="focus-min-chip spring-btn ltr font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300 cursor-pointer">60m</button>
               </div>
             </div>
 
@@ -937,7 +939,7 @@
         </div>
       </section>
 
-      <div class="grid grid-cols-3 gap-2.5">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">تکمیل‌شده امروز</span>
           <div id="stat-done-count" class="text-xl font-extrabold text-[#7fd5d8] mt-1">۰</div>
@@ -945,6 +947,10 @@
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">در جریان امروز</span>
           <div id="stat-active-count" class="text-xl font-extrabold text-white mt-1">۰</div>
+        </div>
+        <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
+          <span class="text-[11px] text-[#93a3a5]">تمرکز امروز</span>
+          <div id="stat-focus-minutes" class="text-lg font-extrabold text-emerald-300 mt-1">۰ دقیقه</div>
         </div>
         <div class="liquid-surface-fast rounded-3xl p-3.5 text-center">
           <span class="text-[11px] text-[#93a3a5]">استریک</span>
@@ -1483,7 +1489,6 @@
         </div>
       </div>
 
-      <!-- جستجو و فیلتر برچسب‌ها -->
       <div class="flex flex-col gap-2 shrink-0">
         <div class="relative">
           <input
@@ -1521,7 +1526,6 @@
         </div>
       </div>
 
-      <!-- فهرست یادداشت‌های دفترچه -->
       <div id="notebook-entries-list" class="flex-1 overflow-y-auto flex flex-col gap-2.5 pr-0.5"></div>
     </div>
   </div>
@@ -1557,7 +1561,6 @@
       </div>
 
       <form id="note-editor-form" action="javascript:void(0)" class="flex flex-col gap-3">
-        <!-- انتخاب دسته‌بندی / برچسب یادداشت -->
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           <button type="button" data-editor-tag="general" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-[#7fd5d8] text-[#0b1617] font-bold cursor-pointer">📝 عمومی</button>
           <button type="button" data-editor-tag="idea" class="note-tag-choice-btn spring-btn whitespace-nowrap text-[11px] px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-slate-300 cursor-pointer">💡 ایده</button>
@@ -1822,7 +1825,7 @@
         <div class="rounded-2xl bg-white/[0.04] border border-white/10 px-3.5 py-2.5 flex items-center justify-between gap-2">
           <div class="min-w-0">
             <span class="block text-xs font-bold text-white">ساعت یادآور (⏰)</span>
-            <span class="block text-[10px] text-[#93a3a5]">ارسال نوتیفیکیشن سر ساعت انتخاب‌شده</span>
+            <span id="edit-task-reminder-subtext" class="block text-[10px] text-[#93a3a5]">ارسال نوتیفیکیشن سر ساعت انتخاب‌شده</span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <input
@@ -2199,7 +2202,7 @@
 
       <div class="flex flex-col items-center gap-1">
         <span id="update-overlay-version" class="ltr font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8]">
-          v2.6.0
+          v2.6.2
         </span>
         <h2 id="update-overlay-title" class="text-base font-extrabold text-white mt-1">
           در حال آماده‌سازی بروزرسانی...
