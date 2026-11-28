@@ -1,7 +1,7 @@
 'use strict';
 
 const STORAGE_KEY = 'daily_flow_liquid_glass_v2';
-const APP_VERSION = '2.6.5';
+const APP_VERSION = '2.7.0';
 let memoryFallbackStorage = null;
 let suppressNextCardClick = false;
 let audioCtx = null;
@@ -358,7 +358,6 @@ function scheduleAppNotification({ idKey, triggerAtMillis, title, body, channelI
     }
   }
 
-  /* تایمر پشتیبان درون‌صفحه‌ای برای مرورگر وب یا زمانی که اپ در پیش‌زمینه باز است */
   const delayMs = targetMs - Date.now();
   if (!scheduledNative && delayMs > 0 && delayMs <= 24 * 60 * 60 * 1000) {
     const tid = setTimeout(() => {
@@ -386,7 +385,7 @@ function scheduleAppNotification({ idKey, triggerAtMillis, title, body, channelI
   return scheduledNative || inPageScheduledTimers.has(safeId);
 }
 
-/* ==================== زمان‌بندی یادآور روزانه و حفظ استریک (مرحله ۲) ==================== */
+/* ==================== زمان‌بندی یادآور روزانه و حفظ استریک ==================== */
 function parseReminderTimeParts(timeStr) {
   const clean = normalizeReminderTime(timeStr) || '21:00';
   const [hStr, mStr] = clean.split(':');
@@ -489,7 +488,7 @@ function updateNotificationSettingsUI() {
   }
 }
 
-/* ==================== اتصال تایمر تمرکز به نوتیفیکیشن بومی (مرحله ۳) ==================== */
+/* ==================== اتصال تایمر تمرکز به نوتیفیکیشن بومی ==================== */
 function cancelFocusEndNotification() {
   cancelAppNotification(FOCUS_TIMER_NOTIF_ID);
 }
@@ -522,7 +521,7 @@ function scheduleFocusEndNotification() {
   });
 }
 
-/* ==================== زمان‌بندی و لغو یادآور ساعت‌دار کارها (مرحله ۴ + هوشمندسازی) ==================== */
+/* ==================== زمان‌بندی و لغو یادآور ساعت‌دار کارها ==================== */
 function normalizeReminderTime(rawTime) {
   const clean = String(rawTime || '').trim();
   const match = clean.match(/^(\d{1,2}):(\d{2})$/);
@@ -810,7 +809,7 @@ function initAdaptiveRenderEngine() {
   });
 }
 
-/* ==================== موتور بازتاب نور شیشه‌ای با سنسور ژیروسکوپ ==================== */
+/* ==================== موتور بازتاب نور شیشه‌ای با سنسور ژیروسکوپ و اسکرول ==================== */
 function initGyroscopeSpecularEngine() {
   const root = document.documentElement;
   let targetX = 50;
@@ -860,7 +859,6 @@ function initGyroscopeSpecularEngine() {
       baseGamma = e.gamma;
       baseBeta = e.beta;
     } else {
-      /* کالیبراسیون تدریجی زاویه دست کاربر برای راحتی در هر وضعیت نشستن یا دراز کشیدن */
       baseGamma = baseGamma * 0.985 + e.gamma * 0.015;
       baseBeta = baseBeta * 0.985 + e.beta * 0.015;
     }
@@ -875,7 +873,6 @@ function initGyroscopeSpecularEngine() {
 
   window.addEventListener('deviceorientation', handleOrientation, { passive: true });
 
-  /* پشتیبانی نرم از حرکت نشانگر در دسکتاپ برای بازتاب نور روی کارت‌ها */
   window.addEventListener(
     'pointermove',
     (e) => {
@@ -889,7 +886,24 @@ function initGyroscopeSpecularEngine() {
     { passive: true }
   );
 
-  /* درخواست مجوز سنسور در مرورگرهای iOS هنگام اولین لمس صفحه */
+  let scrollSheenRaf = false;
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (scrollSheenRaf || state.activeGpuTier === 'performance') return;
+      scrollSheenRaf = true;
+      requestAnimationFrame(() => {
+        scrollSheenRaf = false;
+        const isLight = state.colorMode === 'light';
+        const baseOpacity = isLight ? 0.85 : 0.18;
+        const maxBoost = isLight ? 0.13 : 0.14;
+        const scrollRatio = Math.min(1, Math.max(0, window.scrollY / 240));
+        root.style.setProperty('--rim-sheen-opacity', (baseOpacity + scrollRatio * maxBoost).toFixed(3));
+      });
+    },
+    { passive: true }
+  );
+
   if (
     typeof DeviceOrientationEvent !== 'undefined' &&
     typeof DeviceOrientationEvent.requestPermission === 'function'
@@ -899,6 +913,87 @@ function initGyroscopeSpecularEngine() {
     };
     document.addEventListener('pointerdown', unlockIosGyro, { once: true, passive: true });
   }
+}
+
+/* ==================== کشسانی آکاردئونی لبه اسکرول در لیست کارها (Edge Overscroll Accordion) ==================== */
+function initEdgeOverscrollAccordion() {
+  const root = document.documentElement;
+  let touchStartY = 0;
+  let isPullingEdge = false;
+  let rafPending = false;
+  let currentGapRem = 0.625;
+
+  const getActiveChannel = () => document.getElementById(`day-channel-${state.selectedDayView}`);
+
+  const applyAccordionFrame = () => {
+    rafPending = false;
+    root.style.setProperty('--accordion-gap', `${currentGapRem.toFixed(3)}rem`);
+  };
+
+  window.addEventListener(
+    'touchstart',
+    (e) => {
+      if (e.touches.length !== 1 || state.activeTab !== 'tasks' || state.activeGpuTier === 'performance') return;
+      if (e.target.closest('[id$="-modal"]') || e.target.closest('#dynamic-island')) return;
+      touchStartY = e.touches[0].clientY;
+      isPullingEdge = false;
+    },
+    { passive: true }
+  );
+
+  window.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!touchStartY || e.touches.length !== 1) return;
+      const dy = e.touches[0].clientY - touchStartY;
+      const atTop = window.scrollY <= 1 && dy > 14;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const atBottom = window.scrollY >= maxScroll - 2 && dy < -14;
+      const activeChannel = getActiveChannel();
+
+      if (!atTop && !atBottom) {
+        if (isPullingEdge) {
+          isPullingEdge = false;
+          activeChannel?.classList.remove('is-accordion-pulling');
+          currentGapRem = 0.625;
+          if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(applyAccordionFrame);
+          }
+        }
+        return;
+      }
+
+      if (!isPullingEdge) {
+        isPullingEdge = true;
+        activeChannel?.classList.add('is-accordion-pulling');
+      }
+
+      const edgeDelta = atTop ? dy - 14 : Math.abs(dy) - 14;
+      const damped = computeIosRubberBand(edgeDelta, 80);
+      currentGapRem = 0.625 + Math.min(0.42, damped * 0.011);
+
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(applyAccordionFrame);
+      }
+    },
+    { passive: true }
+  );
+
+  const releaseAccordion = () => {
+    touchStartY = 0;
+    if (!isPullingEdge) return;
+    isPullingEdge = false;
+    rafPending = false;
+    document.querySelectorAll('.day-channel-pane.is-accordion-pulling').forEach((el) => {
+      el.classList.remove('is-accordion-pulling');
+    });
+    root.style.setProperty('--accordion-gap', '0.625rem');
+  };
+
+  window.addEventListener('touchend', releaseAccordion, { passive: true });
+  window.addEventListener('touchcancel', releaseAccordion, { passive: true });
 }
 
 /* ==================== توابع کمکی تاریخ شمسی و قالب‌بندی ==================== */
@@ -1510,6 +1605,7 @@ function applyThemePreferences() {
   root.style.setProperty('--mint-accent-rgb', isLight ? palette.lightRgb : palette.rgb);
   root.style.setProperty('--mint-contrast-text', isLight ? '#ffffff' : '#0b1617');
   root.style.setProperty('--card-radius', `${state.cardRadius || 24}px`);
+  root.style.setProperty('--rim-sheen-opacity', isLight ? '0.85' : '0.18');
 
   const summaryEl = document.getElementById('tg-val-appearance-summary');
   if (summaryEl) {
@@ -2503,7 +2599,7 @@ function setSelectedDayView(dayView, options = {}) {
   updateHeaderAndProgress();
 }
 
-/* ==================== رندر و مدیریت لیست کارها ==================== */
+/* ==================== رندر و مدیریت لیست کارها با انیمیشن FLIP و تیک چندمرحله‌ای ==================== */
 function renderFolderFilterChips() {
   const container = document.getElementById('folder-filter-chips-container');
   if (!container) return;
@@ -2626,9 +2722,9 @@ function buildTaskCardHtml(task, dayView, staggerIndex = -1) {
 
             <div class="min-w-0 flex-1">
               <h3 dir="auto" class="text-[13.5px] font-bold leading-snug ${privacyClass} ${
-    task.completed ? 'line-through text-[#7d8e90]' : 'text-white'
+    task.completed ? 'text-[#7d8e90]' : 'text-white'
   }">
-                ${escapeHtml(task.title)}
+                <span class="task-title-text ${task.completed ? 'is-completed-title' : ''}">${escapeHtml(task.title)}</span>
               </h3>
               ${
                 task.description
@@ -2724,7 +2820,18 @@ function buildTaskCardHtml(task, dayView, staggerIndex = -1) {
 
 function renderTasks(options = {}) {
   const useCascade = Boolean(options.cascade);
+  const useFlip = Boolean(options.flip);
   const q = state.searchQuery.trim().toLowerCase();
+
+  const firstRects = new Map();
+  if (useFlip && state.activeGpuTier !== 'performance') {
+    const activeChannel = document.getElementById(`day-channel-${state.selectedDayView}`);
+    if (activeChannel) {
+      activeChannel.querySelectorAll('.task-swipe-slot[data-slot-task-id]').forEach((slot) => {
+        firstRects.set(slot.dataset.slotTaskId, slot.getBoundingClientRect().top);
+      });
+    }
+  }
 
   ['yesterday', 'today', 'tomorrow'].forEach((viewKey) => {
     const channelEl = document.getElementById(`day-channel-${viewKey}`);
@@ -2781,6 +2888,38 @@ function renderTasks(options = {}) {
     }
   });
 
+  if (firstRects.size > 0) {
+    const activeChannel = document.getElementById(`day-channel-${state.selectedDayView}`);
+    if (activeChannel) {
+      const movedSlots = [];
+      activeChannel.querySelectorAll('.task-swipe-slot[data-slot-task-id]').forEach((slot) => {
+        const prevTop = firstRects.get(slot.dataset.slotTaskId);
+        if (typeof prevTop !== 'number') return;
+        const deltaY = prevTop - slot.getBoundingClientRect().top;
+        if (Math.abs(deltaY) >= 2 && Math.abs(deltaY) < 600) {
+          slot.style.transition = 'none';
+          slot.style.transform = `translate3d(0, ${deltaY.toFixed(1)}px, 0)`;
+          movedSlots.push(slot);
+        }
+      });
+
+      if (movedSlots.length > 0) {
+        requestAnimationFrame(() => {
+          movedSlots.forEach((slot) => {
+            slot.style.transition = 'transform calc(0.42s * var(--motion-scale)) var(--interruptible-spring)';
+            slot.style.transform = 'translate3d(0, 0, 0)';
+          });
+          setTimeout(() => {
+            movedSlots.forEach((slot) => {
+              slot.style.transition = '';
+              slot.style.transform = '';
+            });
+          }, 450);
+        });
+      }
+    }
+  }
+
   const currentViewTasks = getTasksForDayView(state.selectedDayView);
   const hasCompleted = currentViewTasks.some((t) => t.completed && !t.isHabit);
   const clearMob = document.getElementById('clear-completed-btn');
@@ -2799,7 +2938,6 @@ function setupTaskListDelegation() {
   const taskListEl = document.getElementById('task-list');
   if (!taskListEl) return;
 
-  /* پاک‌سازی خودکار کلاس انیمیشن پس از نشستن کارت برای جلوگیری از هرگونه پرش مجدد */
   taskListEl.addEventListener('animationend', (e) => {
     const slot = e.target.closest('.task-swipe-slot');
     if (slot) {
@@ -2808,7 +2946,6 @@ function setupTaskListDelegation() {
     }
   });
 
-  /* درخشش موضعی زیر انگشت و نشانگر ماوس روی کارت‌ها (HyperOS Specular Spot) */
   let activeSpotCard = null;
   const updateCardSpecularSpot = (card, clientX, clientY) => {
     if (!card || state.activeGpuTier === 'performance') return;
@@ -2871,6 +3008,7 @@ function setupTaskListDelegation() {
       const action = actionBtn.dataset.action;
       const taskId = actionBtn.dataset.taskId;
       const dayView = actionBtn.dataset.dayView || state.selectedDayView;
+      const parentCard = actionBtn.closest('.task-card');
 
       if (action === 'toggle-task') {
         toggleTask(taskId, false, dayView);
@@ -2882,7 +3020,7 @@ function setupTaskListDelegation() {
         if (window.innerWidth >= 1024) {
           openDesktopInspector(taskId);
         } else {
-          openTaskEditModal(taskId, dayView);
+          openTaskEditModal(taskId, dayView, parentCard);
         }
       } else if (action === 'delete-task') {
         deleteTask(taskId);
@@ -2892,14 +3030,14 @@ function setupTaskListDelegation() {
           task.scheduledDate = getTodayKey();
           scheduleTaskReminderNotification(task);
           saveState();
-          renderTasks();
+          renderTasks({ flip: true });
           updateHeaderAndProgress();
           syncDailyStreakReminderNotification(true, false);
           playTactileSound('pop');
           triggerIslandToast('☀️', 'کار به برنامه امروز منتقل شد');
         }
       } else if (action === 'empty-add-task') {
-        openTaskComposer(dayView);
+        openTaskComposer(dayView, actionBtn);
       }
       return;
     }
@@ -2910,7 +3048,7 @@ function setupTaskListDelegation() {
       if (window.innerWidth >= 1024) {
         openDesktopInspector(card.dataset.taskId);
       } else {
-        openTaskEditModal(card.dataset.taskId, cardDayView);
+        openTaskEditModal(card.dataset.taskId, cardDayView, card);
       }
     }
   });
@@ -3049,7 +3187,7 @@ function setupTaskListDelegation() {
     const [moved] = state.tasks.splice(fromIdx, 1);
     state.tasks.splice(toIdx, 0, moved);
     saveState();
-    renderTasks();
+    renderTasks({ flip: true });
     playTactileSound('pop');
   });
 }
@@ -3063,7 +3201,6 @@ function addTask(title, options = {}) {
   let reminderTime = normalizeReminderTime(options.reminderTime);
   let autoShiftedToTomorrow = false;
 
-  /* هوشمندسازی ساعت یادآور: اگر برای امروز ساعتی انتخاب شود که گذشته، خودکار برای فردا تنظیم می‌شود */
   if (reminderTime && !isHabit) {
     if (dayView === 'yesterday') {
       reminderTime = '';
@@ -3103,7 +3240,7 @@ function addTask(title, options = {}) {
 
   const reminderScheduled = scheduleTaskReminderNotification(newTask);
   saveState();
-  renderTasks();
+  renderTasks({ flip: true });
   if (!isHabit && state.selectedDayView !== dayView) {
     setSelectedDayView(dayView);
   } else {
@@ -3119,6 +3256,38 @@ function addTask(title, options = {}) {
     triggerIslandToast('⏰', `«${cleanTitle}» با یادآور ${toPersianDigits(reminderTime)} ثبت شد`);
   } else {
     triggerIslandToast('✨', `«${cleanTitle}» اضافه شد`);
+  }
+}
+
+/* اعمال فوری جلوه بصری تیک خوردن چندمرحله‌ای روی کارت قبل از جابه‌جایی لیست */
+function applyChoreographedCardCompletionVisual(taskId, dayView, isCompleted) {
+  const channelEl = document.getElementById(`day-channel-${dayView}`);
+  const card = channelEl?.querySelector(`.task-card[data-task-id="${CSS.escape ? CSS.escape(taskId) : taskId}"]`);
+  if (!card) return;
+
+  const checkBtn = card.querySelector('.check-circle');
+  const titleSpan = card.querySelector('.task-title-text');
+  const titleHeading = card.querySelector('h3');
+
+  if (checkBtn) {
+    checkBtn.classList.toggle('checked', isCompleted);
+    checkBtn.innerHTML = isCompleted
+      ? '<svg class="w-3.5 h-3.5 text-[#0b1617]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path class="check-stroke-anim" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
+      : '';
+  }
+
+  if (titleSpan) {
+    titleSpan.classList.toggle('is-completed-title', isCompleted);
+  }
+  if (titleHeading) {
+    titleHeading.classList.toggle('text-[#7d8e90]', isCompleted);
+    titleHeading.classList.toggle('text-white', !isCompleted);
+  }
+
+  if (isCompleted) {
+    card.classList.remove('is-task-completing');
+    void card.offsetWidth;
+    card.classList.add('is-task-completing');
   }
 }
 
@@ -3148,15 +3317,14 @@ function toggleTask(taskId, silent = false, dayView = state.selectedDayView) {
     }
   }
 
-  /* لغو خودکار یادآور هنگام تیک خوردن کار و بازتنظیم در صورت برداشتن تیک */
   scheduleTaskReminderNotification(task);
 
   if (nextCompleted && state.focusedTaskId === task.id) {
     advanceSmartFocusTask(false);
   }
 
+  applyChoreographedCardCompletionVisual(taskId, dayView, nextCompleted);
   saveState();
-  renderTasks();
   updateHeaderAndProgress();
   syncDailyStreakReminderNotification(true, false);
   if (state.inspectedTaskId === task.id) renderDesktopInspector();
@@ -3172,6 +3340,14 @@ function toggleTask(taskId, silent = false, dayView = state.selectedDayView) {
       playTactileSound('pop');
     }
   }
+
+  if (state.autoSortCompleted && state.activeGpuTier !== 'performance') {
+    setTimeout(() => {
+      renderTasks({ flip: true });
+    }, 200);
+  } else {
+    renderTasks({ flip: state.autoSortCompleted });
+  }
 }
 
 function toggleSubtask(taskId, subtaskId, silent = false, dayView = state.selectedDayView) {
@@ -3180,6 +3356,7 @@ function toggleSubtask(taskId, subtaskId, silent = false, dayView = state.select
 
   const todayKey = getTodayKey();
   const targetDayKey = getDayKeyForView(dayView);
+  const wasCompleted = Boolean(task.completed);
 
   if (task.isHabit && targetDayKey !== todayKey) {
     if (!task.habitHistory || typeof task.habitHistory !== 'object') {
@@ -3216,7 +3393,7 @@ function toggleSubtask(taskId, subtaskId, silent = false, dayView = state.select
   }
 
   saveState();
-  renderTasks();
+  renderTasks({ flip: state.autoSortCompleted && wasCompleted !== Boolean(task.completed) });
   updateHeaderAndProgress();
   syncDailyStreakReminderNotification(true, false);
   if (state.inspectedTaskId === task.id) renderDesktopInspector();
@@ -3246,7 +3423,7 @@ function deleteTask(taskId) {
   }
 
   saveState();
-  renderTasks();
+  renderTasks({ flip: true });
   updateHeaderAndProgress();
   syncDailyStreakReminderNotification(true, false);
   if (state.activeTab === 'stats') renderSecondaryTabViews();
@@ -3268,7 +3445,7 @@ function deleteTask(taskId) {
       state.focusedTaskId = next ? next.id : null;
       if (state.focusRunning) scheduleFocusEndNotification();
       saveState();
-      renderTasks();
+      renderTasks({ flip: true });
       updateHeaderAndProgress();
       syncDailyStreakReminderNotification(true, false);
       if (state.activeTab === 'stats') renderSecondaryTabViews();
@@ -3307,6 +3484,17 @@ function getSortedNotebookEntries() {
       return Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
     }
     return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+  });
+}
+
+function bindNotebookCardPressFeedback(containerEl) {
+  if (!containerEl) return;
+  containerEl.querySelectorAll('.notebook-entry-card').forEach((card) => {
+    const release = () => card.classList.remove('is-card-pressing');
+    card.addEventListener('pointerdown', () => card.classList.add('is-card-pressing'), { passive: true });
+    card.addEventListener('pointerup', release, { passive: true });
+    card.addEventListener('pointercancel', release, { passive: true });
+    card.addEventListener('pointerleave', release, { passive: true });
   });
 }
 
@@ -3354,9 +3542,10 @@ function renderQuickNotes() {
     })
     .join('');
 
+  bindNotebookCardPressFeedback(listEl);
   listEl.querySelectorAll('[data-open-note-id]').forEach((card) => {
     card.addEventListener('click', () => {
-      openNoteEditorModal(card.dataset.openNoteId);
+      openNoteEditorModal(card.dataset.openNoteId, card);
     });
   });
 }
@@ -3467,6 +3656,8 @@ function renderNotebookModalList() {
     })
     .join('');
 
+  bindNotebookCardPressFeedback(listEl);
+
   listEl.querySelectorAll('[data-nb-pin]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -3496,14 +3687,14 @@ function renderNotebookModalList() {
 
   listEl.querySelectorAll('[data-nb-card-id]').forEach((card) => {
     card.addEventListener('click', () => {
-      openNoteEditorModal(card.dataset.nbCardId);
+      openNoteEditorModal(card.dataset.nbCardId, card);
     });
   });
 }
 
-function openNotebookModal() {
+function openNotebookModal(sourceEl = null) {
   renderNotebookModalList();
-  openModal('notebook-modal');
+  openModal('notebook-modal', sourceEl);
   requestAnimationFrame(() => {
     syncDynamicPillIndicator({
       barId: 'notebook-filter-pill-bar',
@@ -3546,7 +3737,7 @@ function updateNoteEditorControlsUI() {
   }
 }
 
-function openNoteEditorModal(noteId = null) {
+function openNoteEditorModal(noteId = null, sourceEl = null) {
   const existing = noteId ? state.quickNotes.find((n) => n.id === noteId) : null;
   state.editingNoteId = existing ? existing.id : null;
   state.draftNoteTag = existing ? existing.tag || 'general' : 'general';
@@ -3570,7 +3761,7 @@ function openNoteEditorModal(noteId = null) {
   }
 
   updateNoteEditorControlsUI();
-  openModal('note-editor-modal');
+  openModal('note-editor-modal', sourceEl);
 }
 
 function addQuickNote(rawText) {
@@ -4486,7 +4677,6 @@ function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, da
     'touchstart',
     (e) => {
       if (e.touches.length !== 1) return;
-      /* اگر نوار در صفحات باریک نیاز به اسکرول افقی دارد، اسکرول طبیعی آزاد می‌ماند */
       if (barEl.scrollWidth > barEl.clientWidth + 2) {
         startX = 0;
         return;
@@ -4591,8 +4781,44 @@ function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, da
   barEl.addEventListener('touchcancel', finishScrub);
 }
 
-/* ==================== مدیریت شیت‌ها و مودال‌ها ==================== */
+/* ==================== مدیریت شیت‌ها و تولد پیوسته از المان مبدا (Shared-Element Morphing) ==================== */
 const modalCloseTimers = new Map();
+
+function applySheetMorphOrigin(modalEl, sourceEl) {
+  if (!modalEl) return;
+  const sheet = modalEl.querySelector('.sheet-animate');
+  if (!sheet) return;
+
+  if (!sourceEl || typeof sourceEl.getBoundingClientRect !== 'function') {
+    sheet.style.removeProperty('--sheet-origin-x');
+    sheet.style.removeProperty('--sheet-origin-y');
+    sheet.style.removeProperty('--sheet-origin-scale');
+    sheet.style.removeProperty('--morph-from-x');
+    sheet.style.removeProperty('--morph-from-y');
+    sheet.style.removeProperty('--morph-from-scale');
+    return;
+  }
+
+  const rect = sourceEl.getBoundingClientRect();
+  if (!rect.width && !rect.height) return;
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const srcCenterX = rect.left + rect.width / 2;
+  const srcCenterY = rect.top + rect.height / 2;
+  const screenCenterX = vw / 2;
+  const screenCenterY = vh / 2;
+
+  const offsetX = Math.max(-140, Math.min(140, Math.round((srcCenterX - screenCenterX) * 0.42)));
+  const offsetY = Math.max(-220, Math.min(260, Math.round((srcCenterY - screenCenterY) * 0.46)));
+
+  sheet.style.setProperty('--sheet-origin-x', `${Math.round(offsetX * 0.55)}px`);
+  sheet.style.setProperty('--sheet-origin-y', `${Math.max(48, Math.round(rect.top * 0.35))}px`);
+  sheet.style.setProperty('--sheet-origin-scale', '0.93');
+  sheet.style.setProperty('--morph-from-x', `${offsetX}px`);
+  sheet.style.setProperty('--morph-from-y', `${offsetY}px`);
+  sheet.style.setProperty('--morph-from-scale', '0.9');
+}
 
 function updateMainStageDepth(depthRatio, smoothTransition = true) {
   const mainStage = document.getElementById('app-main-stage');
@@ -4617,7 +4843,7 @@ function updateMainStageDepth(depthRatio, smoothTransition = true) {
   const scale = 1 - clamped * 0.046;
   const translateY = clamped * 10;
 
-  mainStage.classList.add('is-stage-animating');
+  mainStage.classList.add('is-stage-animating', 'is-stage-settled-back');
   if (smoothTransition) {
     mainStage.style.transition = 'transform calc(0.46s * var(--motion-scale)) cubic-bezier(0.19, 1, 0.22, 1)';
   } else {
@@ -4637,10 +4863,16 @@ function resetSheetInlineStyles(modalEl) {
     sheet.style.transition = '';
     sheet.style.opacity = '';
     sheet.style.animation = '';
+    sheet.style.removeProperty('--sheet-origin-x');
+    sheet.style.removeProperty('--sheet-origin-y');
+    sheet.style.removeProperty('--sheet-origin-scale');
+    sheet.style.removeProperty('--morph-from-x');
+    sheet.style.removeProperty('--morph-from-y');
+    sheet.style.removeProperty('--morph-from-scale');
   }
 }
 
-function openModal(id) {
+function openModal(id, sourceEl = null) {
   const el = document.getElementById(id);
   if (!el) return;
   if (modalCloseTimers.has(id)) {
@@ -4648,6 +4880,9 @@ function openModal(id) {
     modalCloseTimers.delete(id);
   }
   resetSheetInlineStyles(el);
+  if (sourceEl) {
+    applySheetMorphOrigin(el, sourceEl);
+  }
   el.classList.remove('hidden', 'is-closing');
   el.classList.add('flex');
 
@@ -4702,7 +4937,7 @@ function closeModal(id, fromDrag = false) {
   modalCloseTimers.set(id, timer);
 }
 
-/* ==================== موتور شیت کرکره‌ای تمام‌GPU بخش «کار جدید» ==================== */
+/* ==================== موتور شیت کرکره‌ای تمام‌GPU بخش «کار جدید» با تولد از دل دکمه + ==================== */
 function initComposerShutterGesture() {
   const modal = document.getElementById('task-composer-modal');
   const sheet = document.getElementById('composer-shutter-sheet');
@@ -4738,6 +4973,18 @@ function initComposerShutterGesture() {
   const getViewportH = () => {
     const vv = window.visualViewport;
     return vv ? Math.round(vv.height) : window.innerHeight;
+  };
+
+  const getFabOriginMetrics = () => {
+    const fab = document.getElementById('fab-quick-add-btn');
+    if (!fab) return { originX: '16%', dx: 0 };
+    const rect = fab.getBoundingClientRect();
+    const fabCenterX = rect.left + rect.width / 2;
+    const screenCenterX = window.innerWidth / 2;
+    return {
+      originX: `${Math.round(fabCenterX)}px`,
+      dx: Math.round((fabCenterX - screenCenterX) * 0.28),
+    };
   };
 
   const clearSettleTimer = () => {
@@ -4812,6 +5059,7 @@ function initComposerShutterGesture() {
     modal.style.opacity = '1';
     updateMainStageDepth(0.65, true);
 
+    sheet.style.transformOrigin = 'center top';
     sheet.style.opacity = '1';
     sheet.style.transition = `transform ${dur}ms ${IOS_SILK_CURVE}`;
     sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
@@ -4840,6 +5088,7 @@ function initComposerShutterGesture() {
     modal.style.opacity = '1';
     updateMainStageDepth(1, true);
 
+    sheet.style.transformOrigin = 'center top';
     sheet.style.opacity = '1';
     const entryStretchY = Math.min(1.022, 1.01 + Math.min(800, Math.abs(initialVel)) * 0.000014);
     const entrySquashX = 2 - entryStretchY;
@@ -4891,12 +5140,14 @@ function initComposerShutterGesture() {
     cachedVh = metrics.vh;
     restY = metrics.restY;
     scrollBody.style.maxHeight = `${metrics.maxScrollBodyH}px`;
+    const fabOrigin = getFabOriginMetrics();
 
     modal.style.transition = 'none';
     modal.style.opacity = '0';
     sheet.style.transition = 'none';
-    sheet.style.opacity = '1';
-    sheet.style.transform = `translate3d(0, ${metrics.vh}px, 0) scale3d(0.978, 1.024, 1)`;
+    sheet.style.opacity = '0.92';
+    sheet.style.transformOrigin = `${fabOrigin.originX} top`;
+    sheet.style.transform = `translate3d(${fabOrigin.dx}px, ${metrics.vh - 36}px, 0) scale3d(0.76, 0.84, 1)`;
     currentY = metrics.vh;
     currentScaleX = 1;
     currentScaleY = 1;
@@ -4908,12 +5159,14 @@ function initComposerShutterGesture() {
         modal.style.opacity = '1';
         updateMainStageDepth(0.65, true);
 
-        sheet.style.transition = `transform 510ms ${IOS_SILK_CURVE}`;
+        sheet.style.transition = `transform 510ms ${IOS_SILK_CURVE}, opacity 240ms ease`;
+        sheet.style.opacity = '1';
         sheet.style.transform = `translate3d(0, ${restY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
         currentY = restY;
 
         settleTimer = setTimeout(() => {
           sheet.style.transition = 'none';
+          sheet.style.transformOrigin = 'center top';
         }, 530);
       });
     });
@@ -4927,14 +5180,16 @@ function initComposerShutterGesture() {
     const vh = getViewportH();
     const dist = Math.max(120, vh - currentY);
     const dur = Math.min(440, Math.max(360, computeAdaptiveDuration(dist, initialVel)));
+    const fabOrigin = getFabOriginMetrics();
 
     modal.style.transition = `opacity ${dur}ms ${IOS_CLOSE_CURVE}`;
     modal.style.opacity = '0';
     updateMainStageDepth(0, true);
 
-    sheet.style.transition = `transform ${dur}ms ${IOS_CLOSE_CURVE}`;
-    sheet.style.opacity = '1';
-    sheet.style.transform = `translate3d(0, ${vh}px, 0) scale3d(0.955, 0.985, 1)`;
+    sheet.style.transformOrigin = `${fabOrigin.originX} top`;
+    sheet.style.transition = `transform ${dur}ms ${IOS_CLOSE_CURVE}, opacity ${Math.round(dur * 0.85)}ms ease`;
+    sheet.style.opacity = '0.88';
+    sheet.style.transform = `translate3d(${fabOrigin.dx}px, ${vh - 28}px, 0) scale3d(0.8, 0.88, 1)`;
     currentY = vh;
     currentScaleX = 1;
     currentScaleY = 1;
@@ -4957,6 +5212,7 @@ function initComposerShutterGesture() {
     modal.style.opacity = '';
     scrollBody.style.maxHeight = '';
     sheet.classList.remove('is-fullscreen');
+    sheet.style.transformOrigin = 'center top';
     sheet.style.transition = 'none';
     sheet.style.opacity = '';
     sheet.style.transform = '';
@@ -5029,6 +5285,7 @@ function initComposerShutterGesture() {
 
       clearSettleTimer();
       const liveY = readLiveTranslateY();
+      sheet.style.transformOrigin = 'center top';
       sheet.style.transition = 'none';
       sheet.style.opacity = '1';
       sheet.style.transform = `translate3d(0, ${liveY.toFixed(1)}px, 0) scale3d(1, 1, 1)`;
@@ -5308,7 +5565,7 @@ function updateProfileModalPreview() {
   });
 }
 
-function openProfileModal() {
+function openProfileModal(sourceEl = null) {
   state.draftAvatar = state.profile.avatar || '🧑‍💻';
   state.draftPhotoDataUrl = state.profile.photoDataUrl || '';
   const nameInput = document.getElementById('profile-name-input');
@@ -5316,7 +5573,7 @@ function openProfileModal() {
   if (nameInput) nameInput.value = state.profile.name || '';
   if (bioInput) bioInput.value = state.profile.bio || '';
   updateProfileModalPreview();
-  openModal('profile-modal');
+  openModal('profile-modal', sourceEl);
 }
 
 function encodeSyncCode(dataObj) {
@@ -5545,7 +5802,7 @@ function renderTaskEditModalControls() {
   }
 }
 
-function openTaskEditModal(taskId, dayView = state.selectedDayView) {
+function openTaskEditModal(taskId, dayView = state.selectedDayView, sourceEl = null) {
   const task = state.tasks.find((t) => t.id === taskId);
   if (!task) return;
   state.editingTaskId = taskId;
@@ -5566,7 +5823,10 @@ function openTaskEditModal(taskId, dayView = state.selectedDayView) {
   if (reminderInp) reminderInp.value = state.draftEditReminderTime || '';
 
   renderTaskEditModalControls();
-  openModal('task-edit-modal');
+  const resolvedSource =
+    sourceEl ||
+    document.querySelector(`#day-channel-${state.editingTaskDayView} .task-card[data-task-id="${CSS.escape ? CSS.escape(taskId) : taskId}"]`);
+  openModal('task-edit-modal', resolvedSource);
 }
 
 function addSubtaskFromEditModal() {
@@ -5830,7 +6090,7 @@ function updateComposerTogglesUI(options = {}) {
   }
 }
 
-function openTaskComposer(defaultDayOverride = null) {
+function openTaskComposer(defaultDayOverride = null, sourceEl = null) {
   state.composerSubtasks = [];
   state.composerDay = defaultDayOverride || state.selectedDayView || 'today';
   state.composerCategory = state.folderFilter !== 'all' ? state.folderFilter : state.selectedCategory || 'شخصی';
@@ -5849,7 +6109,12 @@ function openTaskComposer(defaultDayOverride = null) {
   updateComposerTogglesUI({ animateSwitches: false });
   renderComposerSubtasks();
   updateComposerSmartBadges();
-  openModal('task-composer-modal');
+  const originBtn =
+    sourceEl ||
+    (window.innerWidth >= 1024
+      ? document.getElementById('rail-new-task-btn')
+      : document.getElementById('fab-quick-add-btn'));
+  openModal('task-composer-modal', originBtn);
 
   if (composerShutterController) {
     composerShutterController.animateOpen();
@@ -6351,7 +6616,6 @@ function startAtomicAppUpdate() {
   playTactileSound('pop');
   triggerHaptic(10);
 
-  /* تایمر ایمنی ۸ ثانیه‌ای برای جلوگیری از هرگونه گیر کردن صفحه در شرایط غیرمنتظره */
   const safetyReloadTimer = setTimeout(() => {
     window.location.reload();
   }, 8000);
@@ -6581,6 +6845,7 @@ function initApp() {
   applyAdaptiveRenderCalibration();
   initAdaptiveRenderEngine();
   initGyroscopeSpecularEngine();
+  initEdgeOverscrollAccordion();
   applyThemePreferences();
   setupTaskListDelegation();
   renderFolderFilterChips();
@@ -6598,7 +6863,6 @@ function initApp() {
   setupAndroidBackButtonHandler();
   registerOfflineServiceWorker();
 
-  /* اتصال رویدادهای بازگشت از نوتیفیکیشن بومی اندروید */
   window.__onNativeNotificationPermission = (granted) => {
     updateNotificationSettingsUI();
     if (granted && state.dailyReminderEnabled) {
@@ -7146,11 +7410,14 @@ function initApp() {
   const fabBtn = document.getElementById('fab-quick-add-btn');
   fabBtn?.addEventListener('click', () => {
     triggerFabLiquidPop(fabBtn);
-    openTaskComposer();
+    openTaskComposer(null, fabBtn);
   });
-  document.getElementById('rail-new-task-btn')?.addEventListener('click', () => openTaskComposer());
-  document.getElementById('rail-avatar-btn')?.addEventListener('click', openProfileModal);
-  document.getElementById('header-avatar-btn')?.addEventListener('click', openProfileModal);
+  const railNewBtn = document.getElementById('rail-new-task-btn');
+  railNewBtn?.addEventListener('click', () => openTaskComposer(null, railNewBtn));
+  const railAvatarBtn = document.getElementById('rail-avatar-btn');
+  railAvatarBtn?.addEventListener('click', () => openProfileModal(railAvatarBtn));
+  const headerAvatarBtn = document.getElementById('header-avatar-btn');
+  headerAvatarBtn?.addEventListener('click', () => openProfileModal(headerAvatarBtn));
   document.getElementById('rail-cmd-btn')?.addEventListener('click', openCommandPalette);
   document.getElementById('rail-theme-btn')?.addEventListener('click', () => {
     state.colorMode = state.colorMode === 'dark' ? 'light' : 'dark';
@@ -7224,7 +7491,7 @@ function initApp() {
     state.focusedTaskId = next ? next.id : null;
     if (state.focusRunning) scheduleFocusEndNotification();
     saveState();
-    renderTasks();
+    renderTasks({ flip: true });
     updateHeaderAndProgress();
     syncDailyStreakReminderNotification(true, false);
     playTactileSound('delete');
@@ -7383,16 +7650,21 @@ function initApp() {
     inp.value = '';
   });
 
-  document.getElementById('open-notebook-header-btn')?.addEventListener('click', openNotebookModal);
-  document.getElementById('open-notebook-btn')?.addEventListener('click', openNotebookModal);
-  document.getElementById('view-all-notes-footer-btn')?.addEventListener('click', openNotebookModal);
-  document.getElementById('new-notebook-entry-card-btn')?.addEventListener('click', () => {
-    openNoteEditorModal(null);
+  const nbHeaderBtn = document.getElementById('open-notebook-header-btn');
+  nbHeaderBtn?.addEventListener('click', () => openNotebookModal(nbHeaderBtn));
+  const nbOpenBtn = document.getElementById('open-notebook-btn');
+  nbOpenBtn?.addEventListener('click', () => openNotebookModal(nbOpenBtn));
+  const nbFooterBtn = document.getElementById('view-all-notes-footer-btn');
+  nbFooterBtn?.addEventListener('click', () => openNotebookModal(nbFooterBtn));
+  const nbNewEntryCardBtn = document.getElementById('new-notebook-entry-card-btn');
+  nbNewEntryCardBtn?.addEventListener('click', () => {
+    openNoteEditorModal(null, nbNewEntryCardBtn);
   });
 
   document.getElementById('close-notebook-modal')?.addEventListener('click', () => closeModal('notebook-modal'));
-  document.getElementById('notebook-new-note-btn')?.addEventListener('click', () => {
-    openNoteEditorModal(null);
+  const nbModalNewBtn = document.getElementById('notebook-new-note-btn');
+  nbModalNewBtn?.addEventListener('click', () => {
+    openNoteEditorModal(null, nbModalNewBtn);
   });
 
   const nbSearchInput = document.getElementById('notebook-search-input');
@@ -7520,7 +7792,7 @@ function initApp() {
     playTactileSound('pop');
   });
 
-  /* ==================== رویدادهای تنظیمات و بخش اعلان‌ها (مرحله ۲) ==================== */
+  /* ==================== رویدادهای تنظیمات و بخش اعلان‌ها ==================== */
   document.getElementById('tg-row-notif-permission')?.addEventListener('click', async () => {
     const status = getNotificationPermissionStatus();
     if (status === 'needs_apk_update') {
@@ -7636,8 +7908,10 @@ function initApp() {
   document.getElementById('tg-row-cleanup')?.addEventListener('click', () => openModal('cleanup-modal'));
   document.getElementById('tg-row-app-update')?.addEventListener('click', checkForAppUpdateManually);
 
-  document.getElementById('tg-profile-avatar-btn')?.addEventListener('click', openProfileModal);
-  document.getElementById('tg-row-profile')?.addEventListener('click', openProfileModal);
+  const tgAvatarBtn = document.getElementById('tg-profile-avatar-btn');
+  tgAvatarBtn?.addEventListener('click', () => openProfileModal(tgAvatarBtn));
+  const tgRowProfileBtn = document.getElementById('tg-row-profile');
+  tgRowProfileBtn?.addEventListener('click', () => openProfileModal(tgRowProfileBtn));
 
   document.getElementById('tg-row-appearance')?.addEventListener('click', () => {
     document.getElementById('tg-settings-main')?.classList.add('hidden');
@@ -7710,7 +7984,7 @@ function initApp() {
     state.autoSortCompleted = !state.autoSortCompleted;
     setTgSwitchState(document.getElementById('tg-switch-autosort'), state.autoSortCompleted, true);
     saveState();
-    renderTasks();
+    renderTasks({ flip: true });
     renderSecondaryTabViews();
     playTactileSound('pop');
   });
@@ -7884,7 +8158,7 @@ function initApp() {
     syncDailyStreakReminderNotification(true, false);
     applyThemePreferences();
     renderFolderFilterChips();
-    renderTasks();
+    renderTasks({ cascade: true });
     renderQuickNotes();
     renderNotebookModalList();
     updateHeaderAndProgress();
@@ -7953,7 +8227,7 @@ function initApp() {
     state.tasks = getDefaultSampleTasks();
     state.focusedTaskId = state.tasks[0]?.id || null;
     saveState();
-    renderTasks();
+    renderTasks({ cascade: true });
     setSelectedDayView('today');
     updateHeaderAndProgress();
     syncDailyStreakReminderNotification(true, false);
@@ -7963,7 +8237,7 @@ function initApp() {
     triggerIslandToast('🔄', 'تسک‌های نمونه بازیابی شدند');
   });
 
-  /* ==================== رویدادهای ویرایش کار و ساعت یادآور (مرحله ۴) ==================== */
+  /* ==================== رویدادهای ویرایش کار و ساعت یادآور ==================== */
   document.getElementById('close-task-edit-modal')?.addEventListener('click', () => closeModal('task-edit-modal'));
   document.querySelectorAll('.edit-day-choice-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -8056,7 +8330,7 @@ function initApp() {
       scheduleFocusEndNotification();
     }
     saveState();
-    renderTasks();
+    renderTasks({ flip: true });
     if (state.selectedDayView !== nextView) {
       setSelectedDayView(nextView);
     } else {
@@ -8100,7 +8374,7 @@ function initApp() {
     triggerIslandToast('📁', `پوشه «${name}» ساخته شد`);
   });
 
-  /* ==================== رویدادهای شیت ایجاد کار جدید و یادآور ساعت‌دار (مرحله ۴) ==================== */
+  /* ==================== رویدادهای شیت ایجاد کار جدید و یادآور ساعت‌دار ==================== */
   document.getElementById('composer-title-input')?.addEventListener('input', updateComposerSmartBadges);
   document.getElementById('composer-desc-input')?.addEventListener('input', updateComposerSmartBadges);
 
