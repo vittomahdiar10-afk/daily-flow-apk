@@ -11,6 +11,8 @@
   --glass-blur: 10px;
   --island-blur: 12px;
   --motion-scale: 1;
+  --gyro-x: 50%;
+  --gyro-y: 12%;
 
   /* منحنی‌های فنری و ابریشمی منطبق با فیزیک iOS & HyperOS */
   --spring-curve: cubic-bezier(0.22, 1.12, 0.36, 1);
@@ -316,6 +318,7 @@ body.theme-light [id$="-modal"] {
 
 /* سطح شیشه‌ای فوق‌سریع قفل‌شده روی GPU برای کارت‌های داخلی صفحه */
 .liquid-surface-fast {
+  position: relative;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: inset 0 1px 0 0 var(--specular-edge);
@@ -325,6 +328,38 @@ body.theme-light [id$="-modal"] {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* بازتاب نور پویا با سنسور ژیروسکوپ روی لبه‌ها و سطوح شیشه‌ای */
+.liquid-surface-fast::before,
+.liquid-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    260px circle at var(--gyro-x, 50%) var(--gyro-y, 12%),
+    rgba(255, 255, 255, 0.085) 0%,
+    rgba(var(--mint-accent-rgb), 0.045) 38%,
+    transparent 72%
+  );
+}
+
+body.theme-light .liquid-surface-fast::before,
+body.theme-light .liquid-card::before {
+  background: radial-gradient(
+    280px circle at var(--gyro-x, 50%) var(--gyro-y, 12%),
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(var(--mint-accent-rgb), 0.085) 42%,
+    transparent 74%
+  );
+}
+
+body.gpu-tier-performance .liquid-surface-fast::before,
+body.gpu-tier-performance .liquid-card::before {
+  display: none;
 }
 
 [id$="-modal"]:not(#task-composer-modal) > .liquid-glass {
@@ -1862,7 +1897,7 @@ body.theme-light .avatar-surface {
   animation: fabIconRotatePop calc(0.44s * var(--motion-scale)) var(--spring-curve);
 }
 
-/* ==================== ذرات جشن، سوایپ کارت‌ها و ریل دسکتاپ ==================== */
+/* ==================== ذرات جشن، چیدمان آبشاری فنری، سوایپ کارت‌ها و ریل دسکتاپ ==================== */
 .sparkle-particle {
   position: fixed;
   width: 7px;
@@ -1884,6 +1919,21 @@ body.theme-light .avatar-surface {
   }
 }
 
+@keyframes taskCardSpringCascade {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale3d(0.972, 0.972, 1);
+  }
+  62% {
+    opacity: 1;
+    transform: translate3d(0, -2px, 0) scale3d(1.004, 1.004, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
 .task-swipe-slot {
   position: relative;
   border-radius: var(--card-radius);
@@ -1892,6 +1942,12 @@ body.theme-light .avatar-surface {
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+
+.task-swipe-slot.is-cascade-enter {
+  animation: taskCardSpringCascade calc(0.44s * var(--motion-scale)) var(--spring-curve) both;
+  animation-delay: calc(var(--stagger-idx, 0) * 28ms);
+  will-change: transform, opacity;
 }
 
 .task-swipe-slot.is-actively-swiping .task-card {

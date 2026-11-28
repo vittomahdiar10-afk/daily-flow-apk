@@ -1,7 +1,7 @@
 'use strict';
 
 const STORAGE_KEY = 'daily_flow_liquid_glass_v2';
-const APP_VERSION = '2.6.3';
+const APP_VERSION = '2.6.4';
 let memoryFallbackStorage = null;
 let suppressNextCardClick = false;
 let audioCtx = null;
@@ -808,6 +808,97 @@ function initAdaptiveRenderEngine() {
       requestAnimationFrame(measureLoop);
     }
   });
+}
+
+/* ==================== موتور بازتاب نور شیشه‌ای با سنسور ژیروسکوپ ==================== */
+function initGyroscopeSpecularEngine() {
+  const root = document.documentElement;
+  let targetX = 50;
+  let targetY = 12;
+  let currentX = 50;
+  let currentY = 12;
+  let baseBeta = null;
+  let baseGamma = null;
+  let rafId = null;
+
+  const renderSpecularStep = () => {
+    rafId = null;
+    if (document.hidden || state.activeGpuTier === 'performance') return;
+
+    const dx = targetX - currentX;
+    const dy = targetY - currentY;
+    if (Math.abs(dx) < 0.08 && Math.abs(dy) < 0.08) {
+      currentX = targetX;
+      currentY = targetY;
+    } else {
+      currentX += dx * 0.14;
+      currentY += dy * 0.14;
+      rafId = requestAnimationFrame(renderSpecularStep);
+    }
+
+    root.style.setProperty('--gyro-x', `${currentX.toFixed(1)}%`);
+    root.style.setProperty('--gyro-y', `${currentY.toFixed(1)}%`);
+
+    const islandEl = document.getElementById('dynamic-island');
+    if (islandEl && !islandEl.classList.contains('is-island-pulling')) {
+      const islandSpecular = 50 + (currentX - 50) * 0.55;
+      islandEl.style.setProperty('--island-specular-x', `${islandSpecular.toFixed(1)}%`);
+    }
+  };
+
+  const scheduleSpecularUpdate = () => {
+    if (!rafId && !document.hidden && state.activeGpuTier !== 'performance') {
+      rafId = requestAnimationFrame(renderSpecularStep);
+    }
+  };
+
+  const handleOrientation = (e) => {
+    if (document.hidden || state.activeGpuTier === 'performance') return;
+    if (typeof e.gamma !== 'number' || typeof e.beta !== 'number') return;
+
+    if (baseGamma === null || baseBeta === null) {
+      baseGamma = e.gamma;
+      baseBeta = e.beta;
+    } else {
+      /* کالیبراسیون تدریجی زاویه دست کاربر برای راحتی در هر وضعیت نشستن یا دراز کشیدن */
+      baseGamma = baseGamma * 0.985 + e.gamma * 0.015;
+      baseBeta = baseBeta * 0.985 + e.beta * 0.015;
+    }
+
+    const deltaGamma = Math.max(-28, Math.min(28, e.gamma - baseGamma));
+    const deltaBeta = Math.max(-25, Math.min(25, e.beta - baseBeta));
+
+    targetX = 50 + (deltaGamma / 28) * 38;
+    targetY = 24 + (deltaBeta / 25) * 32;
+    scheduleSpecularUpdate();
+  };
+
+  window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+
+  /* پشتیبانی نرم از حرکت نشانگر در دسکتاپ برای بازتاب نور روی کارت‌ها */
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      if (e.pointerType !== 'mouse' || document.hidden || state.activeGpuTier === 'performance') return;
+      const vw = Math.max(1, window.innerWidth);
+      const vh = Math.max(1, window.innerHeight);
+      targetX = 20 + (e.clientX / vw) * 60;
+      targetY = 8 + (e.clientY / vh) * 48;
+      scheduleSpecularUpdate();
+    },
+    { passive: true }
+  );
+
+  /* درخواست مجوز سنسور در مرورگرهای iOS هنگام اولین لمس صفحه */
+  if (
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function'
+  ) {
+    const unlockIosGyro = () => {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    };
+    document.addEventListener('pointerdown', unlockIosGyro, { once: true, passive: true });
+  }
 }
 
 /* ==================== توابع کمکی تاریخ شمسی و قالب‌بندی ==================== */
@@ -2400,7 +2491,7 @@ function setSelectedDayView(dayView, options = {}) {
     triggerHaptic(7);
   }
 
-  renderTasks();
+  renderTasks({ cascade: !fromScrub });
   updateHeaderAndProgress();
 }
 
@@ -2433,19 +2524,22 @@ function renderFolderFilterChips() {
     btn.addEventListener('click', () => {
       state.folderFilter = btn.dataset.folderFilter || 'all';
       renderFolderFilterChips();
-      renderTasks();
+      renderTasks({ cascade: true });
       playTactileSound('pop');
     });
   });
 }
 
-function buildTaskCardHtml(task, dayView) {
+function buildTaskCardHtml(task, dayView, staggerIndex = -1) {
   const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
   const doneSubs = subs.filter((s) => s.completed).length;
   const isFocused = state.focusedTaskId === task.id;
   const isInspected = state.inspectedTaskId === task.id;
   const privacyClass = state.privacyBlur ? 'privacy-blur-text' : '';
   const reminderTime = normalizeReminderTime(task.reminderTime);
+  const useCascade = staggerIndex >= 0 && staggerIndex < 14;
+  const cascadeClass = useCascade ? 'is-cascade-enter' : '';
+  const cascadeStyle = useCascade ? `style="--stagger-idx: ${staggerIndex};"` : '';
 
   const subtasksHtml =
     subs.length > 0
@@ -2492,7 +2586,7 @@ function buildTaskCardHtml(task, dayView) {
       : '';
 
   return `
-    <div class="task-swipe-slot" data-slot-task-id="${escapeHtml(task.id)}">
+    <div class="task-swipe-slot ${cascadeClass}" ${cascadeStyle} data-slot-task-id="${escapeHtml(task.id)}">
       <div class="task-swipe-backdrop" aria-hidden="true">
         <span class="text-xs font-extrabold text-[#7fd5d8]">✓ انجام شد</span>
         <span class="text-xs font-extrabold text-rose-300">🗑️ حذف</span>
@@ -2620,7 +2714,8 @@ function buildTaskCardHtml(task, dayView) {
   `;
 }
 
-function renderTasks() {
+function renderTasks(options = {}) {
+  const useCascade = Boolean(options.cascade);
   const q = state.searchQuery.trim().toLowerCase();
 
   ['yesterday', 'today', 'tomorrow'].forEach((viewKey) => {
@@ -2672,7 +2767,9 @@ function renderTasks() {
         </div>
       `;
     } else {
-      channelEl.innerHTML = list.map((task) => buildTaskCardHtml(task, viewKey)).join('');
+      channelEl.innerHTML = list
+        .map((task, idx) => buildTaskCardHtml(task, viewKey, useCascade ? idx : -1))
+        .join('');
     }
   });
 
@@ -4009,7 +4106,7 @@ function setTaskFilter(nextFilter, options = {}) {
     fromScrub,
   });
 
-  renderTasks();
+  renderTasks({ cascade: !fromScrub });
 }
 
 function handleSmartTabReTap(tabName) {
@@ -4105,6 +4202,7 @@ function switchTab(tabName, options = {}) {
   }
 
   if (tabName === 'tasks') {
+    renderTasks({ cascade: !fromScrub });
     requestAnimationFrame(() => {
       syncDynamicPillIndicator({
         barId: 'task-filter-pill-bar',
@@ -6402,13 +6500,15 @@ function initApp() {
   loadState();
   applyAdaptiveRenderCalibration();
   initAdaptiveRenderEngine();
+  initGyroscopeSpecularEngine();
   applyThemePreferences();
   setupTaskListDelegation();
   renderFolderFilterChips();
-  renderTasks();
+  renderTasks({ cascade: true });
   renderQuickNotes();
   updateFocusUI();
   updateHeaderAndProgress();
+  updateAppVersionSettingsUI();
   finishPostReloadUpdateCurtain();
   syncDynamicIslandExpandedHeight();
   if (document.fonts && document.fonts.ready) {
