@@ -1,6 +1,7 @@
 'use strict';
 
 const STORAGE_KEY = 'daily_flow_liquid_glass_v2';
+const APP_VERSION = '2.6.3';
 let memoryFallbackStorage = null;
 let suppressNextCardClick = false;
 let audioCtx = null;
@@ -182,6 +183,7 @@ const state = {
   radarCurrentScores: { mind: 20, efficiency: 20, discipline: 20, body: 20 },
   radarAnimFrame: null,
   editingTaskId: null,
+  editingTaskDayView: 'today',
   inspectedTaskId: null,
   draftEditCategory: 'شخصی',
   draftEditDay: 'today',
@@ -1321,11 +1323,22 @@ function checkAndHandleMidnightRollover() {
       if (!task.habitHistory[prevDay]) {
         syncHabitDaySnapshot(task, prevDay);
       }
-      task.completed = false;
-      if (Array.isArray(task.subtasks)) {
-        task.subtasks.forEach((s) => {
-          s.completed = false;
-        });
+      const todayRecord = task.habitHistory[today];
+      if (todayRecord) {
+        task.completed = Boolean(todayRecord.completed);
+        const doneIds = Array.isArray(todayRecord.doneSubIds) ? todayRecord.doneSubIds : [];
+        if (Array.isArray(task.subtasks)) {
+          task.subtasks.forEach((s) => {
+            s.completed = doneIds.includes(s.id);
+          });
+        }
+      } else {
+        task.completed = false;
+        if (Array.isArray(task.subtasks)) {
+          task.subtasks.forEach((s) => {
+            s.completed = false;
+          });
+        }
       }
       task.scheduledDate = today;
     }
@@ -1970,7 +1983,10 @@ function updateDynamicIslandSmartState(completedCount, totalCount, pct) {
 
   if (idleSubbadge) {
     const subs = focusedTask && Array.isArray(focusedTask.subtasks) ? focusedTask.subtasks : [];
-    if (!state.focusRunning && subs.length > 0) {
+    if (state.pendingUpdateWorker && !state.isApplyingUpdate) {
+      idleSubbadge.textContent = '✨ آپدیت';
+      idleSubbadge.classList.remove('hidden');
+    } else if (!state.focusRunning && subs.length > 0) {
       const doneSubs = subs.filter((s) => s.completed).length;
       idleSubbadge.textContent = `${toPersianDigits(doneSubs)}/${toPersianDigits(subs.length)}`;
       idleSubbadge.classList.remove('hidden');
@@ -2701,7 +2717,7 @@ function setupTaskListDelegation() {
         if (window.innerWidth >= 1024) {
           openDesktopInspector(taskId);
         } else {
-          openTaskEditModal(taskId);
+          openTaskEditModal(taskId, dayView);
         }
       } else if (action === 'delete-task') {
         deleteTask(taskId);
@@ -2725,10 +2741,11 @@ function setupTaskListDelegation() {
 
     const card = e.target.closest('.task-card');
     if (card && card.dataset.taskId) {
+      const cardDayView = card.dataset.dayView || state.selectedDayView;
       if (window.innerWidth >= 1024) {
         openDesktopInspector(card.dataset.taskId);
       } else {
-        openTaskEditModal(card.dataset.taskId);
+        openTaskEditModal(card.dataset.taskId, cardDayView);
       }
     }
   });
@@ -3950,6 +3967,7 @@ function renderSecondaryTabViews() {
 
   updateNotificationSettingsUI();
   updateGpuSettingsLabels();
+  updateAppVersionSettingsUI();
 
   if (storageVal) {
     const bytes = new Blob([memoryFallbackStorage || '']).size;
@@ -4434,6 +4452,7 @@ function resetSheetInlineStyles(modalEl) {
   if (!modalEl) return;
   modalEl.style.opacity = '';
   modalEl.style.transition = '';
+  modalEl.classList.remove('is-drag-closing');
   const sheet = modalEl.querySelector('.sheet-animate');
   if (sheet) {
     sheet.style.transform = '';
@@ -4473,6 +4492,8 @@ function closeModal(id, fromDrag = false) {
     composerShutterController.animateClose();
   } else if (!fromDrag) {
     resetSheetInlineStyles(el);
+  } else {
+    el.classList.add('is-drag-closing');
   }
 
   el.classList.add('is-closing');
@@ -4492,7 +4513,7 @@ function closeModal(id, fromDrag = false) {
   const closeDelay = isMobileComposer ? 410 : 340;
   const timer = setTimeout(() => {
     el.classList.add('hidden');
-    el.classList.remove('flex', 'is-closing');
+    el.classList.remove('flex', 'is-closing', 'is-drag-closing');
     resetSheetInlineStyles(el);
     if (id === 'task-composer-modal' && composerShutterController) {
       composerShutterController.resetState();
@@ -5277,19 +5298,9 @@ function renderTaskEditModalControls() {
   }
   if (editClearReminderBtn) {
     editClearReminderBtn.classList.toggle('hidden', !state.draftEditReminderTime);
-    editClearReminderBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
-  }
-  if (editRemSub) {
-    if (!state.draftEditReminderTime) {
-      editRemSub.textContent = 'ارسال نوتیفیکیشن سر ساعت انتخاب‌شده';
-    } else if (!state.draftEditHabit && state.draftEditDay === 'today' && hasTodayTimePassed(state.draftEditReminderTime)) {
-      editRemSub.textContent = `ساعت ${toPersianDigits(state.draftEditReminderTime)} امروز گذشته • برای فردا تنظیم می‌شود 🌅`;
-    } else {
-      editRemSub.textContent = `یادآور فعال روی ساعت ${toPersianDigits(state.draftEditReminderTime)}`;
-    }
-  }
-
-  const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
+  const editTargetDayKey = getDayKeyForView(state.editingTaskDayView || 'today');
+  const dayAwareTaskState = getTaskStateForDayKey(task, editTargetDayKey);
+  const subs = Array.isArray(dayAwareTaskState.subtasks) ? dayAwareTaskState.subtasks : [];
   const counterEl = document.getElementById('edit-subtasks-counter');
   const listEl = document.getElementById('edit-subtasks-list');
   if (counterEl) {
@@ -5318,14 +5329,23 @@ function renderTaskEditModalControls() {
 
     listEl.querySelectorAll('[data-edit-sub-toggle]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        toggleSubtask(task.id, btn.dataset.editSubToggle, true, 'today');
+        toggleSubtask(task.id, btn.dataset.editSubToggle, true, state.editingTaskDayView || 'today');
         renderTaskEditModalControls();
       });
     });
 
     listEl.querySelectorAll('[data-edit-sub-del]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        task.subtasks = task.subtasks.filter((s) => s.id !== btn.dataset.editSubDel);
+        const subIdToDel = btn.dataset.editSubDel;
+        task.subtasks = (task.subtasks || []).filter((s) => s.id !== subIdToDel);
+        if (task.isHabit && task.habitHistory) {
+          Object.keys(task.habitHistory).forEach((dKey) => {
+            const rec = task.habitHistory[dKey];
+            if (rec && Array.isArray(rec.doneSubIds)) {
+              rec.doneSubIds = rec.doneSubIds.filter((id) => id !== subIdToDel);
+            }
+          });
+        }
         saveState();
         renderTasks();
         renderTaskEditModalControls();
@@ -5335,10 +5355,11 @@ function renderTaskEditModalControls() {
   }
 }
 
-function openTaskEditModal(taskId) {
+function openTaskEditModal(taskId, dayView = state.selectedDayView) {
   const task = state.tasks.find((t) => t.id === taskId);
   if (!task) return;
   state.editingTaskId = taskId;
+  state.editingTaskDayView = dayView || state.selectedDayView || 'today';
   state.draftEditCategory = task.category || 'شخصی';
   state.draftEditDay = getDayViewFromKey(task.scheduledDate || getTodayKey());
   state.draftEditUrgent = Boolean(task.urgent);
@@ -5561,13 +5582,13 @@ function updateComposerTogglesUI(options = {}) {
   if (daySubtext) {
     if (state.composerHabit) {
       daySubtext.textContent = 'به عنوان عادت، هر روز تکرار می‌شود 🔁';
-    } else if (state.composerDay === 'tomorrow') {
-      daySubtext.textContent = `فردا (${formatJalaliForDayView('tomorrow')}) در لیست امروز می‌آید`;
-    } else if (state.composerDay === 'yesterday') {
-      daySubtext.textContent = `در سابقه دیروز (${formatJalaliForDayView('yesterday')}) ثبت می‌شود`;
-    } else {
-      daySubtext.textContent = 'فقط در برنامه امروز نمایش داده می‌شود';
-    }
+  const dayRow = document.getElementById('composer-day-row');
+  const dayPillGroup = document.getElementById('composer-day-pill-group');
+  if (dayRow) {
+    dayRow.classList.toggle('opacity-50', Boolean(state.composerHabit));
+  }
+  if (dayPillGroup) {
+    dayPillGroup.classList.toggle('pointer-events-none', Boolean(state.composerHabit));
   }
 
   const dayOrder = ['yesterday', 'today', 'tomorrow'];
@@ -6171,53 +6192,51 @@ function startAtomicAppUpdate() {
   }, 980);
 }
 
-function finishPostReloadUpdateCurtain() {
-  let isPostUpdate = false;
-  let savedMeta = null;
-  try {
-    isPostUpdate = sessionStorage.getItem('df_applying_update') === '1';
-    const rawMeta = sessionStorage.getItem('df_update_meta');
-    if (rawMeta) savedMeta = JSON.parse(rawMeta);
-  } catch (e) {}
+function updateAppVersionSettingsUI() {
+  const valEl = document.getElementById('tg-val-app-update');
+  const subEl = document.getElementById('tg-app-update-subtext');
+  const hasReadyUpdate = Boolean(state.pendingUpdateWorker);
 
-  if (!isPostUpdate) return;
+  if (hasReadyUpdate) {
+    const remoteVer = state.pendingUpdateVersionMeta?.version
+      ? `v${String(state.pendingUpdateVersionMeta.version).replace(/^v/i, '')}`
+      : 'جدید';
+    if (valEl) valEl.textContent = `نصب ${remoteVer} ✨`;
+    if (subEl) subEl.textContent = 'بروزرسانی آماده است • برای نصب بدون بهم‌ریختگی لمس کنید';
+  } else {
+    if (valEl) valEl.textContent = `v${APP_VERSION} ✓`;
+    if (subEl) subEl.textContent = `نسخه فعلی v${APP_VERSION} • لمس برای بررسی بروزرسانی`;
+  }
+}
 
-  const overlay = document.getElementById('app-update-overlay');
-  const formattedVersion =
-    savedMeta && savedMeta.version
-      ? /^v/i.test(String(savedMeta.version))
-        ? String(savedMeta.version)
-        : `v${savedMeta.version}`
-      : 'نسخه جدید';
+async function checkForAppUpdateManually() {
+  if (state.pendingUpdateWorker) {
+    startAtomicAppUpdate();
+    return;
+  }
 
-  setUpdateOverlayProgress({
-    icon: '🎉',
-    version: formattedVersion,
-    title: 'در حال اعمال تغییرات...',
-    status: (savedMeta && savedMeta.title) || 'نهایی‌سازی رابط کاربری نسخه جدید',
-    stepLabel: 'نصب با موفقیت انجام شد ✓',
-    percent: 100,
-    notes: (savedMeta && savedMeta.notes) || [],
-  });
+  const valEl = document.getElementById('tg-val-app-update');
+  if (valEl) valEl.textContent = 'در حال بررسی...';
+  playTactileSound('pop');
 
   try {
-    sessionStorage.removeItem('df_applying_update');
-    sessionStorage.removeItem('df_update_meta');
-  } catch (e) {}
-
-  setTimeout(() => {
-    playTactileSound('complete');
-    triggerHaptic(12);
-    if (overlay) {
-      overlay.classList.remove('is-overlay-entering');
-      overlay.classList.add('is-overlay-fading-out');
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-        overlay.classList.remove('flex', 'is-overlay-fading-out');
-      }, 360);
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration('./');
+      if (reg) {
+        await reg.update();
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          await handleWaitingServiceWorker(reg.waiting);
+          updateAppVersionSettingsUI();
+          return;
+        }
+      }
     }
-    triggerIslandToast('✨', `برنامه به ${formattedVersion} بروزرسانی شد`);
-  }, 540);
+  } catch (e) {}
+
+  updateAppVersionSettingsUI();
+  if (!state.pendingUpdateWorker) {
+    triggerIslandToast('✅', `برنامه روی آخرین نسخه (v${APP_VERSION}) است`);
+  }
 }
 
 async function handleWaitingServiceWorker(worker) {
@@ -6240,6 +6259,8 @@ async function handleWaitingServiceWorker(worker) {
     }
   } catch (e) {}
 
+  updateAppVersionSettingsUI();
+  updateHeaderAndProgress();
   showUpdateReadyInDynamicIsland();
 }
 
@@ -6355,6 +6376,13 @@ function initApp() {
     checkAndHandleMidnightRollover();
     if (state.focusRunning) {
       syncFocusTimerTick(true);
+    }
+    if (state.ambientMode && state.ambientMode !== 'off') {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      } else if (!audioCtx || audioCtx.state === 'closed' || !activeAmbientCleanup) {
+        setAmbientMode(state.ambientMode);
+      }
     }
     updateNotificationSettingsUI();
   };
@@ -7349,6 +7377,7 @@ function initApp() {
 
   document.getElementById('tg-top-cleanup-btn')?.addEventListener('click', () => openModal('cleanup-modal'));
   document.getElementById('tg-row-cleanup')?.addEventListener('click', () => openModal('cleanup-modal'));
+  document.getElementById('tg-row-app-update')?.addEventListener('click', checkForAppUpdateManually);
 
   document.getElementById('tg-profile-avatar-btn')?.addEventListener('click', openProfileModal);
   document.getElementById('tg-row-profile')?.addEventListener('click', openProfileModal);
