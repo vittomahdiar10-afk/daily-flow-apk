@@ -5298,6 +5298,18 @@ function renderTaskEditModalControls() {
   }
   if (editClearReminderBtn) {
     editClearReminderBtn.classList.toggle('hidden', !state.draftEditReminderTime);
+    editClearReminderBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
+  }
+  if (editRemSub) {
+    if (!state.draftEditReminderTime) {
+      editRemSub.textContent = 'ارسال نوتیفیکیشن سر ساعت انتخاب‌شده';
+    } else if (!state.draftEditHabit && state.draftEditDay === 'today' && hasTodayTimePassed(state.draftEditReminderTime)) {
+      editRemSub.textContent = `ساعت ${toPersianDigits(state.draftEditReminderTime)} امروز گذشته • برای فردا تنظیم می‌شود 🌅`;
+    } else {
+      editRemSub.textContent = `یادآور روی ساعت ${toPersianDigits(state.draftEditReminderTime)} تنظیم شد`;
+    }
+  }
+
   const editTargetDayKey = getDayKeyForView(state.editingTaskDayView || 'today');
   const dayAwareTaskState = getTaskStateForDayKey(task, editTargetDayKey);
   const subs = Array.isArray(dayAwareTaskState.subtasks) ? dayAwareTaskState.subtasks : [];
@@ -5582,6 +5594,15 @@ function updateComposerTogglesUI(options = {}) {
   if (daySubtext) {
     if (state.composerHabit) {
       daySubtext.textContent = 'به عنوان عادت، هر روز تکرار می‌شود 🔁';
+    } else if (state.composerDay === 'tomorrow') {
+      daySubtext.textContent = `فردا (${formatJalaliForDayView('tomorrow')}) در لیست امروز می‌آید`;
+    } else if (state.composerDay === 'yesterday') {
+      daySubtext.textContent = `در سابقه دیروز (${formatJalaliForDayView('yesterday')}) ثبت می‌شود`;
+    } else {
+      daySubtext.textContent = 'فقط در برنامه امروز نمایش داده می‌شود';
+    }
+  }
+
   const dayRow = document.getElementById('composer-day-row');
   const dayPillGroup = document.getElementById('composer-day-pill-group');
   if (dayRow) {
@@ -6311,6 +6332,62 @@ function registerOfflineServiceWorker() {
       })
       .catch(() => {});
   });
+}
+
+function finishPostReloadUpdateCurtain() {
+  let applyingFlag = null;
+  let metaRaw = null;
+  try {
+    applyingFlag = sessionStorage.getItem('df_applying_update');
+    metaRaw = sessionStorage.getItem('df_update_meta');
+  } catch (e) {}
+
+  if (applyingFlag !== '1') return;
+
+  try {
+    sessionStorage.removeItem('df_applying_update');
+    sessionStorage.removeItem('df_update_meta');
+  } catch (e) {}
+
+  let meta = null;
+  if (metaRaw) {
+    try {
+      meta = JSON.parse(metaRaw);
+    } catch (e) {}
+  }
+
+  const formattedVersion =
+    meta && meta.version
+      ? /^v/i.test(String(meta.version))
+        ? String(meta.version)
+        : `v${meta.version}`
+      : `v${APP_VERSION}`;
+
+  setUpdateOverlayProgress({
+    icon: '✅',
+    version: formattedVersion,
+    title: 'بروزرسانی با موفقیت انجام شد!',
+    status: (meta && meta.title) || 'نسخه جدید آماده استفاده است',
+    stepLabel: 'تکمیل نصب و اعمال تغییرات',
+    percent: 100,
+    notes: (meta && meta.notes) || [],
+  });
+
+  const overlay = document.getElementById('app-update-overlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    setTimeout(() => {
+      overlay.classList.add('is-overlay-fading-out');
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex', 'is-overlay-entering', 'is-overlay-fading-out');
+      }, 380);
+    }, 650);
+  }
+
+  playTactileSound('complete');
+  triggerHaptic(14);
 }
 
 /* ==================== راه‌اندازی اولیه برنامه ==================== */
