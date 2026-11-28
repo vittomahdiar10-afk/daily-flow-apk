@@ -1560,6 +1560,11 @@ body.theme-light .radar-node-core {
   }
 }
 
+/* جلوگیری از پرش لحظه‌ای شیت هنگام بستن با سوایپ به پایین */
+[id$="-modal"].is-drag-closing .sheet-animate {
+  animation: none !important;
+}
+
 .privacy-blur-text {
   filter: blur(5.5px);
   transition: filter 0.2s ease;

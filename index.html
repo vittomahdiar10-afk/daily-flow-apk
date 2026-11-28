@@ -1301,6 +1301,26 @@
           </div>
         </div>
 
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-bold text-[#7fd5d8] px-2">نسخه و بروزرسانی برنامه</span>
+          <div class="liquid-surface-fast rounded-3xl overflow-hidden divide-y divide-white/[0.07]">
+            <button id="tg-row-app-update" type="button" class="tg-settings-row">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="tg-icon-circle bg-[#0ea5e9]">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-white">نسخه برنامه و بررسی بروزرسانی</div>
+                  <div id="tg-app-update-subtext" class="text-[11px] text-[#93a3a5] truncate">نسخه فعلی v2.6.3 • بررسی وضعیت آپدیت</div>
+                </div>
+              </div>
+              <span id="tg-val-app-update" class="ltr font-mono text-xs font-bold text-[#7fd5d8] shrink-0">v2.6.3 ✓</span>
+            </button>
+          </div>
+        </div>
+
         <p class="text-center text-[11px] text-[#7d8e90] pt-1">
           Daily Flow Glass Studio • فیزیک فنری iOS و HyperOS
         </p>
@@ -2043,7 +2063,7 @@
             </div>
 
             <!-- انتخاب‌گر جیوه‌ای روز اجرا: دیروز | امروز | فردا -->
-            <div class="px-4 py-3 flex items-center justify-between gap-2">
+            <div id="composer-day-row" class="px-4 py-3 flex items-center justify-between gap-2 transition-opacity duration-200">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="tg-icon-circle bg-[#14b8a6]">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -2202,7 +2222,7 @@
 
       <div class="flex flex-col items-center gap-1">
         <span id="update-overlay-version" class="ltr font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#7fd5d8]/20 text-[#7fd5d8]">
-          v2.6.2
+          v2.6.3
         </span>
         <h2 id="update-overlay-title" class="text-base font-extrabold text-white mt-1">
           در حال آماده‌سازی بروزرسانی...
