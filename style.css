@@ -2389,3 +2389,98 @@ body.theme-light #app-update-overlay {
 #update-overlay-progress-fill {
   transition: transform calc(0.42s * var(--motion-scale)) var(--spring-curve);
 }
+
+/* ==========================================================================
+   Stage 1: iOS 27 Liquid Glass & HyperOS 4 Alive Physics Additions
+   ========================================================================== */
+:root {
+  --rim-sheen-opacity: 0.18;
+  --stage-depth-blur: 0px;
+  --stage-depth-dim: 1;
+  --liquid-refraction-border: rgba(255, 255, 255, 0.19);
+  --interruptible-spring: cubic-bezier(0.2, 1.08, 0.34, 1);
+  --accordion-gap: 0.625rem;
+}
+
+body.theme-light {
+  --rim-sheen-opacity: 0.85;
+  --liquid-refraction-border: rgba(255, 255, 255, 0.96);
+}
+
+/* Dynamic Rim Specular (بازتاب نور لبه‌ای پویا روی کارت‌ها و داک پایینی) */
+.liquid-surface-fast,
+.liquid-card,
+.tg-nav-pill,
+.day-switcher-bar {
+  border-top-color: var(--liquid-refraction-border);
+  box-shadow:
+    0 10px 28px -12px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 0 rgba(255, 255, 255, var(--rim-sheen-opacity)),
+    inset 0 0 0 0.5px rgba(var(--mint-accent-rgb), 0.12);
+}
+
+body.theme-light .liquid-surface-fast,
+body.theme-light .liquid-card,
+body.theme-light .tg-nav-pill,
+body.theme-light .day-switcher-bar {
+  box-shadow:
+    0 10px 26px -12px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.98),
+    inset 0 0 0 0.5px rgba(var(--mint-accent-rgb), 0.16);
+}
+
+/* Layered Depth Blur (عمق لایه‌ها هنگام باز شدن شیت‌ها و پنجره‌ها) */
+.app-safe-main {
+  filter: blur(var(--stage-depth-blur)) brightness(var(--stage-depth-dim));
+  transition:
+    transform calc(0.48s * var(--motion-scale)) var(--interruptible-spring),
+    filter calc(0.38s * var(--motion-scale)) var(--ios-decelerate);
+}
+
+.app-safe-main.is-stage-settled-back {
+  --stage-depth-blur: 3px;
+  --stage-depth-dim: 0.88;
+}
+
+body.gpu-tier-performance .app-safe-main.is-stage-settled-back {
+  --stage-depth-blur: 0px;
+  --stage-depth-dim: 0.92;
+}
+
+/* Interruptible Springs & Smooth Layout Reflow (حرکت‌های قابل وقفه و جابه‌جایی نرم کارت‌ها) */
+.day-channel-pane {
+  gap: var(--accordion-gap);
+  transition: gap 0.24s var(--ios-decelerate);
+}
+
+.task-swipe-slot {
+  transition:
+    transform calc(0.38s * var(--motion-scale)) var(--interruptible-spring),
+    opacity calc(0.28s * var(--motion-scale)) ease;
+}
+
+/* Choreographed Task Completion Strike-Through & Ripple */
+@keyframes checkCircleRipple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--mint-accent-rgb), 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 11px rgba(var(--mint-accent-rgb), 0);
+  }
+}
+
+.check-circle.checked {
+  animation: checkCircleRipple calc(0.52s * var(--motion-scale)) var(--ios-decelerate);
+}
+
+.task-card h3 {
+  position: relative;
+  transition: color 0.24s ease, opacity 0.24s ease;
+}
+
+/* Ambient Mesh Subtle Shift (هاله زنده پس‌زمینه هماهنگ با زاویه گوشی) */
+.ambient-backdrop {
+  background:
+    radial-gradient(circle at calc(18% + (var(--gyro-x, 50%) - 50%) * 0.25) calc(12% + (var(--gyro-y, 12%) - 12%) * 0.25), rgba(var(--mint-accent-rgb), 0.13) 0%, transparent 44%),
+    radial-gradient(circle at calc(84% - (var(--gyro-x, 50%) - 50%) * 0.25) 78%, rgba(var(--mint-accent-rgb), 0.08) 0%, transparent 48%);
+}
