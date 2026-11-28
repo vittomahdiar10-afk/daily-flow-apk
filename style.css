@@ -21,6 +21,10 @@
     0.975 33%, 1.022 40%, 1.024 46%, 1.012 55%, 1.002 67%, 0.999 80%, 1
   );
 
+  /* منحنی استهلاک بحرانی iOS بدون جهش یا شکست پیکسلی در انتهای حرکت */
+  --ios-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
+  --hyperos-hover-curve: cubic-bezier(0.2, 0.85, 0.25, 1);
+
   /* منحنی‌های سریع، واکنش‌گرا و مخملی بومی iOS برای داینامیک آیلند */
   --island-open-curve: cubic-bezier(0.16, 1, 0.3, 1);
   --island-open-curve: linear(
@@ -304,7 +308,7 @@ body.theme-light [id$="-modal"] {
   background: linear-gradient(to top, var(--scrim-bg) 50%, transparent 100%);
 }
 
-/* ==================== سطوح شیشه‌ای ==================== */
+/* ==================== سطوح شیشه‌ای و بازتاب نور ژیروسکوپ ==================== */
 .liquid-glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -327,7 +331,10 @@ body.theme-light [id$="-modal"] {
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.24s ease,
+    border-color 0.24s var(--hyperos-hover-curve),
+    box-shadow 0.28s var(--hyperos-hover-curve);
 }
 
 /* بازتاب نور پویا با سنسور ژیروسکوپ روی لبه‌ها و سطوح شیشه‌ای */
@@ -435,8 +442,14 @@ body.gpu-tier-performance .liquid-card::before {
   position: relative;
   z-index: 1;
   transition:
-    color 0.18s ease,
+    color 0.2s ease,
     transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+@media (hover: hover) {
+  .liquid-seg-btn:not(.is-active):hover {
+    color: var(--text-main) !important;
+  }
 }
 
 .liquid-seg-btn.is-active {
@@ -513,8 +526,14 @@ body.gpu-tier-performance .liquid-card::before {
   color: var(--text-muted);
   cursor: pointer;
   transition:
-    color 0.18s ease,
+    color 0.2s ease,
     transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
+}
+
+@media (hover: hover) {
+  .day-tab-btn:not(.is-active):hover {
+    color: var(--text-main);
+  }
 }
 
 .day-tab-btn.is-active {
@@ -529,7 +548,7 @@ body.gpu-tier-performance .liquid-card::before {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
   color: inherit;
-  transition: background-color 0.18s ease;
+  transition: background-color 0.18s ease, transform 0.25s var(--spring-curve);
 }
 
 .day-tab-btn.is-active .day-tab-badge {
@@ -541,7 +560,7 @@ body.theme-light .day-tab-btn:not(.is-active) .day-tab-badge {
   background: rgba(15, 23, 42, 0.08);
 }
 
-/* ==================== کانال‌های زنده سه‌روزه — تعویض آنی ۰ میلی‌ثانیه و ۱۰۰٪ شارپ ==================== */
+/* ==================== کانال‌های زنده سه‌روزه — تعویض آنی و روان ==================== */
 .day-channel-pane {
   display: flex;
   flex-direction: column;
@@ -711,7 +730,14 @@ body.theme-light .composer-glass-capsule {
     transform calc(0.28s * var(--motion-scale)) var(--spring-curve),
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .composer-submit-pill:not(:disabled):hover {
+    box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
 }
 
 .composer-submit-pill:disabled {
@@ -730,27 +756,91 @@ body.theme-light .composer-submit-pill:disabled {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
-/* ==================== کارت‌های تسک و دفترچه یادداشت ==================== */
+/* ==================== کارت‌های تسک، نورپردازی لمس و دفترچه یادداشت ==================== */
 .liquid-card {
+  position: relative;
   background: var(--glass-card-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 0 var(--specular-edge);
+  box-shadow:
+    0 6px 18px -8px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 0 var(--specular-edge);
   border-radius: var(--card-radius);
   contain: layout style;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
-    border-color 0.2s ease;
+    transform calc(0.32s * var(--motion-scale)) var(--hyperos-hover-curve),
+    border-color 0.24s var(--hyperos-hover-curve),
+    box-shadow 0.28s var(--hyperos-hover-curve),
+    background-color 0.24s ease;
+}
+
+body.theme-light .liquid-card {
+  box-shadow:
+    0 6px 18px -8px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 0 var(--specular-edge);
+}
+
+/* درخشش موضعی زیر انگشت و نشانگر ماوس روی کارت‌ها (HyperOS Specular Spot) */
+.liquid-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  background: radial-gradient(
+    220px circle at var(--touch-x, 50%) var(--touch-y, 50%),
+    rgba(var(--mint-accent-rgb), 0.16) 0%,
+    rgba(255, 255, 255, 0.04) 42%,
+    transparent 72%
+  );
+  transition: opacity 0.3s var(--hyperos-hover-curve);
+}
+
+body.theme-light .liquid-card::after {
+  background: radial-gradient(
+    230px circle at var(--touch-x, 50%) var(--touch-y, 50%),
+    rgba(var(--mint-accent-rgb), 0.14) 0%,
+    rgba(255, 255, 255, 0.5) 45%,
+    transparent 74%
+  );
+}
+
+.liquid-card.is-pointer-active::after {
+  opacity: 1;
 }
 
 .liquid-card.is-card-pressing {
   transform: scale3d(0.982, 0.982, 1) !important;
-  transition: transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  transition: transform 0.13s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+
+/* هاله ملایم برای کارهای فوری و کار در حال تمرکز */
+@keyframes urgentBorderBreathe {
+  0%, 100% {
+    border-color: rgba(251, 191, 36, 0.22);
+  }
+  50% {
+    border-color: rgba(251, 191, 36, 0.44);
+  }
+}
+
+.task-card.is-urgent-card {
+  animation: urgentBorderBreathe 3.4s ease-in-out infinite;
+}
+
+.task-card.is-focused-card {
+  border-color: rgba(var(--mint-accent-rgb), 0.45);
+  box-shadow:
+    0 8px 24px -8px rgba(var(--mint-accent-rgb), 0.18),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
 }
 
 .notebook-entry-card {
+  position: relative;
   background: #12191b;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 0 var(--specular-edge);
@@ -759,9 +849,14 @@ body.theme-light .composer-submit-pill:disabled {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    transform calc(0.3s * var(--motion-scale)) var(--spring-curve),
-    border-color 0.18s ease,
-    background-color 0.18s ease;
+    transform calc(0.28s * var(--motion-scale)) var(--hyperos-hover-curve),
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    box-shadow 0.24s ease;
+}
+
+.notebook-entry-card:active {
+  transform: scale3d(0.985, 0.985, 1);
 }
 
 .notebook-entry-card.is-pinned {
@@ -781,7 +876,9 @@ body.theme-light .notebook-entry-card.is-pinned {
 
 @media (hover: hover) {
   .notebook-entry-card:hover {
-    border-color: rgba(var(--mint-accent-rgb), 0.36);
+    border-color: rgba(var(--mint-accent-rgb), 0.4);
+    transform: translate3d(0, -1.5px, 0);
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.35), inset 0 1px 0 0 var(--specular-edge);
   }
 }
 
@@ -884,14 +981,23 @@ body.theme-light .focus-min-chip.bg-\[\#7fd5d8\] {
   user-select: none;
   line-height: 1;
   transition:
-    transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
-    background-color 0.18s ease,
-    opacity 0.18s ease,
-    border-color 0.18s ease;
+    transform calc(0.28s * var(--motion-scale)) var(--spring-curve),
+    background-color 0.2s var(--hyperos-hover-curve),
+    opacity 0.2s ease,
+    border-color 0.2s var(--hyperos-hover-curve),
+    box-shadow 0.24s var(--hyperos-hover-curve),
+    filter 0.2s ease;
 }
-.spring-btn:active {
-  transform: scale3d(0.925, 0.925, 1);
-  transition: transform 0.1s cubic-bezier(0.2, 0.9, 0.3, 1);
+
+@media (hover: hover) {
+  .spring-btn:not(:disabled):hover {
+    filter: brightness(1.06);
+  }
+}
+
+.spring-btn:not(:disabled):active {
+  transform: scale3d(0.935, 0.935, 1);
+  transition: transform 0.09s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 .icon-circle-btn {
@@ -1399,13 +1505,22 @@ body.theme-light .island-expanded-toast-banner {
   flex-shrink: 0;
   transition:
     transform calc(0.34s * var(--motion-scale)) var(--spring-curve),
-    background-color 0.18s ease,
-    border-color 0.18s ease;
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .check-circle:not(.checked):hover {
+    border-color: rgba(var(--mint-accent-rgb), 0.72);
+    background-color: rgba(var(--mint-accent-rgb), 0.08);
+  }
 }
 
 .check-circle.checked {
   background-color: var(--mint-accent);
   border-color: var(--mint-accent);
+  box-shadow: 0 3px 10px rgba(var(--mint-accent-rgb), 0.35);
   transform: scale3d(1.06, 1.06, 1);
 }
 
@@ -1443,7 +1558,15 @@ body.theme-light .island-expanded-toast-banner {
   transform-origin: right center;
   transform: scaleX(0);
   background: linear-gradient(90deg, var(--mint-accent-strong), var(--mint-accent));
-  transition: transform calc(0.48s * var(--motion-scale)) var(--ios-fluid-curve);
+  transition: transform calc(0.52s * var(--motion-scale)) var(--ios-decelerate);
+}
+
+.ambient-chip {
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    transform calc(0.28s * var(--motion-scale)) var(--spring-curve);
 }
 
 .ambient-chip.is-active {
@@ -1492,6 +1615,13 @@ body.theme-light .radar-node-core {
     transform calc(0.32s * var(--motion-scale)) var(--spring-curve),
     background-color 0.18s ease,
     border-color 0.18s ease;
+}
+
+@media (hover: hover) {
+  .radar-axis-pill:hover {
+    border-color: rgba(var(--mint-accent-rgb), 0.35);
+    background-color: rgba(var(--mint-accent-rgb), 0.1);
+  }
 }
 
 .radar-axis-pill.is-selected {
@@ -1605,10 +1735,18 @@ body.theme-light .radar-node-core {
   transition: filter 0.2s ease;
 }
 
-/* ==================== پروفایل، ردیف‌های تنظیمات و سوئیچ‌های شیشه‌ای ==================== */
+/* ==================== پروفایل، ردیف‌های تنظیمات و سوئیچ‌های شیشه‌ای HyperOS ==================== */
 .avatar-surface {
   background: linear-gradient(145deg, rgba(var(--mint-accent-rgb), 0.22), rgba(var(--mint-accent-rgb), 0.08));
   border: 1.5px solid rgba(var(--mint-accent-rgb), 0.42);
+  transition: transform 0.28s var(--spring-curve), border-color 0.22s ease, box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .avatar-surface:hover {
+    border-color: rgba(var(--mint-accent-rgb), 0.72);
+    box-shadow: 0 6px 18px rgba(var(--mint-accent-rgb), 0.22);
+  }
 }
 
 body.theme-light .avatar-surface {
@@ -1625,7 +1763,7 @@ body.theme-light .avatar-surface {
   padding: 0.78rem 0.95rem;
   text-align: right;
   cursor: pointer;
-  transition: background-color 0.16s ease, transform 0.24s var(--ios-fluid-curve);
+  transition: background-color 0.18s ease, transform 0.24s var(--ios-fluid-curve);
 }
 .tg-settings-row:hover {
   background-color: rgba(147, 163, 165, 0.08);
@@ -1644,6 +1782,17 @@ body.theme-light .avatar-surface {
   justify-content: center;
   color: #ffffff;
   flex-shrink: 0;
+  transition: transform 0.28s var(--spring-curve), box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .tg-settings-row:hover .tg-icon-circle {
+    transform: scale(1.07);
+  }
+}
+
+.tg-settings-row:active .tg-icon-circle {
+  transform: scale(0.94);
 }
 
 .tg-switch {
@@ -1847,14 +1996,23 @@ body.theme-light .avatar-surface {
   border-radius: 999px;
   background: linear-gradient(135deg, var(--mint-accent), var(--mint-accent-strong));
   color: var(--mint-contrast-text);
-  box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.34);
+  box-shadow: 0 8px 22px rgba(var(--mint-accent-rgb), 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   cursor: pointer;
   will-change: transform;
-  transition: transform calc(0.36s * var(--motion-scale)) var(--spring-curve);
+  transition:
+    transform calc(0.36s * var(--motion-scale)) var(--spring-curve),
+    box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .tg-fab-add:hover {
+    transform: scale3d(1.05, 1.05, 1);
+    box-shadow: 0 12px 28px rgba(var(--mint-accent-rgb), 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
 }
 
 .tg-fab-add:active {
@@ -1897,7 +2055,7 @@ body.theme-light .avatar-surface {
   animation: fabIconRotatePop calc(0.44s * var(--motion-scale)) var(--spring-curve);
 }
 
-/* ==================== ذرات جشن، چیدمان آبشاری فنری، سوایپ کارت‌ها و ریل دسکتاپ ==================== */
+/* ==================== ذرات جشن، ورود ابریشمی بدون پرش کارت‌ها و جابه‌جایی تب‌ها ==================== */
 .sparkle-particle {
   position: fixed;
   width: 7px;
@@ -1919,18 +2077,18 @@ body.theme-light .avatar-surface {
   }
 }
 
-@keyframes taskCardSpringCascade {
+/* انیمیشن ورود ابریشمی کارت‌ها بدون تغییر Scale کسری (صفر پرش پیکسلی در انتهای حرکت) */
+@keyframes taskCardSilkyGlide {
   0% {
     opacity: 0;
-    transform: translate3d(0, 16px, 0) scale3d(0.972, 0.972, 1);
+    transform: translate3d(0, 14px, 0);
   }
-  62% {
+  42% {
     opacity: 1;
-    transform: translate3d(0, -2px, 0) scale3d(1.004, 1.004, 1);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -1938,16 +2096,13 @@ body.theme-light .avatar-surface {
   position: relative;
   border-radius: var(--card-radius);
   overflow: hidden;
-  contain: layout style;
-  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
 .task-swipe-slot.is-cascade-enter {
-  animation: taskCardSpringCascade calc(0.44s * var(--motion-scale)) var(--spring-curve) both;
-  animation-delay: calc(var(--stagger-idx, 0) * 28ms);
-  will-change: transform, opacity;
+  animation: taskCardSilkyGlide calc(0.42s * var(--motion-scale)) var(--ios-decelerate) backwards;
+  animation-delay: calc(var(--stagger-idx, 0) * 22ms);
 }
 
 .task-swipe-slot.is-actively-swiping .task-card {
@@ -1978,14 +2133,73 @@ body.theme-light .avatar-surface {
   background: rgba(244, 63, 94, 0.22);
 }
 
+/* انیمیشن جابه‌جایی جهت‌دار تب‌های اصلی (iOS & HyperOS Page Transition) */
+@keyframes tabSlideFromLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-16px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tabSlideFromRight {
+  from {
+    opacity: 0;
+    transform: translate3d(16px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 .tab-view.is-tab-hidden {
   display: none !important;
 }
 
+.tab-view.is-entering-from-left {
+  animation: tabSlideFromLeft calc(0.34s * var(--motion-scale)) var(--ios-decelerate) both;
+}
+
+.tab-view.is-entering-from-right {
+  animation: tabSlideFromRight calc(0.34s * var(--motion-scale)) var(--ios-decelerate) both;
+}
+
+/* پالس نرم برای تغییر اعداد و درصدها */
+@keyframes metricSmoothPop {
+  0% {
+    transform: translate3d(0, 2px, 0) scale(0.95);
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+.is-metric-updating {
+  display: inline-block;
+  animation: metricSmoothPop calc(0.28s * var(--motion-scale)) var(--ios-decelerate) both;
+}
+
 @media (hover: hover) {
   .liquid-card:hover {
-    border-color: rgba(var(--mint-accent-rgb), 0.34);
-    transform: translate3d(0, -1.5px, 0);
+    border-color: rgba(var(--mint-accent-rgb), 0.42);
+    transform: translate3d(0, -2px, 0);
+    box-shadow:
+      0 14px 30px -10px rgba(0, 0, 0, 0.36),
+      0 0 0 1px rgba(var(--mint-accent-rgb), 0.14),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+  }
+
+  body.theme-light .liquid-card:hover {
+    box-shadow:
+      0 14px 28px -10px rgba(15, 23, 42, 0.13),
+      0 0 0 1px rgba(var(--mint-accent-rgb), 0.18),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.98);
   }
 }
 
@@ -2127,7 +2341,7 @@ body.theme-light .avatar-surface {
 }
 
 .cmd-item {
-  transition: background-color 0.16s ease, border-color 0.16s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.2s ease;
 }
 
 .cmd-item.is-selected {

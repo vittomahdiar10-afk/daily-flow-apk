@@ -1,7 +1,7 @@
 'use strict';
 
 const STORAGE_KEY = 'daily_flow_liquid_glass_v2';
-const APP_VERSION = '2.6.4';
+const APP_VERSION = '2.6.5';
 let memoryFallbackStorage = null;
 let suppressNextCardClick = false;
 let audioCtx = null;
@@ -2395,7 +2395,11 @@ function updateHeaderAndProgress() {
     dateEl.textContent = `${dayMeta.label} • ${formatJalaliForDayView(state.selectedDayView)}`;
   }
   if (streakEl) {
-    streakEl.textContent = `🔥 ${toPersianDigits(state.streak.count || 1)} روز`;
+    const nextStreakText = `🔥 ${toPersianDigits(state.streak.count || 1)} روز`;
+    if (streakEl.textContent.trim() !== nextStreakText) {
+      streakEl.textContent = nextStreakText;
+      animateMetricPop(streakEl);
+    }
   }
 
   renderAvatarInto(document.getElementById('header-avatar-badge'));
@@ -2449,7 +2453,11 @@ function updateHeaderAndProgress() {
     ratioEl.textContent = `${toPersianDigits(doneCount)} از ${toPersianDigits(totalCount)} کار تکمیل شده • هدف ${toPersianDigits(state.dailyGoal || 5)}`;
   }
   if (pctEl) {
-    pctEl.textContent = `${pct}%`;
+    const nextPctText = `${pct}%`;
+    if (pctEl.textContent !== nextPctText) {
+      pctEl.textContent = nextPctText;
+      animateMetricPop(pctEl);
+    }
   }
   if (barEl) {
     barEl.style.transform = `scaleX(${(pct / 100).toFixed(4)})`;
@@ -2537,9 +2545,11 @@ function buildTaskCardHtml(task, dayView, staggerIndex = -1) {
   const isInspected = state.inspectedTaskId === task.id;
   const privacyClass = state.privacyBlur ? 'privacy-blur-text' : '';
   const reminderTime = normalizeReminderTime(task.reminderTime);
-  const useCascade = staggerIndex >= 0 && staggerIndex < 14;
+  const useCascade = staggerIndex >= 0 && staggerIndex < 12;
   const cascadeClass = useCascade ? 'is-cascade-enter' : '';
   const cascadeStyle = useCascade ? `style="--stagger-idx: ${staggerIndex};"` : '';
+  const urgentCardClass = task.urgent && !task.completed ? 'is-urgent-card' : '';
+  const focusedCardClass = isFocused ? 'is-focused-card border-[#7fd5d8]/45' : '';
 
   const subtasksHtml =
     subs.length > 0
@@ -2595,11 +2605,9 @@ function buildTaskCardHtml(task, dayView, staggerIndex = -1) {
         draggable="true"
         data-task-id="${escapeHtml(task.id)}"
         data-day-view="${escapeHtml(dayView)}"
-        class="task-card liquid-card p-3.5 relative ${isInspected ? 'is-inspected' : ''} ${
-    isFocused ? 'border-[#7fd5d8]/45' : ''
-  }"
+        class="task-card liquid-card p-3.5 relative ${isInspected ? 'is-inspected' : ''} ${urgentCardClass} ${focusedCardClass}"
       >
-        <div class="flex items-start justify-between gap-2.5">
+        <div class="relative z-[1] flex items-start justify-between gap-2.5">
           <div class="flex items-start gap-3 min-w-0 flex-1">
             <button
               type="button"
@@ -2790,6 +2798,66 @@ function renderTasks(options = {}) {
 function setupTaskListDelegation() {
   const taskListEl = document.getElementById('task-list');
   if (!taskListEl) return;
+
+  /* پاک‌سازی خودکار کلاس انیمیشن پس از نشستن کارت برای جلوگیری از هرگونه پرش مجدد */
+  taskListEl.addEventListener('animationend', (e) => {
+    const slot = e.target.closest('.task-swipe-slot');
+    if (slot) {
+      slot.classList.remove('is-cascade-enter');
+      slot.style.removeProperty('--stagger-idx');
+    }
+  });
+
+  /* درخشش موضعی زیر انگشت و نشانگر ماوس روی کارت‌ها (HyperOS Specular Spot) */
+  let activeSpotCard = null;
+  const updateCardSpecularSpot = (card, clientX, clientY) => {
+    if (!card || state.activeGpuTier === 'performance') return;
+    const rect = card.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const relY = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    card.style.setProperty('--touch-x', `${relX.toFixed(1)}px`);
+    card.style.setProperty('--touch-y', `${relY.toFixed(1)}px`);
+    if (activeSpotCard && activeSpotCard !== card) {
+      activeSpotCard.classList.remove('is-pointer-active');
+    }
+    activeSpotCard = card;
+    card.classList.add('is-pointer-active');
+  };
+
+  const clearCardSpecularSpot = () => {
+    if (activeSpotCard) {
+      activeSpotCard.classList.remove('is-pointer-active');
+      activeSpotCard = null;
+    }
+  };
+
+  taskListEl.addEventListener(
+    'pointerdown',
+    (e) => {
+      const card = e.target.closest('.task-card');
+      if (card) updateCardSpecularSpot(card, e.clientX, e.clientY);
+    },
+    { passive: true }
+  );
+
+  taskListEl.addEventListener(
+    'pointermove',
+    (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const card = e.target.closest('.task-card');
+      if (card) {
+        updateCardSpecularSpot(card, e.clientX, e.clientY);
+      } else {
+        clearCardSpecularSpot();
+      }
+    },
+    { passive: true }
+  );
+
+  taskListEl.addEventListener('pointerup', clearCardSpecularSpot, { passive: true });
+  taskListEl.addEventListener('pointercancel', clearCardSpecularSpot, { passive: true });
+  taskListEl.addEventListener('pointerleave', clearCardSpecularSpot, { passive: true });
 
   taskListEl.addEventListener('click', (e) => {
     if (suppressNextCardClick) {
@@ -4087,6 +4155,13 @@ function triggerBlobStretch(blobEl, stepDistance = 1) {
   blobEl.classList.add('is-stretching');
 }
 
+function animateMetricPop(el) {
+  if (!el) return;
+  el.classList.remove('is-metric-updating');
+  void el.offsetWidth;
+  el.classList.add('is-metric-updating');
+}
+
 function setTaskFilter(nextFilter, options = {}) {
   const fromScrub = Boolean(options.fromScrub);
   const filterOrder = ['all', 'active', 'completed', 'urgent', 'habit'];
@@ -4176,6 +4251,11 @@ function switchTab(tabName, options = {}) {
     const isTarget = view.id === `tab-view-${tabName}`;
     view.classList.toggle('hidden', !isTarget);
     view.classList.toggle('is-tab-hidden', !isTarget);
+    view.classList.remove('is-entering-from-left', 'is-entering-from-right');
+    if (isTarget && !fromScrub) {
+      void view.offsetWidth;
+      view.classList.add(stepDelta > 0 ? 'is-entering-from-left' : 'is-entering-from-right');
+    }
   });
 
   document.querySelectorAll('.tg-nav-btn, .rail-nav-btn').forEach((btn) => {
