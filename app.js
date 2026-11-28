@@ -145,6 +145,7 @@ const state = {
   focusLastRenderedSecond: 25 * 60,
   focusRunning: false,
   focusIntervalId: null,
+  focusHistory: {},
   ambientMode: 'off',
   islandMode: 'idle',
   activeIslandToast: null,
@@ -519,7 +520,7 @@ function scheduleFocusEndNotification() {
   });
 }
 
-/* ==================== زمان‌بندی و لغو یادآور ساعت‌دار کارها (مرحله ۴) ==================== */
+/* ==================== زمان‌بندی و لغو یادآور ساعت‌دار کارها (مرحله ۴ + هوشمندسازی) ==================== */
 function normalizeReminderTime(rawTime) {
   const clean = String(rawTime || '').trim();
   const match = clean.match(/^(\d{1,2}):(\d{2})$/);
@@ -530,6 +531,15 @@ function normalizeReminderTime(rawTime) {
     return '';
   }
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+}
+
+function hasTodayTimePassed(timeStr) {
+  const norm = normalizeReminderTime(timeStr);
+  if (!norm) return false;
+  const { hour, minute } = parseReminderTimeParts(norm);
+  const candidate = new Date();
+  candidate.setHours(hour, minute, 0, 0);
+  return candidate.getTime() <= Date.now() + 5000;
 }
 
 function getTaskReminderAlarmKey(taskId) {
@@ -1138,6 +1148,7 @@ function saveState() {
     focusDurationMinutes: state.focusDurationMinutes,
     focusRemainingMs: state.focusRemainingMs,
     focusEndTimestamp: state.focusEndTimestamp,
+    focusHistory: state.focusHistory,
     soundEnabled: state.soundEnabled,
     dailyReminderEnabled: state.dailyReminderEnabled,
     dailyReminderTime: state.dailyReminderTime,
@@ -1198,6 +1209,9 @@ function loadState() {
           state.focusSeconds = Math.ceil(parsed.focusRemainingMs / 1000);
           state.focusLastRenderedSecond = state.focusSeconds;
         }
+      }
+      if (parsed.focusHistory && typeof parsed.focusHistory === 'object') {
+        state.focusHistory = parsed.focusHistory;
       }
       if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
       if (typeof parsed.dailyReminderEnabled === 'boolean') {
@@ -1291,6 +1305,58 @@ function loadState() {
   state.focusedTaskId = smartInitial ? smartInitial.id : null;
 
   saveState();
+}
+
+/* ==================== همگام‌سازی خودکار هنگام عبور از نیمه‌شب (۰۰:۰۰) ==================== */
+function checkAndHandleMidnightRollover() {
+  const today = getTodayKey();
+  if (!state.lastHabitResetDay || state.lastHabitResetDay === today) return false;
+
+  const prevDay = state.lastHabitResetDay;
+  state.tasks.forEach((task) => {
+    if (task.isHabit) {
+      if (!task.habitHistory || typeof task.habitHistory !== 'object') {
+        task.habitHistory = {};
+      }
+      if (!task.habitHistory[prevDay]) {
+        syncHabitDaySnapshot(task, prevDay);
+      }
+      task.completed = false;
+      if (Array.isArray(task.subtasks)) {
+        task.subtasks.forEach((s) => {
+          s.completed = false;
+        });
+      }
+      task.scheduledDate = today;
+    }
+  });
+
+  state.lastHabitResetDay = today;
+
+  if (state.streak.lastActiveDay !== today) {
+    const diffDays = getCalendarDaysDiff(state.streak.lastActiveDay, today);
+    if (diffDays === 1) {
+      state.streak.count = Math.max(1, (state.streak.count || 1) + 1);
+    } else {
+      state.streak.count = 1;
+    }
+    state.streak.lastActiveDay = today;
+  }
+
+  const nextCandidate = getSmartFocusCandidate();
+  state.focusedTaskId = nextCandidate ? nextCandidate.id : null;
+
+  saveState();
+  syncAllTaskReminderNotifications();
+  if (state.dailyReminderEnabled) {
+    syncDailyStreakReminderNotification(true, true);
+  }
+  renderTasks();
+  updateHeaderAndProgress();
+  if (state.activeTab === 'stats' || state.activeTab === 'settings') {
+    renderSecondaryTabViews();
+  }
+  return true;
 }
 
 function getAllFolders() {
@@ -2051,7 +2117,7 @@ function updateFocusUI() {
     }
   });
 
-  const minsList = [15, 25, 45];
+  const minsList = [15, 25, 45, 60];
   const pillIdx = minsList.indexOf(state.focusDurationMinutes);
   const pillInd = document.getElementById('island-timer-indicator');
   if (pillInd && pillIdx >= 0 && !pillInd.classList.contains('is-scrubbing')) {
@@ -2063,7 +2129,7 @@ function updateFocusUI() {
 
 function setFocusDuration(minutes, options = {}) {
   const fromScrub = Boolean(options.fromScrub);
-  const minsList = [15, 25, 45];
+  const minsList = [15, 25, 45, 60];
   const oldIdx = minsList.indexOf(state.focusDurationMinutes);
   const newIdx = minsList.indexOf(minutes);
 
@@ -2090,6 +2156,18 @@ function setFocusDuration(minutes, options = {}) {
   if (state.activeTab === 'settings') renderSecondaryTabViews();
 }
 
+function recordCompletedFocusSession(minutesCompleted) {
+  const today = getTodayKey();
+  if (!state.focusHistory || typeof state.focusHistory !== 'object') {
+    state.focusHistory = {};
+  }
+  const prev = state.focusHistory[today] || { sessions: 0, minutes: 0 };
+  state.focusHistory[today] = {
+    sessions: (Number(prev.sessions) || 0) + 1,
+    minutes: (Number(prev.minutes) || 0) + Math.max(1, Number(minutesCompleted) || 25),
+  };
+}
+
 function syncFocusTimerTick(forceRender = false) {
   if (!state.focusRunning || typeof state.focusEndTimestamp !== 'number') return;
   const remMs = Math.max(0, state.focusEndTimestamp - Date.now());
@@ -2103,17 +2181,20 @@ function syncFocusTimerTick(forceRender = false) {
       state.focusIntervalId = null;
     }
     cancelFocusEndNotification();
+    const finishedMins = state.focusDurationMinutes || 25;
+    recordCompletedFocusSession(finishedMins);
     state.focusRunning = false;
     state.focusEndTimestamp = null;
-    state.focusRemainingMs = state.focusDurationMinutes * 60 * 1000;
-    state.focusSeconds = state.focusDurationMinutes * 60;
+    state.focusRemainingMs = finishedMins * 60 * 1000;
+    state.focusSeconds = finishedMins * 60;
     state.focusLastRenderedSecond = state.focusSeconds;
     saveState();
     updateFocusUI();
+    if (state.activeTab === 'stats') renderSecondaryTabViews();
     playTactileSound('complete');
     triggerHaptic(25);
     spawnCelebrationSparkles();
-    triggerIslandToast('🎉', 'جلسه تمرکز با موفقیت کامل شد!');
+    triggerIslandToast('🎉', `جلسه ${toPersianDigits(finishedMins)} دقیقه‌ای تمرکز کامل شد!`);
     return;
   }
 
@@ -2795,11 +2876,23 @@ function addTask(title, options = {}) {
   const cleanTitle = String(title || '').trim();
   if (!cleanTitle) return;
 
-  const dayView = options.dayView || state.selectedDayView || 'today';
+  let dayView = options.dayView || state.selectedDayView || 'today';
   const isHabit = Boolean(options.isHabit);
+  let reminderTime = normalizeReminderTime(options.reminderTime);
+  let autoShiftedToTomorrow = false;
+
+  /* هوشمندسازی ساعت یادآور: اگر برای امروز ساعتی انتخاب شود که گذشته، خودکار برای فردا تنظیم می‌شود */
+  if (reminderTime && !isHabit) {
+    if (dayView === 'yesterday') {
+      reminderTime = '';
+    } else if (dayView === 'today' && hasTodayTimePassed(reminderTime)) {
+      dayView = 'tomorrow';
+      autoShiftedToTomorrow = true;
+    }
+  }
+
   const scheduledDate = isHabit ? getTodayKey() : getDayKeyForView(dayView);
   const rawSubs = Array.isArray(options.subtasks) ? options.subtasks : [];
-  const reminderTime = normalizeReminderTime(options.reminderTime);
 
   const newTask = {
     id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -2838,10 +2931,10 @@ function addTask(title, options = {}) {
   if (state.activeTab === 'stats') renderSecondaryTabViews();
   playTactileSound('complete');
 
-  if (reminderTime && reminderScheduled) {
+  if (autoShiftedToTomorrow && reminderScheduled) {
+    triggerIslandToast('🌅', `«${cleanTitle}» برای فردا ساعت ${toPersianDigits(reminderTime)} تنظیم شد`);
+  } else if (reminderTime && reminderScheduled) {
     triggerIslandToast('⏰', `«${cleanTitle}» با یادآور ${toPersianDigits(reminderTime)} ثبت شد`);
-  } else if (reminderTime && !reminderScheduled) {
-    triggerIslandToast('✨', `«${cleanTitle}» اضافه شد (ساعت یادآور گذشته بود)`);
   } else {
     triggerIslandToast('✨', `«${cleanTitle}» اضافه شد`);
   }
@@ -3767,15 +3860,21 @@ function renderSmartRadarChart() {
 }
 
 function renderSecondaryTabViews() {
+  const todayKey = getTodayKey();
   const todayTasks = getTasksForDayView('today');
   const done = todayTasks.filter((t) => t.completed).length;
   const active = todayTasks.length - done;
+  const todayFocus = (state.focusHistory && state.focusHistory[todayKey]) || { sessions: 0, minutes: 0 };
 
   const doneEl = document.getElementById('stat-done-count');
   const activeEl = document.getElementById('stat-active-count');
+  const focusMinsEl = document.getElementById('stat-focus-minutes');
   const streakEl = document.getElementById('stat-streak-count');
   if (doneEl) doneEl.textContent = toPersianDigits(done);
   if (activeEl) activeEl.textContent = toPersianDigits(active);
+  if (focusMinsEl) {
+    focusMinsEl.textContent = `${toPersianDigits(todayFocus.minutes || 0)} دقیقه`;
+  }
   if (streakEl) streakEl.textContent = `${toPersianDigits(state.streak.count || 1)} روز`;
 
   renderSmartRadarChart();
@@ -4149,6 +4248,7 @@ function setupLiquidBarScrubbing({ barEl, indicatorId, blobId, items, getCurrent
   barEl.addEventListener('touchcancel', finishScrub);
 }
 
+/* اسکرول انگشتی برای کپسول‌های با عرض متغیر (فقط زمانی که تمام دکمه‌ها بدون اسکرول افقی جا شوند) */
 function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, dataAttr, getCurrentValue, onSelectValue }) {
   if (!barEl) return;
 
@@ -4190,6 +4290,11 @@ function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, da
     'touchstart',
     (e) => {
       if (e.touches.length !== 1) return;
+      /* اگر نوار در صفحات باریک نیاز به اسکرول افقی دارد، اسکرول طبیعی آزاد می‌ماند */
+      if (barEl.scrollWidth > barEl.clientWidth + 2) {
+        startX = 0;
+        return;
+      }
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       isScrubbing = false;
@@ -4202,6 +4307,10 @@ function setupDynamicPillScrubbing({ barEl, indicatorId, blobId, btnSelector, da
     'touchmove',
     (e) => {
       if (!startX || e.touches.length !== 1) return;
+      if (barEl.scrollWidth > barEl.clientWidth + 2) {
+        startX = 0;
+        return;
+      }
       const t = e.touches[0];
       const dx = t.clientX - startX;
       const dy = t.clientY - startY;
@@ -4670,6 +4779,7 @@ function initComposerShutterGesture() {
     if (!isMobileShutter() || dragging) return;
     const tag = e.target?.tagName;
     if ((tag === 'INPUT' || tag === 'TEXTAREA') && !isFullscreen) {
+      scrollBody.scrollTop = 0;
       snapToFullscreen(-280);
     }
   });
@@ -5046,6 +5156,7 @@ function openSyncModal() {
         tasks: state.tasks,
         customFolders: state.customFolders,
         quickNotes: state.quickNotes,
+        focusHistory: state.focusHistory,
         dailyGoal: state.dailyGoal,
         dailyReminderEnabled: state.dailyReminderEnabled,
         dailyReminderTime: state.dailyReminderTime,
@@ -5160,12 +5271,22 @@ function renderTaskEditModalControls() {
 
   const editReminderInp = document.getElementById('edit-task-reminder-time-input');
   const editClearReminderBtn = document.getElementById('edit-task-clear-reminder-btn');
+  const editRemSub = document.getElementById('edit-task-reminder-subtext');
   if (editReminderInp && document.activeElement !== editReminderInp) {
     editReminderInp.value = state.draftEditReminderTime || '';
   }
   if (editClearReminderBtn) {
     editClearReminderBtn.classList.toggle('hidden', !state.draftEditReminderTime);
     editClearReminderBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
+  }
+  if (editRemSub) {
+    if (!state.draftEditReminderTime) {
+      editRemSub.textContent = 'ارسال نوتیفیکیشن سر ساعت انتخاب‌شده';
+    } else if (!state.draftEditHabit && state.draftEditDay === 'today' && hasTodayTimePassed(state.draftEditReminderTime)) {
+      editRemSub.textContent = `ساعت ${toPersianDigits(state.draftEditReminderTime)} امروز گذشته • برای فردا تنظیم می‌شود 🌅`;
+    } else {
+      editRemSub.textContent = `یادآور فعال روی ساعت ${toPersianDigits(state.draftEditReminderTime)}`;
+    }
   }
 
   const subs = Array.isArray(task.subtasks) ? task.subtasks : [];
@@ -5479,9 +5600,13 @@ function updateComposerTogglesUI(options = {}) {
     remClearBtn.classList.toggle('inline-flex', Boolean(state.composerReminderTime));
   }
   if (remSubtext) {
-    remSubtext.textContent = state.composerReminderTime
-      ? `یادآور روی ساعت ${toPersianDigits(state.composerReminderTime)} تنظیم شد`
-      : 'اختیاری • ارسال اعلان سر ساعت مشخص';
+    if (!state.composerReminderTime) {
+      remSubtext.textContent = 'اختیاری • ارسال اعلان سر ساعت مشخص';
+    } else if (!state.composerHabit && state.composerDay === 'today' && hasTodayTimePassed(state.composerReminderTime)) {
+      remSubtext.textContent = `ساعت ${toPersianDigits(state.composerReminderTime)} امروز گذشته • برای فردا تنظیم می‌شود 🌅`;
+    } else {
+      remSubtext.textContent = `یادآور روی ساعت ${toPersianDigits(state.composerReminderTime)} تنظیم شد`;
+    }
   }
 }
 
@@ -5850,8 +5975,13 @@ function setupFullScreenViewportSync() {
   document.addEventListener('focusin', (e) => {
     const target = e.target;
     if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+    const insideComposer = Boolean(target.closest('#composer-shutter-sheet'));
     setTimeout(() => {
       syncViewport();
+      if (insideComposer) {
+        const scrollBody = document.getElementById('composer-scroll-body');
+        if (scrollBody && scrollBody.scrollTop <= 16) return;
+      }
       try {
         target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       } catch (err) {}
@@ -6222,11 +6352,13 @@ function initApp() {
   }
 
   const wakeUpAtomicTimer = () => {
+    checkAndHandleMidnightRollover();
     if (state.focusRunning) {
       syncFocusTimerTick(true);
     }
     updateNotificationSettingsUI();
   };
+  setInterval(checkAndHandleMidnightRollover, 30000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) wakeUpAtomicTimer();
   });
@@ -6272,7 +6404,7 @@ function initApp() {
     edgeInset: 4,
   });
 
-  const islandTimerMinsList = [15, 25, 45];
+  const islandTimerMinsList = [15, 25, 45, 60];
   setupLiquidBarScrubbing({
     barEl: document.getElementById('island-timer-pill-group'),
     indicatorId: 'island-timer-indicator',
@@ -6904,11 +7036,16 @@ function initApp() {
       if (perm !== 'granted' && perm !== 'needs_apk_update') {
         await requestAppNotificationPermission();
       }
+      if (!task.isHabit && (task.scheduledDate || getTodayKey()) === getTodayKey() && hasTodayTimePassed(task.reminderTime)) {
+        task.scheduledDate = getOffsetDayKey(1);
+        triggerIslandToast('🌅', `ساعت یادآور امروز گذشته بود؛ به فردا منتقل شد`);
+      }
     }
     scheduleTaskReminderNotification(task);
     saveState();
     renderDesktopInspector();
     renderTasks();
+    updateHeaderAndProgress();
     playTactileSound('pop');
   });
 
@@ -7428,6 +7565,9 @@ function initApp() {
         .map((n, idx) => normalizeNoteEntry(n, idx))
         .filter(Boolean);
     }
+    if (imported.focusHistory && typeof imported.focusHistory === 'object') {
+      state.focusHistory = imported.focusHistory;
+    }
     if (typeof imported.selectedCategory === 'string') state.selectedCategory = imported.selectedCategory;
     if (typeof imported.dailyGoal === 'number') state.dailyGoal = imported.dailyGoal;
     if (typeof imported.dailyReminderEnabled === 'boolean') {
@@ -7571,11 +7711,7 @@ function initApp() {
   });
   editReminderInput?.addEventListener('input', () => {
     state.draftEditReminderTime = normalizeReminderTime(editReminderInput.value);
-    const clearBtn = document.getElementById('edit-task-clear-reminder-btn');
-    if (clearBtn) {
-      clearBtn.classList.toggle('hidden', !state.draftEditReminderTime);
-      clearBtn.classList.toggle('inline-flex', Boolean(state.draftEditReminderTime));
-    }
+    renderTaskEditModalControls();
   });
   document.getElementById('edit-task-clear-reminder-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -7609,15 +7745,26 @@ function initApp() {
     task.category = state.draftEditCategory || 'شخصی';
     task.urgent = state.draftEditUrgent;
     task.isHabit = state.draftEditHabit;
-    task.reminderTime = remFromDom || state.draftEditReminderTime || '';
-    let nextView = state.selectedDayView;
+
+    let finalRem = remFromDom || state.draftEditReminderTime || '';
+    let nextView = state.draftEditDay || 'today';
+    let shiftedToTomorrow = false;
+
     if (task.isHabit) {
       task.scheduledDate = getTodayKey();
+      nextView = state.selectedDayView;
       syncHabitDaySnapshot(task, getTodayKey());
     } else {
-      task.scheduledDate = getDayKeyForView(state.draftEditDay || 'today');
-      nextView = state.draftEditDay || 'today';
+      if (finalRem && nextView === 'yesterday') {
+        finalRem = '';
+      } else if (finalRem && nextView === 'today' && hasTodayTimePassed(finalRem)) {
+        nextView = 'tomorrow';
+        shiftedToTomorrow = true;
+      }
+      task.scheduledDate = getDayKeyForView(nextView);
     }
+
+    task.reminderTime = finalRem;
     scheduleTaskReminderNotification(task);
     if (state.focusRunning && state.focusedTaskId === task.id) {
       scheduleFocusEndNotification();
@@ -7632,7 +7779,11 @@ function initApp() {
     if (state.activeTab === 'stats') renderSecondaryTabViews();
     closeModal('task-edit-modal');
     playTactileSound('complete');
-    triggerIslandToast('✅', 'تغییرات کار ذخیره شد');
+    if (shiftedToTomorrow) {
+      triggerIslandToast('🌅', `یادآور برای فردا ساعت ${toPersianDigits(finalRem)} تنظیم شد`);
+    } else {
+      triggerIslandToast('✅', 'تغییرات کار ذخیره شد');
+    }
   });
 
   document.getElementById('close-folders-modal')?.addEventListener('click', () => closeModal('folders-modal'));
